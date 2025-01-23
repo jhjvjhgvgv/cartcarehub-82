@@ -1,19 +1,49 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ShoppingCart, AlertTriangle, CheckCircle } from "lucide-react";
+import { ShoppingCart, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Index = () => {
   // Dummy data for initial display
+  const stores = [
+    {
+      id: 1,
+      name: "SuperMart Downtown",
+      location: "123 Main St",
+      totalCarts: 50,
+      activeCarts: 45,
+      maintenanceNeeded: 5,
+    },
+    {
+      id: 2,
+      name: "FreshMart Heights",
+      location: "456 Park Ave",
+      totalCarts: 75,
+      activeCarts: 70,
+      maintenanceNeeded: 5,
+    },
+    {
+      id: 3,
+      name: "Value Grocery West",
+      location: "789 West Blvd",
+      totalCarts: 25,
+      activeCarts: 15,
+      maintenanceNeeded: 10,
+    },
+  ];
+
+  // Calculate total statistics
   const stats = {
-    totalCarts: 150,
-    activeCarts: 130,
-    maintenanceNeeded: 20,
+    totalCarts: stores.reduce((sum, store) => sum + store.totalCarts, 0),
+    activeCarts: stores.reduce((sum, store) => sum + store.activeCarts, 0),
+    maintenanceNeeded: stores.reduce((sum, store) => sum + store.maintenanceNeeded, 0),
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Store Dashboard</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="p-6">
@@ -53,24 +83,40 @@ const Index = () => {
           </Card>
         </div>
 
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Cart #A123 Maintenance</p>
-                <p className="text-sm text-gray-500">Routine check completed</p>
-              </div>
-              <span className="text-sm text-gray-500">2 hours ago</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b">
-              <div>
-                <p className="font-medium">Cart #B456 Issue Reported</p>
-                <p className="text-sm text-gray-500">Wheel alignment needed</p>
-              </div>
-              <span className="text-sm text-gray-500">5 hours ago</span>
-            </div>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Stores Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Store Name</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Total Carts</TableHead>
+                    <TableHead>Active</TableHead>
+                    <TableHead>Maintenance</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stores.map((store) => (
+                    <TableRow key={store.id}>
+                      <TableCell className="font-medium">{store.name}</TableCell>
+                      <TableCell>{store.location}</TableCell>
+                      <TableCell>{store.totalCarts}</TableCell>
+                      <TableCell className="text-green-600">{store.activeCarts}</TableCell>
+                      <TableCell className="text-yellow-600">{store.maintenanceNeeded}</TableCell>
+                      <TableCell>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
         </Card>
       </div>
     </DashboardLayout>
