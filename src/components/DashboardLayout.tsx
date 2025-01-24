@@ -15,43 +15,55 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         <Sidebar>
           <SidebarContent>
             <div className="px-3 py-4">
-              <h2 className="text-xl font-bold text-primary-800 mb-6">CartRepairPros</h2>
-              <nav className="space-y-2">
+              <h2 className="mb-6 px-2">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
+                  CartRepairPros
+                </span>
+              </h2>
+              <nav className="space-y-1.5">
                 <Link 
                   to="/" 
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-primary-50 ${
-                    isActive('/') ? 'bg-primary-100 text-primary-900' : 'text-gray-700'
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive('/') 
+                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100' 
+                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
                   }`}
                 >
-                  <LayoutDashboard className="w-5 h-5" />
-                  <span>Dashboard</span>
+                  <LayoutDashboard className={`w-5 h-5 ${isActive('/') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <span className="font-medium">Dashboard</span>
                 </Link>
                 <Link 
                   to="/carts" 
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-primary-50 ${
-                    isActive('/carts') ? 'bg-primary-100 text-primary-900' : 'text-gray-700'
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive('/carts')
+                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
+                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
                   }`}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Carts</span>
+                  <ShoppingCart className={`w-5 h-5 ${isActive('/carts') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <span className="font-medium">Carts</span>
                 </Link>
                 <Link 
                   to="/customers" 
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-primary-50 ${
-                    isActive('/customers') ? 'bg-primary-100 text-primary-900' : 'text-gray-700'
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive('/customers')
+                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
+                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
                   }`}
                 >
-                  <Users className="w-5 h-5" />
-                  <span>Customers</span>
+                  <Users className={`w-5 h-5 ${isActive('/customers') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <span className="font-medium">Customers</span>
                 </Link>
                 <Link 
                   to="/settings" 
-                  className={`flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-primary-50 ${
-                    isActive('/settings') ? 'bg-primary-100 text-primary-900' : 'text-gray-700'
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive('/settings')
+                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
+                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
                   }`}
                 >
-                  <Settings className="w-5 h-5" />
-                  <span>Settings</span>
+                  <Settings className={`w-5 h-5 ${isActive('/settings') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <span className="font-medium">Settings</span>
                 </Link>
               </nav>
             </div>
