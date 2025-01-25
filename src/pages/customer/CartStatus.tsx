@@ -57,24 +57,24 @@ const CartStatus = () => {
     <CustomerLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Carts</h1>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Your Carts</h1>
           <p className="text-muted-foreground">
             View detailed information about all your shopping carts.
           </p>
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {carts.map((cart) => (
-              <Card key={cart.id}>
+              <Card key={cart.id} className="flex flex-col">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Cart #{cart.id}</CardTitle>
+                    <CardTitle className="text-lg">Cart #{cart.id}</CardTitle>
                     {getStatusBadge(cart.status)}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
+                <CardContent className="flex-1 space-y-4">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                       <div>
