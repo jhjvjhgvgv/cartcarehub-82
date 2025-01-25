@@ -1,10 +1,18 @@
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, AlertTriangle, CheckCircle } from "lucide-react";
+import { ShoppingCart, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const CustomerDashboard = () => {
+  // This would typically come from an API
+  const cartStats = {
+    activeCarts: 2,
+    inactiveCarts: 1,
+    totalCarts: 3,
+    recentIssues: 0
+  };
+
   return (
     <CustomerLayout>
       <div className="space-y-6">
@@ -15,34 +23,47 @@ const CustomerDashboard = () => {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Cart</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Active Carts</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">#A12345</div>
+              <div className="text-2xl font-bold text-green-600">{cartStats.activeCarts}</div>
               <p className="text-xs text-muted-foreground">Currently in use</p>
             </CardContent>
           </Card>
+          
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cart Status</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Inactive Carts</CardTitle>
+              <XCircle className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Good Condition</div>
-              <p className="text-xs text-muted-foreground">Last checked 2h ago</p>
+              <div className="text-2xl font-bold text-gray-600">{cartStats.inactiveCarts}</div>
+              <p className="text-xs text-muted-foreground">Not in use</p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Carts</CardTitle>
+              <CheckCircle className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{cartStats.totalCarts}</div>
+              <p className="text-xs text-muted-foreground">All assigned carts</p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recent Issues</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
+              <div className="text-2xl font-bold text-orange-600">{cartStats.recentIssues}</div>
               <p className="text-xs text-muted-foreground">In the last 30 days</p>
             </CardContent>
           </Card>
