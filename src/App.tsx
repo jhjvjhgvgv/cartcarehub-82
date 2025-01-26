@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Carts from "./pages/Carts";
 import CustomerDashboard from "./pages/customer/Dashboard";
@@ -20,8 +21,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Maintenance Company Routes */}
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
+          
+          {/* Maintenance Company Routes */}
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/carts" element={<Carts />} />
           <Route path="/customers" element={<Customers />} />
           
