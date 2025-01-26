@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Tools } from "lucide-react";
+import { ShoppingCart, Wrench } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -20,7 +20,7 @@ const Index = () => {
               onClick={() => navigate("/maintenance-login")}
             >
               <div className="p-2 bg-primary-50 rounded-full">
-                <Tools className="w-6 h-6 text-primary-700" />
+                <Wrench className="w-6 h-6 text-primary-700" />
               </div>
               <div className="text-left">
                 <div className="font-semibold">Maintenance Provider</div>
