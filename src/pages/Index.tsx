@@ -7,16 +7,23 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 p-4">
+      {/* Logo Section */}
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold text-primary-800 mb-2 drop-shadow-lg">
+          CartCareHub
+        </h1>
+        <p className="text-primary-600 text-lg">Cart Maintenance Made Simple</p>
+      </div>
+
+      <Card className="w-full max-w-md shadow-xl bg-white/90 backdrop-blur-sm">
         <CardContent className="pt-6 px-6">
           <div className="flex flex-col space-y-6">
-            <h1 className="text-2xl font-bold text-center text-gray-900">CartCareHub</h1>
             <p className="text-center text-gray-500">Choose how you want to sign in</p>
             
             <Button
               variant="outline"
-              className="h-16 flex items-center justify-start space-x-4"
+              className="h-16 flex items-center justify-start space-x-4 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md"
               onClick={() => navigate("/maintenance-login")}
             >
               <div className="p-2 bg-primary-50 rounded-full">
@@ -30,7 +37,7 @@ const Index = () => {
 
             <Button
               variant="outline"
-              className="h-16 flex items-center justify-start space-x-4"
+              className="h-16 flex items-center justify-start space-x-4 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md"
               onClick={() => navigate("/store-login")}
             >
               <div className="p-2 bg-primary-50 rounded-full">
