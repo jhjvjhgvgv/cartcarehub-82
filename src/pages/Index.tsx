@@ -42,53 +42,53 @@ const Index = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="h-[calc(100vh-4rem)] flex flex-col space-y-4 p-4">
         <h1 className="text-2xl font-bold text-gray-900">Store Dashboard</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-4">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-primary-50 rounded-full">
-                <ShoppingCart className="w-6 h-6 text-primary-700" />
+              <div className="p-2 bg-primary-50 rounded-full">
+                <ShoppingCart className="w-5 h-5 text-primary-700" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Carts</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCarts}</p>
+                <p className="text-xl font-bold text-gray-900">{stats.totalCarts}</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-50 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-2 bg-green-50 rounded-full">
+                <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Active Carts</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeCarts}</p>
+                <p className="text-xl font-bold text-gray-900">{stats.activeCarts}</p>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-yellow-50 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              <div className="p-2 bg-yellow-50 rounded-full">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Needs Maintenance</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
+                <p className="text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
               </div>
             </div>
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="flex-1 flex flex-col">
+          <CardHeader className="py-3">
             <CardTitle>Stores Overview</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[400px]">
+          <CardContent className="flex-1 p-0">
+            <ScrollArea className="h-[calc(100%-1rem)]">
               <Table>
                 <TableHeader>
                   <TableRow>
