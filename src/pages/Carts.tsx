@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import DashboardLayout from "@/components/DashboardLayout"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,6 +8,16 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { PlusCircle, QrCode, Pencil, Trash2 } from "lucide-react"
 import { CartForm } from "@/components/cart-form"
 import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Cart {
   id: string
@@ -49,6 +58,7 @@ const Carts = () => {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
+  const [deleteCart, setDeleteCart] = useState<Cart | null>(null)
   const { toast } = useToast()
 
   const getStatusBadge = (status: Cart["status"]) => {
@@ -101,8 +111,10 @@ const Carts = () => {
     })
   }
 
-  const handleDeleteCart = (cartId: string) => {
-    setCarts(carts.filter((cart) => cart.id !== cartId))
+  const handleDeleteConfirm = () => {
+    if (!deleteCart) return
+    setCarts(carts.filter((cart) => cart.id !== deleteCart.id))
+    setDeleteCart(null)
     toast({
       title: "Cart Deleted",
       description: "Cart has been successfully removed from the system.",
@@ -111,118 +123,134 @@ const Carts = () => {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Cart Management</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Add New Cart
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogTitle>Add New Cart</DialogTitle>
-              <CartForm
-                onSubmit={handleAddCart}
-                onCancel={() => setIsAddDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>All Carts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cart ID</TableHead>
-                    <TableHead>RFID Tag</TableHead>
-                    <TableHead>Store</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Maintenance</TableHead>
-                    <TableHead>Issues</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {carts.map((cart) => (
-                    <TableRow key={cart.id}>
-                      <TableCell className="font-medium">{cart.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <QrCode className="w-4 h-4" />
-                          {cart.rfidTag}
-                        </div>
-                      </TableCell>
-                      <TableCell>{cart.store}</TableCell>
-                      <TableCell>{getStatusBadge(cart.status)}</TableCell>
-                      <TableCell>{cart.lastMaintenance}</TableCell>
-                      <TableCell>
-                        {cart.issues.length > 0 ? (
-                          <ul className="list-disc list-inside">
-                            {cart.issues.map((issue, index) => (
-                              <li key={index} className="text-sm text-gray-600">
-                                {issue}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-sm text-gray-500">No issues reported</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setEditingCart(cart)}
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px]">
-                              <DialogTitle>Edit Cart</DialogTitle>
-                              {editingCart && (
-                                <CartForm
-                                  initialData={{
-                                    rfidTag: editingCart.rfidTag,
-                                    store: editingCart.store,
-                                    status: editingCart.status,
-                                    lastMaintenance: editingCart.lastMaintenance,
-                                    issues: editingCart.issues.join("\n"),
-                                  }}
-                                  onSubmit={handleEditCart}
-                                  onCancel={() => setEditingCart(null)}
-                                />
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleDeleteCart(cart.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+    <div className="space-y-6 p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Cart Management</h1>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <PlusCircle className="w-4 h-4" />
+              Add New Cart
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogTitle>Add New Cart</DialogTitle>
+            <CartForm
+              onSubmit={handleAddCart}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-    </DashboardLayout>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Carts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[600px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cart ID</TableHead>
+                  <TableHead>RFID Tag</TableHead>
+                  <TableHead>Store</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Maintenance</TableHead>
+                  <TableHead>Issues</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {carts.map((cart) => (
+                  <TableRow key={cart.id}>
+                    <TableCell className="font-medium">{cart.id}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <QrCode className="w-4 h-4" />
+                        {cart.rfidTag}
+                      </div>
+                    </TableCell>
+                    <TableCell>{cart.store}</TableCell>
+                    <TableCell>{getStatusBadge(cart.status)}</TableCell>
+                    <TableCell>{cart.lastMaintenance}</TableCell>
+                    <TableCell>
+                      {cart.issues.length > 0 ? (
+                        <ul className="list-disc list-inside">
+                          {cart.issues.map((issue, index) => (
+                            <li key={index} className="text-sm text-gray-600">
+                              {issue}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-sm text-gray-500">No issues reported</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setEditingCart(cart)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[500px]">
+                            <DialogTitle>Edit Cart</DialogTitle>
+                            {editingCart && (
+                              <CartForm
+                                initialData={{
+                                  rfidTag: editingCart.rfidTag,
+                                  store: editingCart.store,
+                                  status: editingCart.status,
+                                  lastMaintenance: editingCart.lastMaintenance,
+                                  issues: editingCart.issues.join("\n"),
+                                }}
+                                onSubmit={handleEditCart}
+                                onCancel={() => setEditingCart(null)}
+                              />
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setDeleteCart(cart)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!deleteCart} onOpenChange={() => setDeleteCart(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the cart
+              and remove its data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }
 
