@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Bell, User, Palette, Shield, Mail, Globe } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Bell, User, Palette, Shield, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { toast } = useToast();
