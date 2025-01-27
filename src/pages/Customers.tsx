@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PlusCircle } from "lucide-react";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { CustomerList } from "@/components/customers/CustomerList";
+import { CustomerInviteDialog } from "@/components/customers/CustomerInviteDialog";
 
 interface Customer {
   id: number;
@@ -81,20 +82,23 @@ const Customers = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
-          <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
-                Add New Customer
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
-              </DialogHeader>
-              <CustomerForm onSubmit={handleAddCustomer} onCancel={() => setIsNewCustomerOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <CustomerInviteDialog />
+            <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4" />
+                  Add New Customer
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Customer</DialogTitle>
+                </DialogHeader>
+                <CustomerForm onSubmit={handleAddCustomer} onCancel={() => setIsNewCustomerOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <Card>
