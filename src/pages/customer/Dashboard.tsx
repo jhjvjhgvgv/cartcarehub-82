@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
 
 const CustomerDashboard = () => {
   // This would typically come from an API
@@ -12,6 +13,9 @@ const CustomerDashboard = () => {
     totalCarts: 3,
     recentIssues: 0
   };
+
+  const activePercentage = Math.round((cartStats.activeCarts / cartStats.totalCarts) * 100);
+  const inactivePercentage = Math.round((cartStats.inactiveCarts / cartStats.totalCarts) * 100);
 
   return (
     <CustomerLayout>
@@ -31,7 +35,10 @@ const CustomerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{cartStats.activeCarts}</div>
-              <p className="text-xs text-muted-foreground">Currently in use</p>
+              <Progress className="mt-2" value={activePercentage} />
+              <p className="text-xs text-muted-foreground mt-2">
+                {activePercentage}% of total carts
+              </p>
             </CardContent>
           </Card>
           
@@ -42,7 +49,10 @@ const CustomerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-600">{cartStats.inactiveCarts}</div>
-              <p className="text-xs text-muted-foreground">Not in use</p>
+              <Progress className="mt-2" value={inactivePercentage} />
+              <p className="text-xs text-muted-foreground mt-2">
+                {inactivePercentage}% of total carts
+              </p>
             </CardContent>
           </Card>
 
