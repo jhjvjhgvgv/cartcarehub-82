@@ -13,9 +13,9 @@ export const LoadingScreen = () => {
           clearInterval(timer);
           return 100;
         }
-        return prevProgress + 2;
+        return prevProgress + 1; // Reduced increment for smoother animation
       });
-    }, 50);
+    }, 30); // Reduced interval for smoother animation
 
     return () => clearInterval(timer);
   }, []);
@@ -32,15 +32,16 @@ export const LoadingScreen = () => {
           <div
             className={cn(
               "absolute top-1/2 -translate-y-1/2",
-              "transition-all duration-300 ease-out",
+              "transition-all duration-500 ease-in-out", // Increased duration for smoother movement
               "transform -translate-x-1/2"
             )}
             style={{ left: `${progress}%` }}
           >
             <ShoppingCart 
-              className="w-8 h-8 text-primary-600 animate-bounce" 
+              className="w-8 h-8 text-primary-600" 
               style={{
-                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                animation: "gentle-bounce 2s infinite" // Custom gentle bounce animation
               }}
             />
           </div>
@@ -48,6 +49,9 @@ export const LoadingScreen = () => {
         
         <p className="text-center text-gray-500 mt-4">
           Loading your dashboard...
+        </p>
+        <p className="text-center text-primary-600 text-sm font-medium animate-pulse">
+          Wheeling in your cart maintenance dashboard! 🛒
         </p>
       </div>
     </div>
