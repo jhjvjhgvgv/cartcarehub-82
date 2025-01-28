@@ -5,6 +5,7 @@ import { ShoppingCart, AlertTriangle, CheckCircle, XCircle } from "lucide-react"
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { EmergencyRepairDialog } from "@/components/customers/EmergencyRepairDialog";
+import { InspectionRequestDialog } from "@/components/customers/InspectionRequestDialog";
 
 const CustomerDashboard = () => {
   // This would typically come from an API
@@ -87,6 +88,7 @@ const CustomerDashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <EmergencyRepairDialog />
+              <InspectionRequestDialog />
               <Button asChild className="w-full">
                 <Link to="/customer/cart-status">Check Cart Status</Link>
               </Button>
