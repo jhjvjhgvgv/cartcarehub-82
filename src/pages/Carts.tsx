@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { PlusCircle, QrCode, Pencil, Trash2 } from "lucide-react"
 import { CartForm } from "@/components/cart-form"
+import { CartFilters, type CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { useToast } from "@/hooks/use-toast"
 
 interface Cart {
@@ -49,7 +50,19 @@ const Carts = () => {
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
+  const [filters, setFilters] = useState<CartFiltersType>({
+    rfidTag: "",
+    store: "",
+    status: "",
+  })
   const { toast } = useToast()
+
+  const filteredCarts = carts.filter((cart) => {
+    const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
+    const matchStore = cart.store.toLowerCase().includes(filters.store.toLowerCase())
+    const matchStatus = !filters.status || cart.status === filters.status
+    return matchRfidTag && matchStore && matchStatus
+  })
 
   const getStatusBadge = (status: Cart["status"]) => {
     switch (status) {
@@ -135,6 +148,7 @@ const Carts = () => {
         <Card>
           <CardHeader>
             <CardTitle>All Carts</CardTitle>
+            <CartFilters onFilterChange={setFilters} />
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[600px]">
@@ -151,7 +165,7 @@ const Carts = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {carts.map((cart) => (
+                  {filteredCarts.map((cart) => (
                     <TableRow key={cart.id}>
                       <TableCell className="font-medium">{cart.id}</TableCell>
                       <TableCell>
