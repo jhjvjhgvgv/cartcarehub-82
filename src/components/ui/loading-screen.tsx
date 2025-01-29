@@ -13,9 +13,9 @@ export const LoadingScreen = () => {
           clearInterval(timer);
           return 100;
         }
-        return prevProgress + 0.5; // Reduced increment for even smoother animation
+        return prevProgress + 1; // Changed back to 1 for steady progress
       });
-    }, 40); // Slightly increased interval for slower overall animation
+    }, 40); // Keeping the slower interval for smooth movement
 
     return () => clearInterval(timer);
   }, []);
@@ -32,7 +32,7 @@ export const LoadingScreen = () => {
           <div
             className={cn(
               "absolute top-1/2 -translate-y-1/2",
-              "transition-all duration-700 ease-linear", // Increased duration and changed to linear for smoother cart movement
+              "transition-all duration-700 ease-linear",
               "transform -translate-x-1/2"
             )}
             style={{ left: `${progress}%` }}
@@ -41,7 +41,7 @@ export const LoadingScreen = () => {
               className="w-8 h-8 text-primary-600" 
               style={{
                 filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                animation: "gentle-bounce 3s infinite" // Slowed down the bounce animation
+                animation: "gentle-bounce 3s infinite"
               }}
             />
           </div>
