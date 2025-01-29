@@ -27,7 +27,7 @@ const Index = () => {
       {/* Logo Section */}
       <div className="mb-8 text-center">
         <h1 className="text-4xl font-bold text-primary-800 mb-2 drop-shadow-lg">
-          CartCareHub
+          Cart Repair Pros
         </h1>
         <p className="text-primary-600 text-lg">Cart Maintenance Made Simple</p>
       </div>
@@ -40,7 +40,7 @@ const Index = () => {
             <Button
               variant="outline"
               className="h-16 flex items-center justify-start space-x-4 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md"
-              onClick={() => navigate("/maintenance-login")}
+              onClick={() => navigate("/dashboard")}
             >
               <div className="p-2 bg-primary-50 rounded-full">
                 <Wrench className="w-6 h-6 text-primary-700" />
@@ -54,7 +54,7 @@ const Index = () => {
             <Button
               variant="outline"
               className="h-16 flex items-center justify-start space-x-4 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md"
-              onClick={() => navigate("/store-login")}
+              onClick={() => navigate("/customer")}
             >
               <div className="p-2 bg-primary-50 rounded-full">
                 <ShoppingCart className="w-6 h-6 text-primary-700" />
