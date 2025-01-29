@@ -29,7 +29,12 @@ export function CartFilters({ onFilterChange }: CartFiltersProps) {
   const handleFilterChange = (key: keyof CartFilters, value: string) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
-    onFilterChange(newFilters)
+    // Convert "all" back to empty string for filtering logic
+    if (key === "status" && value === "all") {
+      onFilterChange({ ...newFilters, status: "" })
+    } else {
+      onFilterChange(newFilters)
+    }
   }
 
   return (
@@ -55,14 +60,14 @@ export function CartFilters({ onFilterChange }: CartFiltersProps) {
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
         <Select
-          value={filters.status}
+          value={filters.status === "" ? "all" : filters.status}
           onValueChange={(value) => handleFilterChange("status", value)}
         >
           <SelectTrigger id="status">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="maintenance">Maintenance</SelectItem>
             <SelectItem value="retired">Retired</SelectItem>
