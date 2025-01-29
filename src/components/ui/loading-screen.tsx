@@ -13,9 +13,9 @@ export const LoadingScreen = () => {
           clearInterval(timer);
           return 100;
         }
-        return prevProgress + 1; // Changed back to 1 for steady progress
+        return prevProgress + 1;
       });
-    }, 40); // Keeping the slower interval for smooth movement
+    }, 40);
 
     return () => clearInterval(timer);
   }, []);
@@ -23,8 +23,8 @@ export const LoadingScreen = () => {
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center z-50">
       <div className="w-full max-w-md px-4 space-y-4">
-        <h2 className="text-2xl font-bold text-center text-primary-800 mb-8">
-          CartCareHub
+        <h2 className="text-3xl font-bold text-center text-primary-800 mb-8">
+          Cart Repair Pros
         </h2>
         
         <div className="relative w-full h-8">
