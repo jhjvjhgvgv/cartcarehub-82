@@ -47,8 +47,8 @@ const Store = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-4">
+      <div className="flex-1 h-screen overflow-y-auto">
+        <div className="p-4 space-y-4">
           <StoreHeader
             name={storeData.name}
             location={storeData.location}
