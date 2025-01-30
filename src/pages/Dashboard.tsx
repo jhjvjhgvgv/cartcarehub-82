@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, Store, ChevronRight, Users, ChartBar } from "lucide-react";
+import { Building2, ShoppingCart, ChevronRight, Store, BarChart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -47,7 +47,7 @@ const Index = () => {
     <DashboardLayout>
       <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-hidden">
         <div className="flex items-center space-x-2">
-          <Store className="w-6 h-6 text-primary-600" />
+          <Building2 className="w-6 h-6 text-primary-600" />
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
         </div>
         
@@ -55,7 +55,7 @@ const Index = () => {
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
-                <Store className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
+                <Building2 className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Total Stores</p>
@@ -79,7 +79,7 @@ const Index = () => {
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-yellow-50 rounded-full">
-                <ChartBar className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
+                <BarChart className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Active Carts</p>
@@ -92,7 +92,7 @@ const Index = () => {
         <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader className="py-2 md:py-3">
             <div className="flex items-center space-x-2">
-              <Store className="w-5 h-5 text-primary-600" />
+              <Building2 className="w-5 h-5 text-primary-600" />
               <CardTitle>Stores Overview</CardTitle>
             </div>
           </CardHeader>
@@ -103,7 +103,7 @@ const Index = () => {
                   <TableRow>
                     <TableHead className="w-[200px]">
                       <div className="flex items-center space-x-2">
-                        <Store className="w-4 h-4" />
+                        <Building2 className="w-4 h-4" />
                         <span>Store Name</span>
                       </div>
                     </TableHead>
