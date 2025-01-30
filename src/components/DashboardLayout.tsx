@@ -1,12 +1,23 @@
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
-import { ShoppingCart, LayoutDashboard, Users, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleSignOut = () => {
+    toast({
+      title: "Signed out successfully",
+      description: "You have been signed out of your account.",
+    });
+    navigate("/");
   };
 
   return (
@@ -65,6 +76,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   <Settings className="h-4 w-4" />
                   <span className="font-medium">Settings</span>
                 </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="font-medium">Sign Out</span>
+                </button>
               </nav>
             </div>
           </SidebarContent>
