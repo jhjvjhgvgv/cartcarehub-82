@@ -23,7 +23,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
-        <Sidebar>
+        <Sidebar className="bg-white border-r border-gray-200">
           <SidebarContent>
             <div className="px-3 py-4">
               <h2 className="mb-6 px-2">
@@ -36,8 +36,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   to="/dashboard" 
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/dashboard') 
-                      ? 'bg-accent text-accent-foreground' 
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary-50 text-primary-900' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <LayoutDashboard className="h-4 w-4" />
@@ -47,8 +47,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   to="/carts" 
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/carts')
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary-50 text-primary-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <ShoppingCart className="h-4 w-4" />
@@ -58,8 +58,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   to="/customers" 
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/customers')
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary-50 text-primary-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Users className="h-4 w-4" />
@@ -69,8 +69,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   to="/settings" 
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/settings')
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary-50 text-primary-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Settings className="h-4 w-4" />
@@ -78,7 +78,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 >
                   <LogOut className="h-4 w-4" />
                   <span className="font-medium">Sign Out</span>
