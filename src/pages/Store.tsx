@@ -56,11 +56,11 @@ const Store = () => {
           maintenanceNeeded={storeData.maintenanceNeeded}
         />
 
-        <Card className="flex-1">
+        <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader className="py-2 md:py-3">
             <CardTitle>Carts Overview</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-4">
+          <CardContent className="flex-1 p-4 overflow-hidden">
             <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
           </CardContent>
         </Card>

@@ -19,14 +19,14 @@ interface StoreCartsTableProps {
 
 export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
   return (
-    <ScrollArea className="h-[calc(100vh-20rem)]">
+    <ScrollArea className="h-[calc(100vh-24rem)] w-full">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Cart Number</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Maintenance</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-[200px]">Cart Number</TableHead>
+            <TableHead className="w-[150px]">Status</TableHead>
+            <TableHead className="w-[200px]">Last Maintenance</TableHead>
+            <TableHead className="w-[100px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -35,10 +35,12 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
               <TableCell className="font-medium">{cart.cartNumber}</TableCell>
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
+                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                     cart.status === "active"
                       ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
+                      : cart.status === "maintenance"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
                   }`}
                 >
                   {cart.status}
@@ -46,7 +48,12 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
               </TableCell>
               <TableCell>{cart.lastMaintenance}</TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="sm" onClick={() => onEditCart(cart)}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => onEditCart(cart)}
+                  className="hover:bg-primary-50"
+                >
                   <PencilIcon className="w-4 h-4" />
                 </Button>
               </TableCell>
