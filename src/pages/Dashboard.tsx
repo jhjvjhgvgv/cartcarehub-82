@@ -61,7 +61,7 @@ const Index = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-hidden">
+      <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-x-hidden">
         <div className="flex items-center space-x-2">
           <Building2 className="w-6 h-6 text-primary-600" />
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
@@ -95,31 +95,31 @@ const Index = () => {
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-yellow-50 rounded-full">
-                <BarChart className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
+                <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-500">Active Carts</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900">{stats.activeCarts}</p>
+                <p className="text-xs md:text-sm text-gray-500">Needs Maintenance</p>
+                <p className="text-lg md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
               </div>
             </div>
           </Card>
         </div>
 
-        <Card className="flex-1 flex flex-col min-h-0">
+        <Card className="flex-1">
           <CardHeader className="py-2 md:py-3">
             <CardTitle>Stores Overview</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-0 overflow-hidden">
-            <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]">
-              <div className="min-w-full overflow-x-auto">
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-20rem)] w-full">
+              <div className="min-w-[800px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Store Name</TableHead>
-                      <TableHead className="hidden sm:table-cell">Location</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Cart Status</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Utilization</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Maintenance</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead className="text-right">Cart Status</TableHead>
+                      <TableHead className="text-right">Utilization</TableHead>
+                      <TableHead className="text-right">Maintenance</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -130,15 +130,15 @@ const Index = () => {
                         className="cursor-pointer hover:bg-primary-50 transition-colors"
                         onClick={() => navigate(`/store/${store.id}`)}
                       >
-                        <TableCell className="font-medium min-w-[120px]">{store.name}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{store.location}</TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
+                        <TableCell className="font-medium">{store.name}</TableCell>
+                        <TableCell>{store.location}</TableCell>
+                        <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-2">
                             <ShoppingCart className="w-4 h-4 text-primary-600" />
                             <span>{store.activeCarts}/{store.totalCarts}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
+                        <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-2">
                             <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
                             <span className={getUtilizationColor(store.utilizationRate)}>
@@ -146,7 +146,7 @@ const Index = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">
+                        <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-2">
                             <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
                             <span className={getMaintenanceColor(store.maintenanceRate)}>
