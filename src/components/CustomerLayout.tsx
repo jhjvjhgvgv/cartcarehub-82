@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, AlertTriangle, Home, Settings, Menu, X } from "lucide-react";
+import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -34,6 +37,14 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
     },
   ];
 
+  const handleSignOut = () => {
+    toast({
+      title: "Signed out successfully",
+      description: "You have been signed out of your account.",
+    });
+    navigate("/");
+  };
+
   const NavLinks = () => (
     <>
       {navigation.map((item) => (
@@ -52,6 +63,14 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
           {item.name}
         </Link>
       ))}
+      <Button
+        variant="ghost"
+        className="w-full justify-start gap-3 px-3"
+        onClick={handleSignOut}
+      >
+        <LogOut className="h-4 w-4" />
+        Sign Out
+      </Button>
     </>
   );
 
@@ -82,7 +101,9 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex">
         <nav className="hidden border-r bg-muted/40 md:block md:w-64">
           <div className="flex h-[calc(100vh-4rem)] flex-col gap-2 p-4">
-            <NavLinks />
+            <div className="flex-1">
+              <NavLinks />
+            </div>
           </div>
         </nav>
         <main className="flex-1 p-4 md:p-6">{children}</main>
