@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CartForm } from "@/components/cart-form";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreCartsTable } from "@/components/store/StoreCartsTable";
@@ -47,30 +47,35 @@ const Store = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 p-4 max-h-[calc(100vh-4rem)] overflow-y-auto">
-        <StoreHeader
-          name={storeData.name}
-          location={storeData.location}
-          totalCarts={storeData.totalCarts}
-          activeCarts={storeData.activeCarts}
-          maintenanceNeeded={storeData.maintenanceNeeded}
-        />
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-4">
+          <StoreHeader
+            name={storeData.name}
+            location={storeData.location}
+            totalCarts={storeData.totalCarts}
+            activeCarts={storeData.activeCarts}
+            maintenanceNeeded={storeData.maintenanceNeeded}
+          />
 
-        <Card>
-          <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">Carts Overview</h2>
-            <div className="w-full overflow-x-auto">
-              <div className="min-w-[600px]">
-                <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
+          <Card>
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4">Carts Overview</h2>
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-[600px]">
+                  <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         <Dialog open={editingCart !== null} onOpenChange={() => setEditingCart(null)}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Cart {editingCart?.cartNumber}</DialogTitle>
+              <DialogDescription>
+                Make changes to the cart details below.
+              </DialogDescription>
             </DialogHeader>
             {editingCart && (
               <CartForm
