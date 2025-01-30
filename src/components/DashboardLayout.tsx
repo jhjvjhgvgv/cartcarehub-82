@@ -22,47 +22,47 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               </h2>
               <nav className="space-y-1.5">
                 <Link 
-                  to="/" 
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                    isActive('/') 
-                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100' 
-                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
+                  to="/dashboard" 
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive('/dashboard') 
+                      ? 'bg-accent text-accent-foreground' 
+                      : 'hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  <LayoutDashboard className={`w-5 h-5 ${isActive('/') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <LayoutDashboard className="h-4 w-4" />
                   <span className="font-medium">Dashboard</span>
                 </Link>
                 <Link 
                   to="/carts" 
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/carts')
-                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
-                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  <ShoppingCart className={`w-5 h-5 ${isActive('/carts') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <ShoppingCart className="h-4 w-4" />
                   <span className="font-medium">Carts</span>
                 </Link>
                 <Link 
                   to="/customers" 
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/customers')
-                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
-                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  <Users className={`w-5 h-5 ${isActive('/customers') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <Users className="h-4 w-4" />
                   <span className="font-medium">Customers</span>
                 </Link>
                 <Link 
                   to="/settings" 
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive('/settings')
-                      ? 'bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-100'
-                      : 'text-gray-600 hover:bg-gray-100/60 hover:text-gray-900'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  <Settings className={`w-5 h-5 ${isActive('/settings') ? 'text-primary-600' : 'text-gray-500'}`} />
+                  <Settings className="h-4 w-4" />
                   <span className="font-medium">Settings</span>
                 </Link>
               </nav>
