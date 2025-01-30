@@ -32,21 +32,13 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           Cart Repair Pros
         </h2>
         
-        <div className="relative w-full h-8">
+        <div className="relative w-full">
           <Progress value={progress} className="h-4" />
-          <div
-            className={cn(
-              "absolute top-1/2 -translate-y-1/2",
-              "transition-all duration-700 ease-linear",
-              "transform -translate-x-1/2"
-            )}
-            style={{ left: `${progress}%` }}
-          >
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
             <ShoppingCart 
               className="w-8 h-8 text-primary-600" 
               style={{
-                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                animation: "gentle-bounce 3s infinite"
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
               }}
             />
           </div>
