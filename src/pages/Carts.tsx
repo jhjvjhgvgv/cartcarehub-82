@@ -52,16 +52,14 @@ const Carts = () => {
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
     rfidTag: "",
-    store: "",
     status: "",
   })
   const { toast } = useToast()
 
   const filteredCarts = carts.filter((cart) => {
     const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
-    const matchStore = cart.store.toLowerCase().includes(filters.store.toLowerCase())
     const matchStatus = !filters.status || cart.status === filters.status
-    return matchRfidTag && matchStore && matchStatus
+    return matchRfidTag && matchStatus
   })
 
   const getStatusBadge = (status: Cart["status"]) => {
