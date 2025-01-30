@@ -45,10 +45,10 @@ const Index = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] w-full flex flex-col space-y-4 p-2 md:p-4">
+      <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-hidden">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
@@ -90,17 +90,17 @@ const Index = () => {
           <CardHeader className="py-2 md:py-3">
             <CardTitle>Stores Overview</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-0">
-            <ScrollArea className="h-full">
+          <CardContent className="flex-1 p-0 overflow-hidden">
+            <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Store Name</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Total Carts</TableHead>
-                    <TableHead>Active</TableHead>
-                    <TableHead>Maintenance</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="w-[200px]">Store Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Location</TableHead>
+                    <TableHead className="text-right">Total Carts</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Active</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Maintenance</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -111,10 +111,10 @@ const Index = () => {
                       onClick={() => navigate(`/store/${store.id}`)}
                     >
                       <TableCell className="font-medium">{store.name}</TableCell>
-                      <TableCell>{store.location}</TableCell>
-                      <TableCell>{store.totalCarts}</TableCell>
-                      <TableCell className="text-green-600">{store.activeCarts}</TableCell>
-                      <TableCell className="text-yellow-600">{store.maintenanceNeeded}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{store.location}</TableCell>
+                      <TableCell className="text-right">{store.totalCarts}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell text-green-600">{store.activeCarts}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell text-yellow-600">{store.maintenanceNeeded}</TableCell>
                       <TableCell>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       </TableCell>

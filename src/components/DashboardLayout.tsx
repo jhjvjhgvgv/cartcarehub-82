@@ -26,8 +26,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         <Sidebar className="bg-white border-r border-gray-200">
           <SidebarContent>
             <div className="px-3 py-4">
-              <h2 className="mb-6 px-2">
-                <span className="text-2xl font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
+              <h2 className="mb-6 px-2 text-lg md:text-2xl">
+                <span className="font-bold bg-gradient-to-r from-primary-700 to-primary-900 bg-clip-text text-transparent">
                   CartRepairPros
                 </span>
               </h2>
@@ -87,8 +87,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </SidebarContent>
         </Sidebar>
-        <main className="flex-1 p-6">
-          <SidebarTrigger className="mb-4" />
+        <main className="flex-1 overflow-hidden">
+          <SidebarTrigger className="p-4" />
           {children}
         </main>
       </div>
