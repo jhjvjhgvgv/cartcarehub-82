@@ -3,8 +3,11 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 import { ShoppingCart, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   // Dummy data for initial display
   const stores = [
     {
@@ -102,7 +105,11 @@ const Index = () => {
                 </TableHeader>
                 <TableBody>
                   {stores.map((store) => (
-                    <TableRow key={store.id}>
+                    <TableRow 
+                      key={store.id}
+                      className="cursor-pointer hover:bg-primary-50 transition-colors"
+                      onClick={() => navigate(`/store/${store.id}`)}
+                    >
                       <TableCell className="font-medium">{store.name}</TableCell>
                       <TableCell>{store.location}</TableCell>
                       <TableCell>{store.totalCarts}</TableCell>
