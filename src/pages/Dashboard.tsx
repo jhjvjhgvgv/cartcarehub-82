@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ShoppingCart, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ShoppingCart, Store, ChevronRight, Users, ChartBar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -46,13 +46,28 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-hidden">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+        <div className="flex items-center space-x-2">
+          <Store className="w-6 h-6 text-primary-600" />
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
-                <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
+                <Store className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
+              </div>
+              <div>
+                <p className="text-xs md:text-sm text-gray-500">Total Stores</p>
+                <p className="text-lg md:text-xl font-bold text-gray-900">{stores.length}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-50 rounded-full">
+                <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Total Carts</p>
@@ -61,10 +76,10 @@ const Index = () => {
             </div>
           </Card>
 
-          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600">
+          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-50 rounded-full">
-                <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
+              <div className="p-2 bg-yellow-50 rounded-full">
+                <ChartBar className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Active Carts</p>
@@ -72,32 +87,33 @@ const Index = () => {
               </div>
             </div>
           </Card>
-
-          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-50 rounded-full">
-                <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-gray-500">Needs Maintenance</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
-              </div>
-            </div>
-          </Card>
         </div>
 
         <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader className="py-2 md:py-3">
-            <CardTitle>Stores Overview</CardTitle>
+            <div className="flex items-center space-x-2">
+              <Store className="w-5 h-5 text-primary-600" />
+              <CardTitle>Stores Overview</CardTitle>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">Store Name</TableHead>
+                    <TableHead className="w-[200px]">
+                      <div className="flex items-center space-x-2">
+                        <Store className="w-4 h-4" />
+                        <span>Store Name</span>
+                      </div>
+                    </TableHead>
                     <TableHead className="hidden sm:table-cell">Location</TableHead>
-                    <TableHead className="text-right">Total Carts</TableHead>
+                    <TableHead className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>Total Carts</span>
+                      </div>
+                    </TableHead>
                     <TableHead className="text-right hidden sm:table-cell">Active</TableHead>
                     <TableHead className="text-right hidden sm:table-cell">Maintenance</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
