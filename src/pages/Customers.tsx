@@ -78,13 +78,13 @@ const Customers = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex min-h-[calc(100vh-4rem)] flex-col space-y-6 p-4 md:p-8">
+      <div className="min-h-[calc(100vh-4rem)] space-y-4 p-4 md:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+          <h1 className="text-2xl font-bold text-primary">Customer Management</h1>
           <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
+              <Button className="w-full sm:w-auto">
+                <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Customer
               </Button>
             </DialogTrigger>
@@ -97,12 +97,12 @@ const Customers = () => {
           </Dialog>
         </div>
 
-        <Card className="flex-1">
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>All Customers</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[calc(100vh-20rem)]">
+            <ScrollArea className="h-[calc(100vh-16rem)]">
               <div className="p-4">
                 <CustomerList
                   customers={customers}
