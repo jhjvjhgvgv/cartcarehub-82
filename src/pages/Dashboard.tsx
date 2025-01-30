@@ -2,13 +2,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, ShoppingCart, ChevronRight, Store, BarChart } from "lucide-react";
+import { Building2, ShoppingCart, ChevronRight, BarChart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
   
-  // Dummy data for initial display
   const stores = [
     {
       id: 1,
@@ -91,22 +90,14 @@ const Index = () => {
 
         <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader className="py-2 md:py-3">
-            <div className="flex items-center space-x-2">
-              <Building2 className="w-5 h-5 text-primary-600" />
-              <CardTitle>Stores Overview</CardTitle>
-            </div>
+            <CardTitle>Stores Overview</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px]">
-                      <div className="flex items-center space-x-2">
-                        <Building2 className="w-4 h-4" />
-                        <span>Store Name</span>
-                      </div>
-                    </TableHead>
+                    <TableHead className="w-[200px]">Store Name</TableHead>
                     <TableHead className="hidden sm:table-cell">Location</TableHead>
                     <TableHead className="text-right">
                       <div className="flex items-center justify-end space-x-2">
