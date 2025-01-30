@@ -53,10 +53,10 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
           to={item.href}
           onClick={() => setIsOpen(false)}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-primary-50",
             location.pathname === item.href
-              ? "bg-accent text-accent-foreground"
-              : "hover:bg-accent hover:text-accent-foreground"
+              ? "bg-primary text-primary-foreground"
+              : "text-gray-700"
           )}
         >
           <item.icon className="h-4 w-4" />
@@ -65,7 +65,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
       ))}
       <Button
         variant="ghost"
-        className="w-full justify-start gap-3 px-3"
+        className="w-full justify-start gap-3 px-3 text-gray-700 hover:bg-primary-50 hover:text-gray-900"
         onClick={handleSignOut}
       >
         <LogOut className="h-4 w-4" />
@@ -75,11 +75,11 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-16 items-center justify-between border-b px-4 md:px-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
         <Link to="/customer" className="flex items-center gap-2">
-          <ShoppingCart className="h-6 w-6" />
-          <span className="font-semibold">CartCareHub</span>
+          <ShoppingCart className="h-6 w-6 text-primary" />
+          <span className="font-semibold text-gray-900">CartCareHub</span>
         </Link>
         
         {isMobile ? (
@@ -99,7 +99,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
       
       <div className="flex">
-        <nav className="hidden border-r bg-muted/40 md:block md:w-64">
+        <nav className="hidden border-r bg-white md:block md:w-64">
           <div className="flex h-[calc(100vh-4rem)] flex-col gap-2 p-4">
             <div className="flex-1">
               <NavLinks />
