@@ -34,7 +34,14 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
         
         <div className="relative w-full">
           <Progress value={progress} className="h-4" />
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 z-10"
+            style={{ 
+              left: `${progress}%`,
+              transform: `translate(-50%, -50%)`,
+              transition: 'left 0.04s linear'
+            }}
+          >
             <ShoppingCart 
               className="w-8 h-8 text-primary-600" 
               style={{
