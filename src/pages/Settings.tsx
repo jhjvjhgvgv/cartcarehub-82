@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Bell, User, Palette, Shield, Mail, Globe } from "lucide-react";
+import { Bell, User, Palette, Shield, ChevronLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -23,11 +25,21 @@ const Settings = () => {
 
   return (
     <div className="container max-w-4xl mx-auto py-6 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences.
-        </p>
+      <div className="flex items-center space-x-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="hover:bg-primary-50"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account settings and preferences.
+          </p>
+        </div>
       </div>
 
       <Separator />
