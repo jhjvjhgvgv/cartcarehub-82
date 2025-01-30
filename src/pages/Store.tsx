@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CartForm } from "@/components/cart-form";
 import { StoreHeader } from "@/components/store/StoreHeader";
@@ -47,7 +47,7 @@ const Store = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-full w-full flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4 p-4 md:p-6 h-[calc(100vh-4rem)]">
         <StoreHeader
           name={storeData.name}
           location={storeData.location}
@@ -56,13 +56,13 @@ const Store = () => {
           maintenanceNeeded={storeData.maintenanceNeeded}
         />
 
-        <Card className="flex-1 flex flex-col min-h-0">
-          <CardHeader className="py-3">
-            <CardTitle>Carts Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 p-0 sm:p-4 overflow-hidden">
-            <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
-          </CardContent>
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <div className="p-4 md:p-6 flex-1 flex flex-col">
+            <h2 className="text-lg font-semibold mb-4">Carts Overview</h2>
+            <div className="flex-1 min-h-0">
+              <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
+            </div>
+          </div>
         </Card>
 
         <Dialog open={editingCart !== null} onOpenChange={() => setEditingCart(null)}>

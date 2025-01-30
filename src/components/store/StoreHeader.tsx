@@ -12,7 +12,7 @@ interface StoreHeaderProps {
 
 export function StoreHeader({ name, location, totalCarts, activeCarts, maintenanceNeeded }: StoreHeaderProps) {
   return (
-    <>
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">{name}</h1>
         <p className="text-sm text-gray-500">{location}</p>
@@ -55,6 +55,6 @@ export function StoreHeader({ name, location, totalCarts, activeCarts, maintenan
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
