@@ -19,15 +19,15 @@ interface StoreCartsTableProps {
 
 export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
   return (
-    <ScrollArea className="h-[calc(100vh-24rem)] w-full rounded-md">
+    <ScrollArea className="h-[calc(100vh-20rem)] w-full rounded-md">
       <div className="min-w-[640px]">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Cart Number</TableHead>
-              <TableHead className="w-[150px]">Status</TableHead>
-              <TableHead className="w-[200px]">Last Maintenance</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
+              <TableHead className="w-[180px]">Cart Number</TableHead>
+              <TableHead className="w-[120px]">Status</TableHead>
+              <TableHead className="w-[180px]">Last Maintenance</TableHead>
+              <TableHead className="w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

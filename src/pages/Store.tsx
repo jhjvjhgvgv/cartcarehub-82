@@ -47,7 +47,7 @@ const Store = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-full w-full flex flex-col space-y-4 p-2 sm:p-4">
+      <div className="h-full w-full flex flex-col gap-4 p-4">
         <StoreHeader
           name={storeData.name}
           location={storeData.location}
@@ -57,10 +57,10 @@ const Store = () => {
         />
 
         <Card className="flex-1 flex flex-col min-h-0">
-          <CardHeader className="py-2 sm:py-3">
+          <CardHeader className="py-3">
             <CardTitle>Carts Overview</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-2 sm:p-4 overflow-hidden">
+          <CardContent className="flex-1 p-0 sm:p-4 overflow-hidden">
             <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
           </CardContent>
         </Card>
