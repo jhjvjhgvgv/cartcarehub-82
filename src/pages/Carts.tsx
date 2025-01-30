@@ -52,6 +52,7 @@ const Carts = () => {
   const [filters, setFilters] = useState<CartFiltersType>({
     rfidTag: "",
     status: "",
+    store: "",
   })
   const { toast } = useToast()
 
@@ -60,7 +61,8 @@ const Carts = () => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
     const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
     const matchStatus = !filters.status || cart.status === filters.status
-    return isInManagedStore && matchRfidTag && matchStatus
+    const matchStore = !filters.store || cart.store === filters.store
+    return isInManagedStore && matchRfidTag && matchStatus && matchStore
   })
 
   const activeCarts = filteredCarts.filter((cart) => cart.status === "active").length
@@ -138,7 +140,7 @@ const Carts = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6">
+      <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Cart Management</h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -167,7 +169,7 @@ const Carts = () => {
         <Card>
           <CardHeader>
             <CardTitle>All Carts</CardTitle>
-            <CartFilters onFilterChange={setFilters} />
+            <CartFilters onFilterChange={setFilters} managedStores={managedStores} />
           </CardHeader>
           <CardContent>
             <CartList

@@ -11,32 +11,35 @@ import {
 
 interface CartFiltersProps {
   onFilterChange: (filters: CartFilters) => void
+  managedStores: { id: string; name: string }[]
 }
 
 export interface CartFilters {
   rfidTag: string
   status: string
+  store: string
 }
 
-export function CartFilters({ onFilterChange }: CartFiltersProps) {
+export function CartFilters({ onFilterChange, managedStores }: CartFiltersProps) {
   const [filters, setFilters] = React.useState<CartFilters>({
     rfidTag: "",
     status: "",
+    store: "",
   })
 
   const handleFilterChange = (key: keyof CartFilters, value: string) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
     // Convert "all" back to empty string for filtering logic
-    if (key === "status" && value === "all") {
-      onFilterChange({ ...newFilters, status: "" })
+    if ((key === "status" || key === "store") && value === "all") {
+      onFilterChange({ ...newFilters, [key]: "" })
     } else {
       onFilterChange(newFilters)
     }
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-3">
       <div className="space-y-2">
         <Label htmlFor="rfidTag">RFID Tag</Label>
         <Input
@@ -45,6 +48,25 @@ export function CartFilters({ onFilterChange }: CartFiltersProps) {
           value={filters.rfidTag}
           onChange={(e) => handleFilterChange("rfidTag", e.target.value)}
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="store">Store</Label>
+        <Select
+          value={filters.store === "" ? "all" : filters.store}
+          onValueChange={(value) => handleFilterChange("store", value)}
+        >
+          <SelectTrigger id="store">
+            <SelectValue placeholder="Filter by store" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stores</SelectItem>
+            {managedStores.map((store) => (
+              <SelectItem key={store.id} value={store.name}>
+                {store.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
