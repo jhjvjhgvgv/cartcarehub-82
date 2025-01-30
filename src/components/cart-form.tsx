@@ -21,6 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+// Mock data for managed stores (this would come from your auth/backend)
+const managedStores = [
+  { id: "store1", name: "SuperMart Downtown" },
+  { id: "store2", name: "FreshMart Heights" },
+]
+
 const cartFormSchema = z.object({
   rfidTag: z.string().min(1, "RFID tag is required"),
   store: z.string().min(1, "Store is required"),
@@ -72,9 +78,20 @@ export function CartForm({ initialData, onSubmit, onCancel }: CartFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Store</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter store name" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select store" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {managedStores.map((store) => (
+                    <SelectItem key={store.id} value={store.name}>
+                      {store.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

@@ -14,10 +14,17 @@ interface Cart {
   id: string
   rfidTag: string
   store: string
+  storeId: string // Added storeId for filtering
   status: "active" | "maintenance" | "retired"
   lastMaintenance: string
   issues: string[]
 }
+
+// Mock data for managed stores (this would come from your auth/backend)
+const managedStores = [
+  { id: "store1", name: "SuperMart Downtown" },
+  { id: "store2", name: "FreshMart Heights" },
+]
 
 const Carts = () => {
   const [carts, setCarts] = useState<Cart[]>([
@@ -25,6 +32,7 @@ const Carts = () => {
       id: "CART-001",
       rfidTag: "RFID-A123",
       store: "SuperMart Downtown",
+      storeId: "store1",
       status: "active",
       lastMaintenance: "2024-02-15",
       issues: ["Wheel alignment needed"],
@@ -33,6 +41,7 @@ const Carts = () => {
       id: "CART-002",
       rfidTag: "RFID-B456",
       store: "SuperMart Downtown",
+      storeId: "store1",
       status: "maintenance",
       lastMaintenance: "2024-01-20",
       issues: ["Handle loose", "Left wheel damaged"],
@@ -41,6 +50,7 @@ const Carts = () => {
       id: "CART-003",
       rfidTag: "RFID-C789",
       store: "FreshMart Heights",
+      storeId: "store2",
       status: "active",
       lastMaintenance: "2024-02-10",
       issues: [],
@@ -55,20 +65,34 @@ const Carts = () => {
   })
   const { toast } = useToast()
 
+  // Filter carts based on managed stores and user filters
   const filteredCarts = carts.filter((cart) => {
+    const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
     const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
     const matchStatus = !filters.status || cart.status === filters.status
-    return matchRfidTag && matchStatus
+    return isInManagedStore && matchRfidTag && matchStatus
   })
 
-  const activeCarts = carts.filter((cart) => cart.status === "active").length
-  const maintenanceNeeded = carts.filter((cart) => cart.status === "maintenance").length
+  const activeCarts = filteredCarts.filter((cart) => cart.status === "active").length
+  const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "maintenance").length
 
   const handleAddCart = (data: any) => {
+    // Find the store ID based on the store name
+    const store = managedStores.find(s => s.name === data.store)
+    if (!store) {
+      toast({
+        title: "Error",
+        description: "Selected store is not in your managed stores list.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const newCart: Cart = {
       id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
       rfidTag: data.rfidTag,
       store: data.store,
+      storeId: store.id,
       status: data.status,
       lastMaintenance: data.lastMaintenance,
       issues: data.issues ? [data.issues] : [],
@@ -83,12 +107,23 @@ const Carts = () => {
 
   const handleEditCart = (data: any) => {
     if (!editingCart) return
+    const store = managedStores.find(s => s.name === data.store)
+    if (!store) {
+      toast({
+        title: "Error",
+        description: "Selected store is not in your managed stores list.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const updatedCarts = carts.map((cart) =>
       cart.id === editingCart.id
         ? {
             ...cart,
             rfidTag: data.rfidTag,
             store: data.store,
+            storeId: store.id,
             status: data.status,
             lastMaintenance: data.lastMaintenance,
             issues: data.issues ? [data.issues] : [],
@@ -135,7 +170,7 @@ const Carts = () => {
         </div>
 
         <CartStats
-          totalCarts={carts.length}
+          totalCarts={filteredCarts.length}
           activeCarts={activeCarts}
           maintenanceNeeded={maintenanceNeeded}
         />
