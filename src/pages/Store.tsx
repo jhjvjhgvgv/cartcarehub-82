@@ -3,12 +3,31 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, AlertTriangle, CheckCircle } from "lucide-react";
+import { ShoppingCart, AlertTriangle, CheckCircle, PencilIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CartFilters, type CartFilters as CartFiltersType } from "@/components/cart-filters";
+import { useState } from "react";
+import { CartForm } from "@/components/cart-form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface Cart {
+  id: number;
+  cartNumber: string;
+  status: "active" | "maintenance" | "retired";
+  lastMaintenance: string;
+  issues: string[];
+}
 
 const Store = () => {
   const { id } = useParams();
+  const [filters, setFilters] = useState<CartFiltersType>({
+    rfidTag: "",
+    store: "",
+    status: "",
+  });
+  const [editingCart, setEditingCart] = useState<Cart | null>(null);
 
-  // This would typically come from an API, using dummy data for now
+  // This would typically come from an API
   const storeData = {
     id: Number(id),
     name: "SuperMart Downtown",
@@ -17,10 +36,27 @@ const Store = () => {
     activeCarts: 45,
     maintenanceNeeded: 5,
     carts: [
-      { id: 1, cartNumber: "CART-001", status: "active", lastMaintenance: "2024-01-15" },
-      { id: 2, cartNumber: "CART-002", status: "maintenance", lastMaintenance: "2024-01-10" },
-      { id: 3, cartNumber: "CART-003", status: "active", lastMaintenance: "2024-01-20" },
-    ]
+      { id: 1, cartNumber: "CART-001", status: "active", lastMaintenance: "2024-01-15", issues: [] },
+      { id: 2, cartNumber: "CART-002", status: "maintenance", lastMaintenance: "2024-01-10", issues: ["Wheel alignment needed"] },
+      { id: 3, cartNumber: "CART-003", status: "active", lastMaintenance: "2024-01-20", issues: [] },
+    ] as Cart[]
+  };
+
+  const filteredCarts = storeData.carts.filter(cart => {
+    return (
+      cart.cartNumber.toLowerCase().includes(filters.rfidTag.toLowerCase()) &&
+      (filters.status === "" || cart.status === filters.status)
+    );
+  });
+
+  const handleEditCart = (cart: Cart) => {
+    setEditingCart(cart);
+  };
+
+  const handleSaveCart = (data: any) => {
+    console.log('Saving cart:', data);
+    // Here you would typically make an API call to update the cart
+    setEditingCart(null);
   };
 
   return (
@@ -73,37 +109,72 @@ const Store = () => {
           <CardHeader className="py-2 md:py-3">
             <CardTitle>Carts Overview</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-0">
-            <ScrollArea className="h-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cart Number</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Maintenance</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {storeData.carts.map((cart) => (
-                    <TableRow key={cart.id}>
-                      <TableCell className="font-medium">{cart.cartNumber}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          cart.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {cart.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>{cart.lastMaintenance}</TableCell>
+          <CardContent className="flex-1 p-4">
+            <div className="space-y-4">
+              <CartFilters onFilterChange={setFilters} />
+              
+              <ScrollArea className="h-[calc(100vh-24rem)]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cart Number</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Maintenance</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCarts.map((cart) => (
+                      <TableRow key={cart.id}>
+                        <TableCell className="font-medium">{cart.cartNumber}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            cart.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {cart.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>{cart.lastMaintenance}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditCart(cart)}
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </div>
           </CardContent>
         </Card>
+
+        <Dialog open={editingCart !== null} onOpenChange={() => setEditingCart(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Cart {editingCart?.cartNumber}</DialogTitle>
+            </DialogHeader>
+            {editingCart && (
+              <CartForm
+                initialData={{
+                  rfidTag: editingCart.cartNumber,
+                  store: storeData.name,
+                  status: editingCart.status,
+                  lastMaintenance: editingCart.lastMaintenance,
+                  issues: editingCart.issues.join('\n'),
+                }}
+                onSubmit={handleSaveCart}
+                onCancel={() => setEditingCart(null)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
