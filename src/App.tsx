@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Index from "@/pages/Index"
 import Dashboard from "@/pages/Dashboard"
 import Carts from "@/pages/Carts"
@@ -14,7 +14,7 @@ import CustomerSettings from "@/pages/customer/Settings"
 
 function App() {
   return (
-    <>
+    <Router>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -31,7 +31,7 @@ function App() {
         </Route>
       </Routes>
       <Toaster />
-    </>
+    </Router>
   )
 }
 
