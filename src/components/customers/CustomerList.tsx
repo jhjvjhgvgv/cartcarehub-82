@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Building2, Phone, Mail, Pencil } from "lucide-react";
@@ -18,6 +19,8 @@ interface CustomerListProps {
 }
 
 export const CustomerList = ({ customers, onEdit }: CustomerListProps) => {
+  const navigate = useNavigate();
+
   return (
     <Table>
       <TableHeader>
@@ -32,7 +35,11 @@ export const CustomerList = ({ customers, onEdit }: CustomerListProps) => {
       </TableHeader>
       <TableBody>
         {customers.map((customer) => (
-          <TableRow key={customer.id}>
+          <TableRow 
+            key={customer.id}
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => navigate(`/store/${customer.id}`)}
+          >
             <TableCell>
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-gray-500" />
@@ -54,7 +61,7 @@ export const CustomerList = ({ customers, onEdit }: CustomerListProps) => {
             </TableCell>
             <TableCell>{customer.location}</TableCell>
             <TableCell>{customer.totalCarts}</TableCell>
-            <TableCell>
+            <TableCell onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="outline"
                 size="sm"
