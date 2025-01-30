@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Wrench } from "lucide-react";
+import { ShoppingCart, Wrench, Key } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
@@ -12,7 +12,7 @@ const Index = () => {
   const handleLoadingComplete = () => {
     setTimeout(() => {
       setIsLoading(false);
-    }, 200); // Small delay after reaching 100% for smooth transition
+    }, 200);
   };
 
   if (isLoading) {
@@ -61,6 +61,17 @@ const Index = () => {
                 <div className="text-sm text-gray-500">Sign in as store manager</div>
               </div>
             </Button>
+
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="link"
+                className="text-primary-600 hover:text-primary-800 flex items-center gap-2"
+                onClick={() => navigate("/forgot-password")}
+              >
+                <Key className="w-4 h-4" />
+                Forgot Password?
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
