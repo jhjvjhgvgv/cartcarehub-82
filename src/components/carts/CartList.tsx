@@ -30,7 +30,7 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
     }
 
     return (
-      <Badge className={`${statusStyles[status]} text-white`}>
+      <Badge className={`${statusStyles[status]} text-white px-4 py-1`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     )
@@ -42,11 +42,11 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>RFID Tag</TableHead>
-              <TableHead className="hidden md:table-cell">Store</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Last Maintenance</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[20%]">RFID Tag</TableHead>
+              <TableHead className="hidden md:table-cell w-[25%]">Store</TableHead>
+              <TableHead className="w-[25%]">Status</TableHead>
+              <TableHead className="hidden md:table-cell w-[20%]">Last Maintenance</TableHead>
+              <TableHead className="text-right w-[10%]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
