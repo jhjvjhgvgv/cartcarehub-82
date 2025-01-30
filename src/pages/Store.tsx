@@ -22,7 +22,6 @@ const Store = () => {
   const { id } = useParams();
   const [filters, setFilters] = useState<CartFiltersType>({
     rfidTag: "",
-    store: "",
     status: "",
   });
   const [editingCart, setEditingCart] = useState<Cart | null>(null);
@@ -61,7 +60,7 @@ const Store = () => {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-4rem)] w-full flex flex-col space-y-4 p-2 md:p-4">
+      <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">{storeData.name}</h1>
           <p className="text-sm text-gray-500">{storeData.location}</p>
@@ -105,7 +104,7 @@ const Store = () => {
           </Card>
         </div>
 
-        <Card className="flex-1 flex flex-col min-h-0">
+        <Card className="flex-1">
           <CardHeader className="py-2 md:py-3">
             <CardTitle>Carts Overview</CardTitle>
           </CardHeader>
@@ -113,7 +112,7 @@ const Store = () => {
             <div className="space-y-4">
               <CartFilters onFilterChange={setFilters} />
               
-              <ScrollArea className="h-[calc(100vh-24rem)]">
+              <ScrollArea className="h-[calc(100vh-26rem)]">
                 <Table>
                   <TableHeader>
                     <TableRow>

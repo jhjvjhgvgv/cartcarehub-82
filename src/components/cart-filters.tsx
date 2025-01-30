@@ -15,14 +15,12 @@ interface CartFiltersProps {
 
 export interface CartFilters {
   rfidTag: string
-  store: string
   status: string
 }
 
 export function CartFilters({ onFilterChange }: CartFiltersProps) {
   const [filters, setFilters] = React.useState<CartFilters>({
     rfidTag: "",
-    store: "",
     status: "",
   })
 
@@ -38,7 +36,7 @@ export function CartFilters({ onFilterChange }: CartFiltersProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label htmlFor="rfidTag">RFID Tag</Label>
         <Input
@@ -46,15 +44,6 @@ export function CartFilters({ onFilterChange }: CartFiltersProps) {
           placeholder="Search by RFID tag..."
           value={filters.rfidTag}
           onChange={(e) => handleFilterChange("rfidTag", e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="store">Store</Label>
-        <Input
-          id="store"
-          placeholder="Search by store..."
-          value={filters.store}
-          onChange={(e) => handleFilterChange("store", e.target.value)}
         />
       </div>
       <div className="space-y-2">
