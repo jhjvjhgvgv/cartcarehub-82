@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { PencilIcon, Trash2Icon } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 export interface Cart {
   id: string
@@ -22,6 +23,8 @@ interface CartListProps {
 }
 
 export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
+  const navigate = useNavigate()
+
   const getStatusBadge = (status: Cart["status"]) => {
     const statusStyles = {
       active: "bg-green-500",
@@ -34,6 +37,14 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     )
+  }
+
+  const handleRowClick = (cartId: string, event: React.MouseEvent) => {
+    // Prevent row click when clicking action buttons
+    if ((event.target as HTMLElement).closest('button')) {
+      return
+    }
+    navigate(`/carts/${cartId}`)
   }
 
   return (
@@ -51,7 +62,11 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
           </TableHeader>
           <TableBody>
             {carts.map((cart) => (
-              <TableRow key={cart.id}>
+              <TableRow 
+                key={cart.id}
+                onClick={(e) => handleRowClick(cart.id, e)}
+                className="cursor-pointer hover:bg-muted/60"
+              >
                 <TableCell className="font-medium">{cart.rfidTag}</TableCell>
                 <TableCell className="hidden md:table-cell">{cart.store}</TableCell>
                 <TableCell>{getStatusBadge(cart.status)}</TableCell>
