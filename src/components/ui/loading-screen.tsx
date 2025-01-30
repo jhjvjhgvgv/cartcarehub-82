@@ -3,7 +3,11 @@ import { ShoppingCart } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-export const LoadingScreen = () => {
+interface LoadingScreenProps {
+  onLoadingComplete?: () => void;
+}
+
+export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -11,6 +15,7 @@ export const LoadingScreen = () => {
       setProgress((prevProgress) => {
         if (prevProgress >= 100) {
           clearInterval(timer);
+          onLoadingComplete?.();
           return 100;
         }
         return prevProgress + 1;
@@ -18,7 +23,7 @@ export const LoadingScreen = () => {
     }, 40);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [onLoadingComplete]);
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-gray-950 flex flex-col items-center justify-center z-50">

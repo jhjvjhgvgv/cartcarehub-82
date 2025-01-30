@@ -9,17 +9,14 @@ const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate initial loading
-    const timer = setTimeout(() => {
+  const handleLoadingComplete = () => {
+    setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    }, 200); // Small delay after reaching 100% for smooth transition
+  };
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
 
   return (
