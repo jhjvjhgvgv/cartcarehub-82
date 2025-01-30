@@ -22,7 +22,7 @@ const Store = () => {
   // This would typically come from an API
   const storeData = {
     id: Number(id),
-    name: "SuperMart Downtown",
+    name: `SuperMart Store ${id}`,
     location: "123 Main St",
     totalCarts: 50,
     activeCarts: 45,
