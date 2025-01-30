@@ -7,18 +7,8 @@ import { PlusCircle } from "lucide-react"
 import { CartForm } from "@/components/cart-form"
 import { CartFilters, type CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { useToast } from "@/hooks/use-toast"
-import { CartList } from "@/components/carts/CartList"
+import { CartList, type Cart } from "@/components/carts/CartList"
 import { CartStats } from "@/components/carts/CartStats"
-
-interface Cart {
-  id: string
-  rfidTag: string
-  store: string
-  storeId: string // Added storeId for filtering
-  status: "active" | "maintenance" | "retired"
-  lastMaintenance: string
-  issues: string[]
-}
 
 // Mock data for managed stores (this would come from your auth/backend)
 const managedStores = [
@@ -77,7 +67,6 @@ const Carts = () => {
   const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "maintenance").length
 
   const handleAddCart = (data: any) => {
-    // Find the store ID based on the store name
     const store = managedStores.find(s => s.name === data.store)
     if (!store) {
       toast({

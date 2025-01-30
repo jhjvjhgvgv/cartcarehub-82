@@ -5,10 +5,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { PencilIcon, Trash2Icon } from "lucide-react"
 
-interface Cart {
+export interface Cart {
   id: string
   rfidTag: string
   store: string
+  storeId: string
   status: "active" | "maintenance" | "retired"
   lastMaintenance: string
   issues: string[]
