@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -17,12 +17,13 @@ interface Cart {
 
 const Store = () => {
   const { id } = useParams();
+  const location = useLocation();
   const [editingCart, setEditingCart] = useState<Cart | null>(null);
 
   // This would typically come from an API
   const storeData = {
     id: Number(id),
-    name: `SuperMart Store ${id}`,
+    name: location.state?.storeName || `Store ${id}`,
     location: "123 Main St",
     totalCarts: 50,
     activeCarts: 45,

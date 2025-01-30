@@ -128,7 +128,7 @@ const Index = () => {
                       <TableRow 
                         key={store.id}
                         className="cursor-pointer hover:bg-primary-50 transition-colors"
-                        onClick={() => navigate(`/store/${store.id}`)}
+                        onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
                       >
                         <TableCell className="font-medium">{store.name}</TableCell>
                         <TableCell>{store.location}</TableCell>
