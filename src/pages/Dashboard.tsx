@@ -2,8 +2,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, ShoppingCart, ChevronRight, BarChart } from "lucide-react";
+import { Building2, ShoppingCart, ChevronRight, BarChart, Percent, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,6 +17,8 @@ const Index = () => {
       totalCarts: 50,
       activeCarts: 45,
       maintenanceNeeded: 5,
+      utilizationRate: 90,
+      maintenanceRate: 10,
     },
     {
       id: 2,
@@ -24,6 +27,8 @@ const Index = () => {
       totalCarts: 75,
       activeCarts: 70,
       maintenanceNeeded: 5,
+      utilizationRate: 93,
+      maintenanceRate: 7,
     },
     {
       id: 3,
@@ -32,6 +37,8 @@ const Index = () => {
       totalCarts: 25,
       activeCarts: 15,
       maintenanceNeeded: 10,
+      utilizationRate: 60,
+      maintenanceRate: 40,
     },
   ];
 
@@ -40,6 +47,18 @@ const Index = () => {
     totalCarts: stores.reduce((sum, store) => sum + store.totalCarts, 0),
     activeCarts: stores.reduce((sum, store) => sum + store.activeCarts, 0),
     maintenanceNeeded: stores.reduce((sum, store) => sum + store.maintenanceNeeded, 0),
+  };
+
+  const getUtilizationColor = (rate: number) => {
+    if (rate >= 90) return "text-green-600";
+    if (rate >= 70) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getMaintenanceColor = (rate: number) => {
+    if (rate <= 10) return "text-green-600";
+    if (rate <= 20) return "text-yellow-600";
+    return "text-red-600";
   };
 
   return (
@@ -99,14 +118,9 @@ const Index = () => {
                   <TableRow>
                     <TableHead className="w-[200px]">Store Name</TableHead>
                     <TableHead className="hidden sm:table-cell">Location</TableHead>
-                    <TableHead className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Total Carts</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right hidden sm:table-cell">Active</TableHead>
-                    <TableHead className="text-right hidden sm:table-cell">Maintenance</TableHead>
+                    <TableHead className="text-right">Cart Status</TableHead>
+                    <TableHead className="text-right">Utilization</TableHead>
+                    <TableHead className="text-right">Maintenance</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -119,9 +133,28 @@ const Index = () => {
                     >
                       <TableCell className="font-medium">{store.name}</TableCell>
                       <TableCell className="hidden sm:table-cell">{store.location}</TableCell>
-                      <TableCell className="text-right">{store.totalCarts}</TableCell>
-                      <TableCell className="text-right hidden sm:table-cell text-green-600">{store.activeCarts}</TableCell>
-                      <TableCell className="text-right hidden sm:table-cell text-yellow-600">{store.maintenanceNeeded}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end items-center space-x-2">
+                          <ShoppingCart className="w-4 h-4 text-primary-600" />
+                          <span>{store.activeCarts}/{store.totalCarts}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end items-center space-x-2">
+                          <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
+                          <span className={getUtilizationColor(store.utilizationRate)}>
+                            {store.utilizationRate}%
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end items-center space-x-2">
+                          <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
+                          <span className={getMaintenanceColor(store.maintenanceRate)}>
+                            {store.maintenanceRate}%
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       </TableCell>
