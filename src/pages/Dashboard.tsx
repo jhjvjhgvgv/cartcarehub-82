@@ -4,7 +4,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Building2, ShoppingCart, ChevronRight, BarChart, Percent, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -42,7 +41,6 @@ const Index = () => {
     },
   ];
 
-  // Calculate total statistics
   const stats = {
     totalCarts: stores.reduce((sum, store) => sum + store.totalCarts, 0),
     activeCarts: stores.reduce((sum, store) => sum + store.activeCarts, 0),
@@ -113,55 +111,57 @@ const Index = () => {
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-22rem)]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Store Name</TableHead>
-                    <TableHead className="hidden sm:table-cell">Location</TableHead>
-                    <TableHead className="text-right">Cart Status</TableHead>
-                    <TableHead className="text-right">Utilization</TableHead>
-                    <TableHead className="text-right">Maintenance</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stores.map((store) => (
-                    <TableRow 
-                      key={store.id}
-                      className="cursor-pointer hover:bg-primary-50 transition-colors"
-                      onClick={() => navigate(`/store/${store.id}`)}
-                    >
-                      <TableCell className="font-medium">{store.name}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{store.location}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-end items-center space-x-2">
-                          <ShoppingCart className="w-4 h-4 text-primary-600" />
-                          <span>{store.activeCarts}/{store.totalCarts}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end items-center space-x-2">
-                          <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
-                          <span className={getUtilizationColor(store.utilizationRate)}>
-                            {store.utilizationRate}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end items-center space-x-2">
-                          <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
-                          <span className={getMaintenanceColor(store.maintenanceRate)}>
-                            {store.maintenanceRate}%
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                      </TableCell>
+              <div className="min-w-full overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Store Name</TableHead>
+                      <TableHead className="hidden sm:table-cell">Location</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Cart Status</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Utilization</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Maintenance</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {stores.map((store) => (
+                      <TableRow 
+                        key={store.id}
+                        className="cursor-pointer hover:bg-primary-50 transition-colors"
+                        onClick={() => navigate(`/store/${store.id}`)}
+                      >
+                        <TableCell className="font-medium min-w-[120px]">{store.name}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{store.location}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex justify-end items-center space-x-2">
+                            <ShoppingCart className="w-4 h-4 text-primary-600" />
+                            <span>{store.activeCarts}/{store.totalCarts}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex justify-end items-center space-x-2">
+                            <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
+                            <span className={getUtilizationColor(store.utilizationRate)}>
+                              {store.utilizationRate}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex justify-end items-center space-x-2">
+                            <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
+                            <span className={getMaintenanceColor(store.maintenanceRate)}>
+                              {store.maintenanceRate}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </ScrollArea>
           </CardContent>
         </Card>
