@@ -3,11 +3,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import DashboardLayout from "@/components/DashboardLayout";
 import { ShoppingCart, AlertTriangle, CheckCircle, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
-  
   // Dummy data for initial display
   const stores = [
     {
@@ -49,10 +46,7 @@ const Index = () => {
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
-          <Card 
-            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-primary-600 hover:-translate-y-1"
-            onClick={() => navigate('/carts')}
-          >
+          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
@@ -64,10 +58,7 @@ const Index = () => {
             </div>
           </Card>
 
-          <Card 
-            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-green-600 hover:-translate-y-1"
-            onClick={() => navigate('/customers')}
-          >
+          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-50 rounded-full">
                 <CheckCircle className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
@@ -79,10 +70,7 @@ const Index = () => {
             </div>
           </Card>
 
-          <Card 
-            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-yellow-600 hover:-translate-y-1"
-            onClick={() => navigate('/settings')}
-          >
+          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-yellow-50 rounded-full">
                 <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
