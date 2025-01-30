@@ -78,17 +78,17 @@ const Customers = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="flex min-h-[calc(100vh-4rem)] flex-col space-y-6 p-4 md:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
           <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
-                <PlusCircle className="w-4 h-4" />
+                <PlusCircle className="h-4 w-4" />
                 Add New Customer
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>Add New Customer</DialogTitle>
               </DialogHeader>
@@ -97,25 +97,27 @@ const Customers = () => {
           </Dialog>
         </div>
 
-        <Card>
+        <Card className="flex-1">
           <CardHeader>
             <CardTitle>All Customers</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px]">
-              <CustomerList
-                customers={customers}
-                onEdit={(customer) => {
-                  setSelectedCustomer(customer);
-                  setIsEditCustomerOpen(true);
-                }}
-              />
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-20rem)]">
+              <div className="p-4">
+                <CustomerList
+                  customers={customers}
+                  onEdit={(customer) => {
+                    setSelectedCustomer(customer);
+                    setIsEditCustomerOpen(true);
+                  }}
+                />
+              </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
         <Dialog open={isEditCustomerOpen} onOpenChange={setIsEditCustomerOpen}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Edit Customer</DialogTitle>
             </DialogHeader>
