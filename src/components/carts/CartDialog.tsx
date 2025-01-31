@@ -2,6 +2,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { CartForm } from "@/components/cart-form"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface CartDialogProps {
   isOpen: boolean
@@ -19,6 +21,8 @@ export function CartDialog({
   managedStores,
 }: CartDialogProps) {
   const { toast } = useToast()
+  const isMultipleEdit = editingCart?.id.includes(",")
+  const cartIds = isMultipleEdit ? editingCart?.id.split(",") : []
 
   const handleSubmit = (data: any) => {
     const store = managedStores.find((s) => s.name === data.store)
@@ -35,28 +39,84 @@ export function CartDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogTitle>{editingCart ? "Edit Cart" : "Add New Cart"}</DialogTitle>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+        <DialogTitle>
+          {isMultipleEdit ? "Edit Multiple Carts" : editingCart ? "Edit Cart" : "Add New Cart"}
+        </DialogTitle>
         <DialogDescription>
-          {editingCart 
-            ? "Update the cart details below." 
-            : "Fill in the details to add a new cart to the system."}
+          {isMultipleEdit 
+            ? "Edit multiple carts individually or apply changes to all selected carts."
+            : editingCart 
+              ? "Update the cart details below." 
+              : "Fill in the details to add a new cart to the system."}
         </DialogDescription>
-        <CartForm
-          initialData={
-            editingCart
-              ? {
-                  rfidTag: editingCart.rfidTag,
-                  store: editingCart.store,
-                  status: editingCart.status,
-                  lastMaintenance: editingCart.lastMaintenance,
-                  issues: editingCart.issues.join("\n"),
-                }
-              : undefined
-          }
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-        />
+        
+        {isMultipleEdit ? (
+          <Tabs defaultValue="individual" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="individual">Individual Edits</TabsTrigger>
+              <TabsTrigger value="bulk">Bulk Edit</TabsTrigger>
+            </TabsList>
+            <TabsContent value="individual">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-6">
+                  {cartIds.map((cartId) => {
+                    const cart = editingCart as Cart
+                    return (
+                      <div key={cartId} className="border rounded-lg p-4">
+                        <h4 className="text-sm font-medium mb-4">Cart ID: {cartId}</h4>
+                        <CartForm
+                          initialData={{
+                            rfidTag: cart.rfidTag,
+                            store: cart.store,
+                            status: cart.status,
+                            lastMaintenance: cart.lastMaintenance,
+                            issues: Array.isArray(cart.issues) ? cart.issues.join("\n") : "",
+                          }}
+                          onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
+                          onCancel={() => onOpenChange(false)}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+            <TabsContent value="bulk">
+              <CartForm
+                initialData={{
+                  rfidTag: "Multiple Carts",
+                  store: editingCart?.store || "",
+                  status: editingCart?.status || "active",
+                  lastMaintenance: editingCart?.lastMaintenance || "",
+                  issues: Array.isArray(editingCart?.issues) 
+                    ? editingCart.issues.join("\n") 
+                    : "",
+                }}
+                onSubmit={handleSubmit}
+                onCancel={() => onOpenChange(false)}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <CartForm
+            initialData={
+              editingCart
+                ? {
+                    rfidTag: editingCart.rfidTag,
+                    store: editingCart.store,
+                    status: editingCart.status,
+                    lastMaintenance: editingCart.lastMaintenance,
+                    issues: Array.isArray(editingCart.issues) 
+                      ? editingCart.issues.join("\n") 
+                      : "",
+                  }
+                : undefined
+            }
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )

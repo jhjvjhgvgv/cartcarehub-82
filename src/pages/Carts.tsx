@@ -69,7 +69,7 @@ const Carts = () => {
     const commonValues = {
       status: selectedCarts.every(cart => cart.status === selectedCarts[0].status) 
         ? selectedCarts[0].status 
-        : "",
+        : "active",
       store: selectedCarts.every(cart => cart.store === selectedCarts[0].store)
         ? selectedCarts[0].store
         : "",
@@ -91,52 +91,56 @@ const Carts = () => {
     setIsAddDialogOpen(true)
   }
 
-  const handleAddCart = (data: any) => {
-    const store = managedStores.find(s => s.name === data.store)
-    if (!store) return
-
-    const newCart: Cart = {
-      id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
-      rfidTag: data.rfidTag,
-      store: data.store,
-      storeId: store.id,
-      status: data.status,
-      lastMaintenance: data.lastMaintenance,
-      issues: data.issues ? data.issues.split('\n') : [],
-    }
-    setCarts([...carts, newCart])
-    setIsAddDialogOpen(false)
-    toast({
-      title: "Cart Added",
-      description: "New cart has been successfully added to the system.",
-    })
-  }
-
   const handleSubmit = (data: any) => {
     if (editingCart) {
       if (editingCart.id.includes(",")) {
-        // Handling bulk edit
-        const cartIds = editingCart.id.split(",")
-        const updatedCarts = carts.map(cart => {
-          if (cartIds.includes(cart.id)) {
-            const store = managedStores.find(s => s.name === data.store)
-            return {
-              ...cart,
-              status: data.status || cart.status,
-              store: data.store || cart.store,
-              storeId: store?.id || cart.storeId,
-              lastMaintenance: data.lastMaintenance || cart.lastMaintenance,
-              issues: data.issues ? data.issues.split('\n') : cart.issues,
+        // Handle individual cart updates
+        if (data.id) {
+          const updatedCarts = carts.map(cart => {
+            if (cart.id === data.id) {
+              const store = managedStores.find(s => s.name === data.store)
+              return {
+                ...cart,
+                rfidTag: data.rfidTag,
+                store: data.store,
+                storeId: store?.id || cart.storeId,
+                status: data.status,
+                lastMaintenance: data.lastMaintenance,
+                issues: data.issues ? data.issues.split('\n') : [],
+              }
             }
-          }
-          return cart
-        })
-        setCarts(updatedCarts)
-        toast({
-          title: "Carts Updated",
-          description: `Successfully updated ${cartIds.length} carts.`,
-        })
+            return cart
+          })
+          setCarts(updatedCarts)
+          toast({
+            title: "Cart Updated",
+            description: `Cart ${data.id} has been successfully updated.`,
+          })
+        } else {
+          // Handle bulk update
+          const cartIds = editingCart.id.split(",")
+          const updatedCarts = carts.map(cart => {
+            if (cartIds.includes(cart.id)) {
+              const store = managedStores.find(s => s.name === data.store)
+              return {
+                ...cart,
+                status: data.status || cart.status,
+                store: data.store || cart.store,
+                storeId: store?.id || cart.storeId,
+                lastMaintenance: data.lastMaintenance || cart.lastMaintenance,
+                issues: data.issues ? data.issues.split('\n') : cart.issues,
+              }
+            }
+            return cart
+          })
+          setCarts(updatedCarts)
+          toast({
+            title: "Carts Updated",
+            description: `Successfully updated ${cartIds.length} carts.`,
+          })
+        }
       } else {
+        // Handle single cart update
         const store = managedStores.find(s => s.name === data.store)
         if (!store) return
 
@@ -160,7 +164,24 @@ const Carts = () => {
         })
       }
     } else {
-      handleAddCart(data)
+      // Handle adding new cart
+      const store = managedStores.find(s => s.name === data.store)
+      if (!store) return
+
+      const newCart: Cart = {
+        id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
+        rfidTag: data.rfidTag,
+        store: data.store,
+        storeId: store.id,
+        status: data.status,
+        lastMaintenance: data.lastMaintenance,
+        issues: data.issues ? data.issues.split('\n') : [],
+      }
+      setCarts([...carts, newCart])
+      toast({
+        title: "Cart Added",
+        description: "New cart has been successfully added to the system.",
+      })
     }
     setIsAddDialogOpen(false)
     setEditingCart(null)
