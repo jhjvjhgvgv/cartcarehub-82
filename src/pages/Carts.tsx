@@ -7,8 +7,9 @@ import { PlusCircle } from "lucide-react"
 import { CartForm } from "@/components/cart-form"
 import { CartFilters, type CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { useToast } from "@/hooks/use-toast"
-import { CartList, type Cart } from "@/components/carts/CartList"
+import { CartList } from "@/components/carts/CartList"
 import { CartStats } from "@/components/carts/CartStats"
+import { Cart } from "@/types/cart"
 
 // Mock data for managed stores (this would come from your auth/backend)
 const managedStores = [
