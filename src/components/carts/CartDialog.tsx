@@ -115,7 +115,7 @@ export function CartDialog({
             <TabsContent value="bulk">
               <CartForm
                 initialData={{
-                  rfidTag: editingCart?.originalCarts?.[0]?.rfidTag || "",
+                  rfidTag: editingCart?.rfidTag || "",
                   store: editingCart?.store || "",
                   status: editingCart?.status || "active",
                   lastMaintenance: editingCart?.lastMaintenance || "",
@@ -147,10 +147,10 @@ export function CartDialog({
               initialData={
                 editingCart
                   ? {
-                      rfidTag: editingCart.rfidTag,
-                      store: editingCart.store,
-                      status: editingCart.status,
-                      lastMaintenance: editingCart.lastMaintenance,
+                      rfidTag: editingCart.rfidTag || "",
+                      store: editingCart.store || "",
+                      status: editingCart.status || "active",
+                      lastMaintenance: editingCart.lastMaintenance || "",
                       issues: Array.isArray(editingCart.issues) 
                         ? editingCart.issues.join("\n") 
                         : "",
