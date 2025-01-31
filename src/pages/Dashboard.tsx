@@ -73,7 +73,7 @@ const Index = () => {
               <div className="p-2 bg-primary-50 rounded-full">
                 <Building2 className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <p className="text-xs md:text-sm text-gray-500">Total Stores</p>
                 <p className="text-sm md:text-xl font-bold text-gray-900">{stores.length}</p>
               </div>
@@ -85,7 +85,7 @@ const Index = () => {
               <div className="p-2 bg-green-50 rounded-full">
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <p className="text-xs md:text-sm text-gray-500">Total Carts</p>
                 <p className="text-sm md:text-xl font-bold text-gray-900">{stats.totalCarts}</p>
               </div>
@@ -97,7 +97,7 @@ const Index = () => {
               <div className="p-2 bg-yellow-50 rounded-full">
                 <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <p className="text-xs md:text-sm text-gray-500">Needs Maintenance</p>
                 <p className="text-sm md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
               </div>
@@ -130,8 +130,16 @@ const Index = () => {
                         className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[140px] md:min-h-[60px]"
                         onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
                       >
-                        <TableCell className="font-medium py-4 text-xs md:text-sm">{store.name}</TableCell>
-                        <TableCell className="py-4 text-xs md:text-sm">{store.location}</TableCell>
+                        <TableCell className="font-medium py-4 text-xs md:text-sm">
+                          <div className="flex flex-col md:flex-row items-start md:items-center">
+                            {store.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 text-xs md:text-sm">
+                          <div className="flex flex-col md:flex-row items-start md:items-center">
+                            {store.location}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right py-4">
                           <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
                             <ShoppingCart className="w-4 h-4 text-primary-600" />
