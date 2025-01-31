@@ -17,7 +17,11 @@ export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowPr
       className="cursor-pointer hover:bg-muted/60"
     >
       <TableCell className="py-4 px-4">
-        <div className="font-medium">{cart.rfidTag}</div>
+        <div className="grid gap-1">
+          <div className="font-medium">{cart.rfidTag}</div>
+          <div className="sm:hidden text-sm text-muted-foreground">{cart.store}</div>
+          <div className="sm:hidden text-sm text-muted-foreground">Last Maintenance: {cart.lastMaintenance}</div>
+        </div>
       </TableCell>
       <TableCell className="hidden sm:table-cell py-4 px-4">
         <div>{cart.store}</div>
