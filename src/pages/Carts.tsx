@@ -81,9 +81,11 @@ const Carts = () => {
         : "",
     }
 
+    const store = managedStores.find(s => s.name === commonValues.store)
     setEditingCart({
       id: selectedCarts.map(cart => cart.id).join(","),
       rfidTag: "Multiple Carts",
+      storeId: store?.id || "",
       ...commonValues,
     } as Cart)
     setIsAddDialogOpen(true)
@@ -118,14 +120,13 @@ const Carts = () => {
         const updatedCarts = carts.map(cart => {
           if (cartIds.includes(cart.id)) {
             const store = managedStores.find(s => s.name === data.store)
-            if (!store) return cart
             return {
               ...cart,
-              status: data.status,
-              store: data.store,
-              storeId: store.id,
-              lastMaintenance: data.lastMaintenance,
-              issues: data.issues ? [data.issues] : [],
+              status: data.status || cart.status,
+              store: data.store || cart.store,
+              storeId: store?.id || cart.storeId,
+              lastMaintenance: data.lastMaintenance || cart.lastMaintenance,
+              issues: data.issues ? [data.issues] : cart.issues,
             }
           }
           return cart
@@ -163,15 +164,6 @@ const Carts = () => {
     }
     setIsAddDialogOpen(false)
     setEditingCart(null)
-  }
-
-  const handleDeleteCart = (cartId: string) => {
-    setCarts(carts.filter((cart) => cart.id !== cartId))
-    toast({
-      title: "Cart Deleted",
-      description: "Cart has been successfully removed from the system.",
-      variant: "destructive",
-    })
   }
 
   return (

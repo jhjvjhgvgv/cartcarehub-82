@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table"
 import { Cart } from "@/types/cart"
 import { CartTableRow } from "./CartTableRow"
