@@ -11,9 +11,18 @@ interface CartTableRowProps {
 }
 
 export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowProps) {
+  const handleRowClick = (event: React.MouseEvent) => {
+    // Only trigger click if not clicking on actions
+    const target = event.target as HTMLElement
+    const isButton = target.tagName === 'BUTTON' || target.closest('button')
+    if (!isButton) {
+      onClick(cart.id, event)
+    }
+  }
+
   return (
     <TableRow 
-      onClick={(e) => onClick(cart.id, e)}
+      onClick={handleRowClick}
       className="cursor-pointer hover:bg-muted/60"
     >
       <TableCell className="py-4 px-4">

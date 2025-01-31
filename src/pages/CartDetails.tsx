@@ -3,26 +3,61 @@ import { useParams } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Cart } from "@/types/cart"
 
 // This would typically come from an API call using the cartId
-const getCartDetails = (cartId: string) => {
+const getCartDetails = (cartId: string): Cart => {
   // Mock data - in a real app, this would be fetched from an API
-  return {
-    id: cartId,
-    rfidTag: "RFID-A123",
-    store: "SuperMart Downtown",
-    storeId: "store1",
-    status: "active" as const,
-    lastMaintenance: "2024-02-15",
-    issues: ["Wheel alignment needed"],
+  const mockCarts: Cart[] = [
+    {
+      id: "CART-001",
+      rfidTag: "RFID-A123",
+      store: "SuperMart Downtown",
+      storeId: "store1",
+      status: "active",
+      lastMaintenance: "2024-02-15",
+      issues: ["Wheel alignment needed"],
+    },
+    {
+      id: "CART-002",
+      rfidTag: "RFID-B456",
+      store: "SuperMart Downtown",
+      storeId: "store1",
+      status: "maintenance",
+      lastMaintenance: "2024-01-20",
+      issues: ["Handle loose", "Left wheel damaged"],
+    },
+    {
+      id: "CART-003",
+      rfidTag: "RFID-C789",
+      store: "FreshMart Heights",
+      storeId: "store2",
+      status: "active",
+      lastMaintenance: "2024-02-10",
+      issues: [],
+    },
+  ]
+
+  const cart = mockCarts.find(cart => cart.id === cartId)
+  if (!cart) {
+    throw new Error(`Cart with ID ${cartId} not found`)
   }
+  return cart
 }
 
 export default function CartDetails() {
-  const { cartId } = useParams()
-  const cart = getCartDetails(cartId || "")
+  const { cartId } = useParams<{ cartId: string }>()
+  const cart = cartId ? getCartDetails(cartId) : null
 
-  const getStatusBadge = (status: "active" | "maintenance" | "retired") => {
+  if (!cart) {
+    return (
+      <DashboardLayout>
+        <div className="p-4 text-center">Cart not found</div>
+      </DashboardLayout>
+    )
+  }
+
+  const getStatusBadge = (status: Cart["status"]) => {
     const statusStyles = {
       active: "bg-green-500",
       maintenance: "bg-yellow-500",
@@ -64,7 +99,7 @@ export default function CartDetails() {
                   <p className="text-lg">{cart.lastMaintenance}</p>
                 </div>
               </div>
-              {cart.issues.length > 0 && (
+              {cart.issues && cart.issues.length > 0 && (
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-2">Issues</p>
                   <ul className="list-disc pl-5 space-y-1">
