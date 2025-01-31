@@ -32,7 +32,7 @@ export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowPr
       <TableCell className="hidden sm:table-cell py-4 px-4">
         <div>{cart.lastMaintenance}</div>
       </TableCell>
-      <TableCell className="py-4 px-1">
+      <TableCell className="py-2 px-2">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
       </TableCell>
     </TableRow>
