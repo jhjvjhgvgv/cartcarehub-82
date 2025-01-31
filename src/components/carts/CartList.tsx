@@ -24,10 +24,11 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
   const navigate = useNavigate()
 
   const handleRowClick = (cartId: string, event: React.MouseEvent) => {
-    if ((event.target as HTMLElement).closest('button')) {
-      return
+    // Check if the click was on a button (edit or delete)
+    const isButton = (event.target as HTMLElement).closest('button')
+    if (!isButton) {
+      navigate(`/carts/${cartId}`)
     }
-    navigate(`/carts/${cartId}`)
   }
 
   return (
