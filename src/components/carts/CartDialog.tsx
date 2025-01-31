@@ -63,24 +63,16 @@ export function CartDialog({
                   {cartIds.map((cartId) => {
                     const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
 
-                    const cartData = {
-                      rfidTag: originalCart?.rfidTag || editingCart?.rfidTag || '',
-                      store: editingCart?.store || '',
-                      status: editingCart?.status || 'active',
-                      lastMaintenance: editingCart?.lastMaintenance || '',
-                      issues: editingCart?.issues || [],
-                    }
-
                     return (
                       <div key={cartId} className="border rounded-lg p-4">
                         <h4 className="text-sm font-medium mb-4">Cart ID: {cartId}</h4>
                         <CartForm
                           initialData={{
-                            rfidTag: cartData.rfidTag,
-                            store: cartData.store,
-                            status: cartData.status,
-                            lastMaintenance: cartData.lastMaintenance,
-                            issues: Array.isArray(cartData.issues) ? cartData.issues.join("\n") : "",
+                            rfidTag: originalCart?.rfidTag || "",
+                            store: editingCart?.store || "",
+                            status: editingCart?.status || "active",
+                            lastMaintenance: editingCart?.lastMaintenance || "",
+                            issues: Array.isArray(editingCart?.issues) ? editingCart.issues.join("\n") : "",
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
