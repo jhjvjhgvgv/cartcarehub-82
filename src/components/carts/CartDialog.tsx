@@ -4,11 +4,14 @@ import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Trash2Icon } from "lucide-react"
 
 interface CartDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: any) => void
+  onDelete: (cartId: string) => void
   editingCart: Cart | null
   managedStores: Array<{ id: string; name: string }>
 }
@@ -17,6 +20,7 @@ export function CartDialog({
   isOpen,
   onOpenChange,
   onSubmit,
+  onDelete,
   editingCart,
   managedStores,
 }: CartDialogProps) {
@@ -35,6 +39,15 @@ export function CartDialog({
       return
     }
     onSubmit(data)
+  }
+
+  const handleDelete = (cartId: string) => {
+    onDelete(cartId)
+    onOpenChange(false)
+    toast({
+      title: "Cart Deleted",
+      description: "The cart has been successfully deleted.",
+    })
   }
 
   return (
@@ -65,7 +78,17 @@ export function CartDialog({
 
                     return (
                       <div key={cartId} className="border rounded-lg p-4">
-                        <h4 className="text-sm font-medium mb-4">Cart ID: {cartId}</h4>
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-sm font-medium">Cart ID: {cartId}</h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(cartId)}
+                            className="h-8 w-8 p-0 hover:bg-red-50"
+                          >
+                            <Trash2Icon className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
                         <CartForm
                           initialData={{
                             rfidTag: originalCart?.rfidTag || "",
@@ -102,24 +125,38 @@ export function CartDialog({
             </TabsContent>
           </Tabs>
         ) : (
-          <CartForm
-            initialData={
-              editingCart
-                ? {
-                    rfidTag: editingCart.rfidTag,
-                    store: editingCart.store,
-                    status: editingCart.status,
-                    lastMaintenance: editingCart.lastMaintenance,
-                    issues: Array.isArray(editingCart.issues) 
-                      ? editingCart.issues.join("\n") 
-                      : "",
-                  }
-                : undefined
-            }
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-            disableRfidTag={false}
-          />
+          <div>
+            {editingCart && (
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(editingCart.id)}
+                  className="h-8 w-8 p-0 hover:bg-red-50"
+                >
+                  <Trash2Icon className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            )}
+            <CartForm
+              initialData={
+                editingCart
+                  ? {
+                      rfidTag: editingCart.rfidTag,
+                      store: editingCart.store,
+                      status: editingCart.status,
+                      lastMaintenance: editingCart.lastMaintenance,
+                      issues: Array.isArray(editingCart.issues) 
+                        ? editingCart.issues.join("\n") 
+                        : "",
+                    }
+                  : undefined
+              }
+              onSubmit={handleSubmit}
+              onCancel={() => onOpenChange(false)}
+              disableRfidTag={false}
+            />
+          </div>
         )}
       </DialogContent>
     </Dialog>
