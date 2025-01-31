@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { PencilIcon, Trash2Icon } from "lucide-react"
-import { Cart } from "./CartList"
+import { Cart } from "@/types/cart"
 
 interface CartActionsProps {
   cart: Cart

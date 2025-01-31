@@ -1,5 +1,5 @@
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Cart } from "./CartList"
+import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table"
+import { Cart } from "@/types/cart"
 import { CartTableRow } from "./CartTableRow"
 import { useNavigate } from "react-router-dom"
 

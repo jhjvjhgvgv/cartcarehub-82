@@ -1,5 +1,5 @@
 import { TableCell, TableRow } from "@/components/ui/table"
-import { Cart } from "./CartList"
+import { Cart } from "@/types/cart"
 import { CartStatusBadge } from "./CartStatusBadge"
 import { CartActions } from "./CartActions"
 

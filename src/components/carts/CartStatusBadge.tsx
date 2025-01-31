@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { Cart } from "./CartList"
+import { Cart } from "@/types/cart"
 
 interface CartStatusBadgeProps {
   status: Cart["status"]
