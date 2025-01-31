@@ -41,9 +41,10 @@ interface CartFormProps {
   initialData?: CartFormValues
   onSubmit: (data: CartFormValues) => void
   onCancel: () => void
+  disableRfidTag?: boolean
 }
 
-export function CartForm({ initialData, onSubmit, onCancel }: CartFormProps) {
+export function CartForm({ initialData, onSubmit, onCancel, disableRfidTag = false }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
     defaultValues: initialData || {
@@ -65,7 +66,12 @@ export function CartForm({ initialData, onSubmit, onCancel }: CartFormProps) {
             <FormItem>
               <FormLabel>RFID Tag</FormLabel>
               <FormControl>
-                <Input placeholder="Enter RFID tag" {...field} />
+                <Input 
+                  placeholder="Enter RFID tag" 
+                  {...field} 
+                  disabled={disableRfidTag}
+                  className={disableRfidTag ? "bg-gray-100" : ""}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

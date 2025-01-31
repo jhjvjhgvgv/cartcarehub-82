@@ -61,9 +61,13 @@ export function CartDialog({
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-6">
                   {cartIds.map((cartId) => {
-                    // Find the specific cart data for this ID
+                    // Find the original cart data from the carts array
+                    const originalCart = editingCart && Array.isArray(editingCart.originalCarts) 
+                      ? editingCart.originalCarts.find(cart => cart.id === cartId)
+                      : null;
+
                     const cartData = {
-                      rfidTag: editingCart?.rfidTag || '',
+                      rfidTag: originalCart?.rfidTag || editingCart?.rfidTag || '',
                       store: editingCart?.store || '',
                       status: editingCart?.status || 'active',
                       lastMaintenance: editingCart?.lastMaintenance || '',
@@ -83,6 +87,7 @@ export function CartDialog({
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
+                          disableRfidTag={false}
                         />
                       </div>
                     )
@@ -103,6 +108,7 @@ export function CartDialog({
                 }}
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
+                disableRfidTag={true}
               />
             </TabsContent>
           </Tabs>
@@ -123,6 +129,7 @@ export function CartDialog({
             }
             onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
+            disableRfidTag={false}
           />
         )}
       </DialogContent>
