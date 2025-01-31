@@ -2,18 +2,21 @@ import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@
 import { Cart } from "@/types/cart"
 import { CartTableRow } from "./CartTableRow"
 import { useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface CartListProps {
   carts: Cart[]
   onEditCart: (cart: Cart) => void
   onDeleteCart: (cartId: string) => void
+  onEditMultiple: (carts: Cart[]) => void
 }
 
-export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
+export function CartList({ carts, onEditCart, onDeleteCart, onEditMultiple }: CartListProps) {
   const navigate = useNavigate()
+  const [selectedCarts, setSelectedCarts] = useState<string[]>([])
 
   const handleRowClick = (cartId: string, event: React.MouseEvent) => {
-    // Only navigate if the click target is not a button
     const target = event.target as HTMLElement
     const isButton = target.tagName === 'BUTTON' || target.closest('button')
     
@@ -22,38 +25,77 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
     }
   }
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCarts(carts.map(cart => cart.id))
+    } else {
+      setSelectedCarts([])
+    }
+  }
+
+  const handleSelectCart = (cartId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedCarts([...selectedCarts, cartId])
+    } else {
+      setSelectedCarts(selectedCarts.filter(id => id !== cartId))
+    }
+  }
+
+  const handleEditSelected = () => {
+    const selectedCartObjects = carts.filter(cart => selectedCarts.includes(cart.id))
+    onEditMultiple(selectedCartObjects)
+  }
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="py-4 px-4">RFID Tag</TableHead>
-            <TableHead className="hidden sm:table-cell py-4 px-4">Store</TableHead>
-            <TableHead className="py-4 px-4">Status</TableHead>
-            <TableHead className="hidden sm:table-cell py-4 px-4">Last Maintenance</TableHead>
-            <TableHead className="py-2 px-2 w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {carts.length === 0 ? (
+    <div>
+      {selectedCarts.length > 0 && (
+        <div className="mb-4 p-4 bg-muted rounded-lg flex items-center justify-between">
+          <span>{selectedCarts.length} carts selected</span>
+          <Button onClick={handleEditSelected}>
+            Edit Selected
+          </Button>
+        </div>
+      )}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4">
-                No carts found
-              </TableCell>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={selectedCarts.length === carts.length && carts.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead className="py-4 px-4">RFID Tag</TableHead>
+              <TableHead className="hidden sm:table-cell py-4 px-4">Store</TableHead>
+              <TableHead className="py-4 px-4">Status</TableHead>
+              <TableHead className="hidden sm:table-cell py-4 px-4">Last Maintenance</TableHead>
+              <TableHead className="py-2 px-2 w-[100px]">Actions</TableHead>
             </TableRow>
-          ) : (
-            carts.map((cart) => (
-              <CartTableRow
-                key={cart.id}
-                cart={cart}
-                onEdit={onEditCart}
-                onDelete={onDeleteCart}
-                onClick={handleRowClick}
-              />
-            ))
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {carts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">
+                  No carts found
+                </TableCell>
+              </TableRow>
+            ) : (
+              carts.map((cart) => (
+                <CartTableRow
+                  key={cart.id}
+                  cart={cart}
+                  onEdit={onEditCart}
+                  onDelete={onDeleteCart}
+                  onClick={handleRowClick}
+                  isSelected={selectedCarts.includes(cart.id)}
+                  onSelect={handleSelectCart}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

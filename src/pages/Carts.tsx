@@ -9,7 +9,6 @@ import { CartDialog } from "@/components/carts/CartDialog"
 import { CartHeader } from "@/components/carts/CartHeader"
 import { Cart } from "@/types/cart"
 
-// Mock data for managed stores (this would come from your auth/backend)
 const managedStores = [
   { id: "store1", name: "SuperMart Downtown" },
   { id: "store2", name: "FreshMart Heights" },
@@ -66,6 +65,30 @@ const Carts = () => {
   const activeCarts = filteredCarts.filter((cart) => cart.status === "active").length
   const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "maintenance").length
 
+  const handleEditMultiple = (selectedCarts: Cart[]) => {
+    const commonValues = {
+      status: selectedCarts.every(cart => cart.status === selectedCarts[0].status) 
+        ? selectedCarts[0].status 
+        : "",
+      store: selectedCarts.every(cart => cart.store === selectedCarts[0].store)
+        ? selectedCarts[0].store
+        : "",
+      lastMaintenance: selectedCarts.every(cart => cart.lastMaintenance === selectedCarts[0].lastMaintenance)
+        ? selectedCarts[0].lastMaintenance
+        : "",
+      issues: selectedCarts.every(cart => cart.issues.join(",") === selectedCarts[0].issues.join(","))
+        ? selectedCarts[0].issues.join("\n")
+        : "",
+    }
+
+    setEditingCart({
+      id: selectedCarts.map(cart => cart.id).join(","),
+      rfidTag: "Multiple Carts",
+      ...commonValues,
+    } as Cart)
+    setIsAddDialogOpen(true)
+  }
+
   const handleAddCart = (data: any) => {
     const store = managedStores.find(s => s.name === data.store)
     if (!store) return
@@ -87,30 +110,59 @@ const Carts = () => {
     })
   }
 
-  const handleEditCart = (data: any) => {
-    if (!editingCart) return
-    const store = managedStores.find(s => s.name === data.store)
-    if (!store) return
-
-    const updatedCarts = carts.map((cart) =>
-      cart.id === editingCart.id
-        ? {
-            ...cart,
-            rfidTag: data.rfidTag,
-            store: data.store,
-            storeId: store.id,
-            status: data.status,
-            lastMaintenance: data.lastMaintenance,
-            issues: data.issues ? [data.issues] : [],
+  const handleSubmit = (data: any) => {
+    if (editingCart) {
+      if (editingCart.id.includes(",")) {
+        // Handling bulk edit
+        const cartIds = editingCart.id.split(",")
+        const updatedCarts = carts.map(cart => {
+          if (cartIds.includes(cart.id)) {
+            const store = managedStores.find(s => s.name === data.store)
+            if (!store) return cart
+            return {
+              ...cart,
+              status: data.status,
+              store: data.store,
+              storeId: store.id,
+              lastMaintenance: data.lastMaintenance,
+              issues: data.issues ? [data.issues] : [],
+            }
           }
-        : cart
-    )
-    setCarts(updatedCarts)
+          return cart
+        })
+        setCarts(updatedCarts)
+        toast({
+          title: "Carts Updated",
+          description: `Successfully updated ${cartIds.length} carts.`,
+        })
+      } else {
+        const store = managedStores.find(s => s.name === data.store)
+        if (!store) return
+
+        const updatedCarts = carts.map((cart) =>
+          cart.id === editingCart.id
+            ? {
+                ...cart,
+                rfidTag: data.rfidTag,
+                store: data.store,
+                storeId: store.id,
+                status: data.status,
+                lastMaintenance: data.lastMaintenance,
+                issues: data.issues ? [data.issues] : [],
+              }
+            : cart
+        )
+        setCarts(updatedCarts)
+        toast({
+          title: "Cart Updated",
+          description: "Cart details have been successfully updated.",
+        })
+      }
+    } else {
+      handleAddCart(data)
+    }
+    setIsAddDialogOpen(false)
     setEditingCart(null)
-    toast({
-      title: "Cart Updated",
-      description: "Cart details have been successfully updated.",
-    })
   }
 
   const handleDeleteCart = (cartId: string) => {
@@ -141,6 +193,7 @@ const Carts = () => {
               carts={filteredCarts}
               onEditCart={setEditingCart}
               onDeleteCart={handleDeleteCart}
+              onEditMultiple={handleEditMultiple}
             />
           </CardContent>
         </Card>
@@ -151,7 +204,7 @@ const Carts = () => {
             setIsAddDialogOpen(open)
             if (!open) setEditingCart(null)
           }}
-          onSubmit={editingCart ? handleEditCart : handleAddCart}
+          onSubmit={handleSubmit}
           editingCart={editingCart}
           managedStores={managedStores}
         />
