@@ -115,6 +115,7 @@ const Carts = () => {
             if (!open) setEditingCart(null)
           }}
           onSubmit={(data) => handleSubmit(data, editingCart, managedStores)}
+          onDelete={handleDeleteCart}
           editingCart={editingCart}
           managedStores={managedStores}
         />
