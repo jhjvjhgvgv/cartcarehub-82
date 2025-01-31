@@ -54,7 +54,9 @@ export function CartDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
         <DialogTitle>
-          {isMultipleEdit ? "Edit Multiple Carts" : editingCart ? "Edit Cart" : "Add New Cart"}
+          {isMultipleEdit 
+            ? `Edit Multiple Carts (${cartIds.length} selected)`
+            : editingCart ? "Edit Cart" : "Add New Cart"}
         </DialogTitle>
         <DialogDescription>
           {isMultipleEdit 
