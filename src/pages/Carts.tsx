@@ -77,8 +77,8 @@ const Carts = () => {
         ? selectedCarts[0].lastMaintenance
         : "",
       issues: selectedCarts.every(cart => cart.issues.join(",") === selectedCarts[0].issues.join(","))
-        ? selectedCarts[0].issues.join("\n")
-        : "",
+        ? selectedCarts[0].issues
+        : [],
     }
 
     const store = managedStores.find(s => s.name === commonValues.store)
@@ -102,7 +102,7 @@ const Carts = () => {
       storeId: store.id,
       status: data.status,
       lastMaintenance: data.lastMaintenance,
-      issues: data.issues ? [data.issues] : [],
+      issues: data.issues ? data.issues.split('\n') : [],
     }
     setCarts([...carts, newCart])
     setIsAddDialogOpen(false)
@@ -126,7 +126,7 @@ const Carts = () => {
               store: data.store || cart.store,
               storeId: store?.id || cart.storeId,
               lastMaintenance: data.lastMaintenance || cart.lastMaintenance,
-              issues: data.issues ? [data.issues] : cart.issues,
+              issues: data.issues ? data.issues.split('\n') : cart.issues,
             }
           }
           return cart
@@ -149,7 +149,7 @@ const Carts = () => {
                 storeId: store.id,
                 status: data.status,
                 lastMaintenance: data.lastMaintenance,
-                issues: data.issues ? [data.issues] : [],
+                issues: data.issues ? data.issues.split('\n') : [],
               }
             : cart
         )
@@ -164,6 +164,15 @@ const Carts = () => {
     }
     setIsAddDialogOpen(false)
     setEditingCart(null)
+  }
+
+  const handleDeleteCart = (cartId: string) => {
+    setCarts(carts.filter((cart) => cart.id !== cartId))
+    toast({
+      title: "Cart Deleted",
+      description: "Cart has been successfully removed from the system.",
+      variant: "destructive",
+    })
   }
 
   return (
