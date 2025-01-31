@@ -1,18 +1,7 @@
-import React from "react"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useNavigate } from "react-router-dom"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Cart } from "./CartList"
 import { CartTableRow } from "./CartTableRow"
-
-export interface Cart {
-  id: string
-  rfidTag: string
-  store: string
-  storeId: string
-  status: "active" | "maintenance" | "retired"
-  lastMaintenance: string
-  issues: string[]
-}
+import { useNavigate } from "react-router-dom"
 
 interface CartListProps {
   carts: Cart[]
@@ -24,8 +13,10 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
   const navigate = useNavigate()
 
   const handleRowClick = (cartId: string, event: React.MouseEvent) => {
-    // Check if the click was on a button (edit or delete)
-    const isButton = (event.target as HTMLElement).closest('button')
+    // Only navigate if the click target is not a button
+    const target = event.target as HTMLElement
+    const isButton = target.tagName === 'BUTTON' || target.closest('button')
+    
     if (!isButton) {
       navigate(`/carts/${cartId}`)
     }
@@ -33,38 +24,36 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
 
   return (
     <div className="rounded-md border">
-      <ScrollArea className="min-h-[300px] max-h-[calc(100vh-16rem)] md:max-h-[calc(100vh-12rem)]">
-        <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="py-4 px-4">RFID Tag</TableHead>
+            <TableHead className="hidden sm:table-cell py-4 px-4">Store</TableHead>
+            <TableHead className="py-4 px-4">Status</TableHead>
+            <TableHead className="hidden sm:table-cell py-4 px-4">Last Maintenance</TableHead>
+            <TableHead className="py-2 px-2 w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {carts.length === 0 ? (
             <TableRow>
-              <TableHead className="w-[180px] min-w-[150px] lg:w-[30%]">RFID Tag</TableHead>
-              <TableHead className="hidden sm:table-cell w-[180px] min-w-[150px] lg:w-[30%]">Store</TableHead>
-              <TableHead className="w-[120px] min-w-[100px] lg:w-[20%]">Status</TableHead>
-              <TableHead className="hidden sm:table-cell w-[180px] min-w-[150px]">Last Maintenance</TableHead>
-              <TableHead className="w-[70px] min-w-[60px]">Actions</TableHead>
+              <TableCell colSpan={5} className="text-center py-4">
+                No carts found
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {carts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  No carts found
-                </TableCell>
-              </TableRow>
-            ) : (
-              carts.map((cart) => (
-                <CartTableRow
-                  key={cart.id}
-                  cart={cart}
-                  onEdit={onEditCart}
-                  onDelete={onDeleteCart}
-                  onClick={handleRowClick}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+          ) : (
+            carts.map((cart) => (
+              <CartTableRow
+                key={cart.id}
+                cart={cart}
+                onEdit={onEditCart}
+                onDelete={onDeleteCart}
+                onClick={handleRowClick}
+              />
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }
