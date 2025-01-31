@@ -36,11 +36,11 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
-              <TableHead className="w-[20%]">RFID Tag</TableHead>
-              <TableHead className="hidden md:table-cell w-[25%]">Store</TableHead>
-              <TableHead className="w-[25%]">Status</TableHead>
-              <TableHead className="hidden md:table-cell w-[20%]">Last Maintenance</TableHead>
-              <TableHead className="text-right w-[10%]">Actions</TableHead>
+              <TableHead className="w-[100px] min-w-[80px] lg:w-[15%]">RFID Tag</TableHead>
+              <TableHead className="hidden sm:table-cell w-[120px] min-w-[100px] lg:w-[25%]">Store</TableHead>
+              <TableHead className="w-[100px] min-w-[80px] lg:w-[20%]">Status</TableHead>
+              <TableHead className="hidden sm:table-cell w-[120px] min-w-[100px] lg:w-[25%]">Last Maintenance</TableHead>
+              <TableHead className="w-[80px] min-w-[60px] lg:w-[15%] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
