@@ -61,17 +61,33 @@ export function CartDialog({
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-6">
                   {cartIds.map((cartId) => {
-                    const cart = editingCart as Cart
+                    // Find the specific cart data for this ID
+                    const cartData = Array.isArray(editingCart?.rfidTags) 
+                      ? {
+                          rfidTag: editingCart.rfidTags[cartIds.indexOf(cartId)] || '',
+                          store: editingCart.store,
+                          status: editingCart.status,
+                          lastMaintenance: editingCart.lastMaintenance,
+                          issues: editingCart.issues,
+                        }
+                      : {
+                          rfidTag: editingCart?.rfidTag || '',
+                          store: editingCart?.store || '',
+                          status: editingCart?.status || 'active',
+                          lastMaintenance: editingCart?.lastMaintenance || '',
+                          issues: editingCart?.issues || [],
+                        };
+
                     return (
                       <div key={cartId} className="border rounded-lg p-4">
                         <h4 className="text-sm font-medium mb-4">Cart ID: {cartId}</h4>
                         <CartForm
                           initialData={{
-                            rfidTag: cart.rfidTag,
-                            store: cart.store,
-                            status: cart.status,
-                            lastMaintenance: cart.lastMaintenance,
-                            issues: Array.isArray(cart.issues) ? cart.issues.join("\n") : "",
+                            rfidTag: cartData.rfidTag,
+                            store: cartData.store,
+                            status: cartData.status,
+                            lastMaintenance: cartData.lastMaintenance,
+                            issues: Array.isArray(cartData.issues) ? cartData.issues.join("\n") : "",
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
