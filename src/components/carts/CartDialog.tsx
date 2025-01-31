@@ -115,7 +115,7 @@ export function CartDialog({
             <TabsContent value="bulk">
               <CartForm
                 initialData={{
-                  rfidTag: "",  // Empty string instead of "Multiple Carts"
+                  rfidTag: editingCart?.rfidTag || "",
                   store: editingCart?.store || "",
                   status: editingCart?.status || "active",
                   lastMaintenance: editingCart?.lastMaintenance || "",
