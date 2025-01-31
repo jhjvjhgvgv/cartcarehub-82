@@ -1,5 +1,5 @@
 import React from "react"
-import { Table, TableHeader, TableRow, TableHead, TableBody } from "@/components/ui/table"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useNavigate } from "react-router-dom"
 import { CartTableRow } from "./CartTableRow"
