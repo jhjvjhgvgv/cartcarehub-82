@@ -69,10 +69,10 @@ export function CartDialog({
                         <CartForm
                           initialData={{
                             rfidTag: originalCart?.rfidTag || "",
-                            store: editingCart?.store || "",
-                            status: editingCart?.status || "active",
-                            lastMaintenance: editingCart?.lastMaintenance || "",
-                            issues: Array.isArray(editingCart?.issues) ? editingCart.issues.join("\n") : "",
+                            store: originalCart?.store || editingCart?.store || "",
+                            status: originalCart?.status || editingCart?.status || "active",
+                            lastMaintenance: originalCart?.lastMaintenance || editingCart?.lastMaintenance || "",
+                            issues: Array.isArray(originalCart?.issues) ? originalCart.issues.join("\n") : "",
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
