@@ -1,14 +1,12 @@
 import { useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import DashboardLayout from "@/components/DashboardLayout"
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { PlusCircle } from "lucide-react"
-import { CartForm } from "@/components/cart-form"
 import { CartFilters, type CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { useToast } from "@/hooks/use-toast"
 import { CartList } from "@/components/carts/CartList"
 import { CartStats } from "@/components/carts/CartStats"
+import { CartDialog } from "@/components/carts/CartDialog"
+import { CartHeader } from "@/components/carts/CartHeader"
 import { Cart } from "@/types/cart"
 
 // Mock data for managed stores (this would come from your auth/backend)
@@ -57,7 +55,6 @@ const Carts = () => {
   })
   const { toast } = useToast()
 
-  // Filter carts based on managed stores and user filters
   const filteredCarts = carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
     const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
@@ -71,14 +68,7 @@ const Carts = () => {
 
   const handleAddCart = (data: any) => {
     const store = managedStores.find(s => s.name === data.store)
-    if (!store) {
-      toast({
-        title: "Error",
-        description: "Selected store is not in your managed stores list.",
-        variant: "destructive",
-      })
-      return
-    }
+    if (!store) return
 
     const newCart: Cart = {
       id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
@@ -100,14 +90,7 @@ const Carts = () => {
   const handleEditCart = (data: any) => {
     if (!editingCart) return
     const store = managedStores.find(s => s.name === data.store)
-    if (!store) {
-      toast({
-        title: "Error",
-        description: "Selected store is not in your managed stores list.",
-        variant: "destructive",
-      })
-      return
-    }
+    if (!store) return
 
     const updatedCarts = carts.map((cart) =>
       cart.id === editingCart.id
@@ -142,31 +125,12 @@ const Carts = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Cart Management</h1>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
-                Add New Cart
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogTitle>Add New Cart</DialogTitle>
-              <CartForm
-                onSubmit={handleAddCart}
-                onCancel={() => setIsAddDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-
+        <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
         <CartStats
           totalCarts={filteredCarts.length}
           activeCarts={activeCarts}
           maintenanceNeeded={maintenanceNeeded}
         />
-
         <Card>
           <CardHeader>
             <CardTitle>All Carts</CardTitle>
@@ -181,24 +145,16 @@ const Carts = () => {
           </CardContent>
         </Card>
 
-        {editingCart && (
-          <Dialog open={!!editingCart} onOpenChange={() => setEditingCart(null)}>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogTitle>Edit Cart</DialogTitle>
-              <CartForm
-                initialData={{
-                  rfidTag: editingCart.rfidTag,
-                  store: editingCart.store,
-                  status: editingCart.status,
-                  lastMaintenance: editingCart.lastMaintenance,
-                  issues: editingCart.issues.join("\n"),
-                }}
-                onSubmit={handleEditCart}
-                onCancel={() => setEditingCart(null)}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+        <CartDialog
+          isOpen={isAddDialogOpen || !!editingCart}
+          onOpenChange={(open) => {
+            setIsAddDialogOpen(open)
+            if (!open) setEditingCart(null)
+          }}
+          onSubmit={editingCart ? handleEditCart : handleAddCart}
+          editingCart={editingCart}
+          managedStores={managedStores}
+        />
       </div>
     </DashboardLayout>
   )
