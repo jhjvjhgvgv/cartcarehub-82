@@ -61,10 +61,7 @@ export function CartDialog({
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-6">
                   {cartIds.map((cartId) => {
-                    // Find the original cart data from the carts array
-                    const originalCart = editingCart && Array.isArray(editingCart.originalCarts) 
-                      ? editingCart.originalCarts.find(cart => cart.id === cartId)
-                      : null;
+                    const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
 
                     const cartData = {
                       rfidTag: originalCart?.rfidTag || editingCart?.rfidTag || '',
@@ -72,7 +69,7 @@ export function CartDialog({
                       status: editingCart?.status || 'active',
                       lastMaintenance: editingCart?.lastMaintenance || '',
                       issues: editingCart?.issues || [],
-                    };
+                    }
 
                     return (
                       <div key={cartId} className="border rounded-lg p-4">

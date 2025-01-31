@@ -6,4 +6,5 @@ export interface Cart {
   status: "active" | "maintenance" | "retired"
   lastMaintenance: string
   issues: string[]
+  originalCarts?: Cart[] // Add this optional property for multiple cart editing
 }
