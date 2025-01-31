@@ -127,7 +127,7 @@ const Index = () => {
                     {stores.map((store) => (
                       <TableRow 
                         key={store.id}
-                        className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[80px] md:min-h-[60px]"
+                        className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[140px] md:min-h-[60px]"
                         onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
                       >
                         <TableCell className="font-medium py-4">{store.name}</TableCell>
