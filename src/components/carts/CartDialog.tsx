@@ -104,7 +104,7 @@ export function CartDialog({
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
-                          disableRfidTag={false}
+                          disableRfidTag={true}
                         />
                       </div>
                     )
@@ -115,7 +115,7 @@ export function CartDialog({
             <TabsContent value="bulk">
               <CartForm
                 initialData={{
-                  rfidTag: editingCart?.rfidTag || "",
+                  rfidTag: editingCart?.originalCarts?.[0]?.rfidTag || "",
                   store: editingCart?.store || "",
                   status: editingCart?.status || "active",
                   lastMaintenance: editingCart?.lastMaintenance || "",
@@ -159,7 +159,7 @@ export function CartDialog({
               }
               onSubmit={handleSubmit}
               onCancel={() => onOpenChange(false)}
-              disableRfidTag={false}
+              disableRfidTag={!!editingCart}
             />
           </div>
         )}
