@@ -28,7 +28,7 @@ export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowPr
       <TableCell className="hidden sm:table-cell py-4 truncate">
         <div>{cart.lastMaintenance}</div>
       </TableCell>
-      <TableCell className="text-right py-4">
+      <TableCell className="py-4 pl-2">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
       </TableCell>
     </TableRow>
