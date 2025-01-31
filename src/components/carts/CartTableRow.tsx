@@ -14,29 +14,21 @@ export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowPr
   return (
     <TableRow 
       onClick={(e) => onClick(cart.id, e)}
-      className="cursor-pointer hover:bg-muted/60 min-h-[140px] md:min-h-[60px]"
+      className="cursor-pointer hover:bg-muted/60"
     >
-      <TableCell className="font-medium">
-        <div className="flex flex-col md:flex-row items-start md:items-center">
-          {cart.rfidTag}
-        </div>
+      <TableCell className="py-4">
+        <div className="font-medium break-all">{cart.rfidTag}</div>
       </TableCell>
-      <TableCell className="hidden md:table-cell">
-        <div className="flex flex-col md:flex-row items-start md:items-center">
-          {cart.store}
-        </div>
+      <TableCell className="hidden md:table-cell py-4">
+        <div className="break-all">{cart.store}</div>
       </TableCell>
-      <TableCell>
-        <div className="flex flex-col md:flex-row items-start md:items-center">
-          <CartStatusBadge status={cart.status} />
-        </div>
+      <TableCell className="py-4">
+        <CartStatusBadge status={cart.status} />
       </TableCell>
-      <TableCell className="hidden md:table-cell">
-        <div className="flex flex-col md:flex-row items-start md:items-center">
-          {cart.lastMaintenance}
-        </div>
+      <TableCell className="hidden md:table-cell py-4">
+        <div className="break-all">{cart.lastMaintenance}</div>
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-right py-4">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
       </TableCell>
     </TableRow>

@@ -32,9 +32,9 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
 
   return (
     <div className="rounded-md border">
-      <ScrollArea className="h-[calc(100vh-20rem)] md:h-[calc(100vh-16rem)]">
+      <ScrollArea className="min-h-[300px] max-h-[calc(100vh-16rem)] md:max-h-[calc(100vh-12rem)]">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
               <TableHead className="w-[20%]">RFID Tag</TableHead>
               <TableHead className="hidden md:table-cell w-[25%]">Store</TableHead>
@@ -44,15 +44,23 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {carts.map((cart) => (
-              <CartTableRow
-                key={cart.id}
-                cart={cart}
-                onEdit={onEditCart}
-                onDelete={onDeleteCart}
-                onClick={handleRowClick}
-              />
-            ))}
+            {carts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  No carts found
+                </TableCell>
+              </TableRow>
+            ) : (
+              carts.map((cart) => (
+                <CartTableRow
+                  key={cart.id}
+                  cart={cart}
+                  onEdit={onEditCart}
+                  onDelete={onDeleteCart}
+                  onClick={handleRowClick}
+                />
+              ))
+            )}
           </TableBody>
         </Table>
       </ScrollArea>
