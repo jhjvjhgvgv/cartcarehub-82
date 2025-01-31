@@ -116,29 +116,29 @@ const Index = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[30%]">Store Name</TableHead>
-                      <TableHead className="hidden md:table-cell">Location</TableHead>
+                      <TableHead className="w-[20%] md:table-cell">Location</TableHead>
                       <TableHead className="text-right w-[25%]">Cart Status</TableHead>
-                      <TableHead className="text-right hidden md:table-cell">Utilization</TableHead>
-                      <TableHead className="text-right hidden md:table-cell">Maintenance</TableHead>
-                      <TableHead className="w-[10%]"></TableHead>
+                      <TableHead className="text-right w-[15%] md:table-cell">Utilization</TableHead>
+                      <TableHead className="text-right w-[15%] md:table-cell">Maintenance</TableHead>
+                      <TableHead className="w-[5%]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {stores.map((store) => (
                       <TableRow 
                         key={store.id}
-                        className="cursor-pointer hover:bg-primary-50 transition-colors"
+                        className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[80px] md:min-h-[60px]"
                         onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
                       >
-                        <TableCell className="font-medium">{store.name}</TableCell>
-                        <TableCell className="hidden md:table-cell">{store.location}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="font-medium py-4">{store.name}</TableCell>
+                        <TableCell className="py-4 md:table-cell">{store.location}</TableCell>
+                        <TableCell className="text-right py-4">
                           <div className="flex justify-end items-center space-x-2">
                             <ShoppingCart className="w-4 h-4 text-primary-600" />
                             <span>{store.activeCarts}/{store.totalCarts}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right hidden md:table-cell">
+                        <TableCell className="text-right py-4 md:table-cell">
                           <div className="flex justify-end items-center space-x-2">
                             <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
                             <span className={getUtilizationColor(store.utilizationRate)}>
@@ -146,7 +146,7 @@ const Index = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right hidden md:table-cell">
+                        <TableCell className="text-right py-4 md:table-cell">
                           <div className="flex justify-end items-center space-x-2">
                             <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
                             <span className={getMaintenanceColor(store.maintenanceRate)}>
@@ -154,7 +154,7 @@ const Index = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-4">
                           <ChevronRight className="w-4 h-4 text-gray-400" />
                         </TableCell>
                       </TableRow>
