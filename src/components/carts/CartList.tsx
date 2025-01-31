@@ -40,7 +40,6 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
   }
 
   const handleRowClick = (cartId: string, event: React.MouseEvent) => {
-    // Prevent row click when clicking action buttons
     if ((event.target as HTMLElement).closest('button')) {
       return
     }
@@ -65,12 +64,28 @@ export function CartList({ carts, onEditCart, onDeleteCart }: CartListProps) {
               <TableRow 
                 key={cart.id}
                 onClick={(e) => handleRowClick(cart.id, e)}
-                className="cursor-pointer hover:bg-muted/60"
+                className="cursor-pointer hover:bg-muted/60 min-h-[140px] md:min-h-[60px]"
               >
-                <TableCell className="font-medium">{cart.rfidTag}</TableCell>
-                <TableCell className="hidden md:table-cell">{cart.store}</TableCell>
-                <TableCell>{getStatusBadge(cart.status)}</TableCell>
-                <TableCell className="hidden md:table-cell">{cart.lastMaintenance}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex flex-col md:flex-row items-start md:items-center">
+                    {cart.rfidTag}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <div className="flex flex-col md:flex-row items-start md:items-center">
+                    {cart.store}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col md:flex-row items-start md:items-center">
+                    {getStatusBadge(cart.status)}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <div className="flex flex-col md:flex-row items-start md:items-center">
+                    {cart.lastMaintenance}
+                  </div>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
