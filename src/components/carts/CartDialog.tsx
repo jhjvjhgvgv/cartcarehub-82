@@ -62,21 +62,13 @@ export function CartDialog({
                 <div className="space-y-6">
                   {cartIds.map((cartId) => {
                     // Find the specific cart data for this ID
-                    const cartData = Array.isArray(editingCart?.rfidTags) 
-                      ? {
-                          rfidTag: editingCart.rfidTags[cartIds.indexOf(cartId)] || '',
-                          store: editingCart.store,
-                          status: editingCart.status,
-                          lastMaintenance: editingCart.lastMaintenance,
-                          issues: editingCart.issues,
-                        }
-                      : {
-                          rfidTag: editingCart?.rfidTag || '',
-                          store: editingCart?.store || '',
-                          status: editingCart?.status || 'active',
-                          lastMaintenance: editingCart?.lastMaintenance || '',
-                          issues: editingCart?.issues || [],
-                        };
+                    const cartData = {
+                      rfidTag: editingCart?.rfidTag || '',
+                      store: editingCart?.store || '',
+                      status: editingCart?.status || 'active',
+                      lastMaintenance: editingCart?.lastMaintenance || '',
+                      issues: editingCart?.issues || [],
+                    };
 
                     return (
                       <div key={cartId} className="border rounded-lg p-4">
