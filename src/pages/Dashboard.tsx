@@ -62,12 +62,12 @@ const Index = () => {
   return (
     <DashboardLayout>
       <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-x-hidden">
-        <div className="flex items-center space-x-2">
-          <Building2 className="w-6 h-6 text-primary-600" />
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+        <div className="flex items-center space-x-2 px-2">
+          <Building2 className="w-5 h-5 text-primary-600" />
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-2">
           <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
@@ -75,7 +75,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Total Stores</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900">{stores.length}</p>
+                <p className="text-base md:text-xl font-bold text-gray-900">{stores.length}</p>
               </div>
             </div>
           </Card>
@@ -87,7 +87,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Total Carts</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900">{stats.totalCarts}</p>
+                <p className="text-base md:text-xl font-bold text-gray-900">{stats.totalCarts}</p>
               </div>
             </div>
           </Card>
@@ -99,28 +99,28 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-xs md:text-sm text-gray-500">Needs Maintenance</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
+                <p className="text-base md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
               </div>
             </div>
           </Card>
         </div>
 
-        <Card className="flex-1">
+        <Card className="flex-1 mx-2">
           <CardHeader className="py-2 md:py-3">
-            <CardTitle>Stores Overview</CardTitle>
+            <CardTitle className="text-lg">Stores Overview</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[calc(100vh-20rem)] w-full">
-              <div className="min-w-[800px]">
+              <div className="min-w-[300px] md:min-w-[800px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Store Name</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead className="text-right">Cart Status</TableHead>
-                      <TableHead className="text-right">Utilization</TableHead>
-                      <TableHead className="text-right">Maintenance</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[30%]">Store Name</TableHead>
+                      <TableHead className="hidden md:table-cell">Location</TableHead>
+                      <TableHead className="text-right w-[25%]">Cart Status</TableHead>
+                      <TableHead className="text-right hidden md:table-cell">Utilization</TableHead>
+                      <TableHead className="text-right hidden md:table-cell">Maintenance</TableHead>
+                      <TableHead className="w-[10%]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -131,14 +131,14 @@ const Index = () => {
                         onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
                       >
                         <TableCell className="font-medium">{store.name}</TableCell>
-                        <TableCell>{store.location}</TableCell>
+                        <TableCell className="hidden md:table-cell">{store.location}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end items-center space-x-2">
                             <ShoppingCart className="w-4 h-4 text-primary-600" />
                             <span>{store.activeCarts}/{store.totalCarts}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right hidden md:table-cell">
                           <div className="flex justify-end items-center space-x-2">
                             <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
                             <span className={getUtilizationColor(store.utilizationRate)}>
@@ -146,7 +146,7 @@ const Index = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right hidden md:table-cell">
                           <div className="flex justify-end items-center space-x-2">
                             <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
                             <span className={getMaintenanceColor(store.maintenanceRate)}>
