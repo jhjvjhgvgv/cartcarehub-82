@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { CartForm } from "@/components/cart-form"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -37,6 +37,11 @@ export function CartDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogTitle>{editingCart ? "Edit Cart" : "Add New Cart"}</DialogTitle>
+        <DialogDescription>
+          {editingCart 
+            ? "Update the cart details below." 
+            : "Fill in the details to add a new cart to the system."}
+        </DialogDescription>
         <CartForm
           initialData={
             editingCart
