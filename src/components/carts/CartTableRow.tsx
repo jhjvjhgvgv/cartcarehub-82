@@ -16,19 +16,19 @@ export function CartTableRow({ cart, onEdit, onDelete, onClick }: CartTableRowPr
       onClick={(e) => onClick(cart.id, e)}
       className="cursor-pointer hover:bg-muted/60"
     >
-      <TableCell className="py-4 truncate">
+      <TableCell className="py-4 px-4">
         <div className="font-medium">{cart.rfidTag}</div>
       </TableCell>
-      <TableCell className="hidden sm:table-cell py-4 truncate">
+      <TableCell className="hidden sm:table-cell py-4 px-4">
         <div>{cart.store}</div>
       </TableCell>
-      <TableCell className="py-4">
+      <TableCell className="py-4 px-4">
         <CartStatusBadge status={cart.status} />
       </TableCell>
-      <TableCell className="hidden sm:table-cell py-4 truncate">
+      <TableCell className="hidden sm:table-cell py-4 px-4">
         <div>{cart.lastMaintenance}</div>
       </TableCell>
-      <TableCell className="py-4 pl-2">
+      <TableCell className="py-4 px-4">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
       </TableCell>
     </TableRow>
