@@ -27,10 +27,17 @@ export function CartForm({
   isBulkEdit = false,
   rfidPlaceholder = "Enter RFID tag"
 }: CartFormProps) {
+  const defaultValues: CartFormValues = {
+    rfidTag: "",
+    store: "",
+    status: "active",
+    lastMaintenance: new Date().toISOString().split("T")[0],
+    issues: "",
+  }
+
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
-    defaultValues: initialData,
-    values: initialData, // This ensures the form always shows the initial values
+    defaultValues: initialData || defaultValues,
   })
 
   // Reset form when initialData changes
