@@ -51,9 +51,17 @@ export function CartForm({
     }
   }, [initialData, form])
 
+  const handleSubmit = (data: CartFormValues) => {
+    // If RFID field is empty and we have initial data, use the initial RFID
+    if (!data.rfidTag && initialData?.rfidTag) {
+      data.rfidTag = initialData.rfidTag;
+    }
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <RfidField 
           form={form} 
           disabled={disableRfidTag}
