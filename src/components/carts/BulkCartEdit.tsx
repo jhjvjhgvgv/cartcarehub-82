@@ -17,7 +17,6 @@ interface BulkCartEditProps {
 export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelete }: BulkCartEditProps) {
   // Get the original cart if only one is selected
   const singleCart = cartIds.length === 1 ? editingCart?.originalCarts?.find(cart => cart.id === cartIds[0]) : null
-  const rfidPlaceholder = singleCart ? singleCart.rfidTag : "Multiple RFIDs - Will Be Preserved"
 
   return (
     <Tabs defaultValue="individual" className="w-full">
@@ -68,7 +67,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
       <TabsContent value="bulk">
         <CartForm
           initialData={{
-            rfidTag: singleCart ? singleCart.rfidTag : "Multiple RFIDs",
+            rfidTag: singleCart?.rfidTag || "Multiple RFIDs",
             store: editingCart?.store || "",
             status: editingCart?.status || "active",
             lastMaintenance: editingCart?.lastMaintenance || "",
@@ -78,7 +77,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
           onCancel={onCancel}
           disableRfidTag={true}
           isBulkEdit={true}
-          rfidPlaceholder={rfidPlaceholder}
+          rfidPlaceholder={singleCart?.rfidTag || "Multiple RFIDs - Will Be Preserved"}
         />
       </TabsContent>
     </Tabs>
