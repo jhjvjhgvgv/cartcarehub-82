@@ -68,7 +68,10 @@ const Index = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-2">
-          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600">
+          <Card 
+            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600 cursor-pointer"
+            onClick={() => navigate('/carts')}
+          >
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-primary-50 rounded-full">
                 <Building2 className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
@@ -80,7 +83,10 @@ const Index = () => {
             </div>
           </Card>
 
-          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600">
+          <Card 
+            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600 cursor-pointer"
+            onClick={() => navigate('/carts')}
+          >
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-50 rounded-full">
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
