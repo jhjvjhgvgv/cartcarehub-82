@@ -1,5 +1,5 @@
 import React from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Index from "@/pages/Index"
 import Dashboard from "@/pages/Dashboard"
 import Carts from "@/pages/Carts"
@@ -27,12 +27,11 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/store/:id" element={<Store />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/customer">
-            <Route path="dashboard" element={<CustomerDashboard />} />
-            <Route path="cart-status" element={<CartStatus />} />
-            <Route path="report-issue" element={<ReportIssue />} />
-            <Route path="settings" element={<CustomerSettings />} />
-          </Route>
+          <Route path="/customer" element={<Navigate to="/customer/dashboard" replace />} />
+          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+          <Route path="/customer/cart-status" element={<CartStatus />} />
+          <Route path="/customer/report-issue" element={<ReportIssue />} />
+          <Route path="/customer/settings" element={<CustomerSettings />} />
         </Routes>
         <Toaster />
       </Router>
