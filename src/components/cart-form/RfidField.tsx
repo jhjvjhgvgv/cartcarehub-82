@@ -19,11 +19,8 @@ export function RfidField({ form, disabled = false, placeholder = "Enter RFID ta
           <FormLabel>RFID Tag</FormLabel>
           <FormControl>
             <Input 
+              {...field}
               placeholder={placeholder}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              name={field.name}
               disabled={disabled}
               className={disabled ? "bg-gray-100" : ""}
             />

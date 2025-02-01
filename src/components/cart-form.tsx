@@ -29,16 +29,11 @@ export function CartForm({
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
-    defaultValues: initialData || {
-      rfidTag: "",
-      store: "",
-      status: "active",
-      lastMaintenance: new Date().toISOString().split("T")[0],
-      issues: "",
-    },
+    defaultValues: initialData,
+    values: initialData, // This ensures the form always shows the initial values
   })
 
-  // Reset form when initialData changes to ensure original values are displayed
+  // Reset form when initialData changes
   React.useEffect(() => {
     if (initialData) {
       form.reset(initialData)
