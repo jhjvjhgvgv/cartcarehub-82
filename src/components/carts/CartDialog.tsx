@@ -41,22 +41,21 @@ export function CartDialog({
       const bulkUpdates = cartIds.map(cartId => {
         const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
         return {
-          ...data,
+          ...originalCart, // Keep all original values
+          ...data, // Only override fields that were actually changed
           id: cartId,
-          rfidTag: originalCart?.rfidTag || "",
-          store: data.store || originalCart?.store || "",
-          status: data.status || originalCart?.status || "active",
-          lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance || "",
+          rfidTag: originalCart?.rfidTag || "", // Preserve original RFID
           issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
         }
       })
       onSubmit(bulkUpdates)
     } else {
-      // For single cart edit, preserve the ID and merge with new data
+      // For single cart edit, preserve all original values and only update changed fields
       const submissionData = {
-        ...editingCart,  // Keep all original values
-        ...data,         // Override with any changed values
+        ...editingCart, // Keep all original values
+        ...data, // Only override fields that were actually changed
         id: editingCart?.id,
+        rfidTag: data.rfidTag || editingCart?.rfidTag, // Preserve original RFID if not changed
         issues: data.issues ? data.issues.split('\n') : editingCart?.issues || [],
       }
       onSubmit(submissionData)
