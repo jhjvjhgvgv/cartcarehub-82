@@ -39,7 +39,6 @@ export function CartDialog({
       return
     }
     
-    // If it's a bulk edit, preserve the original RFID tags
     if (isMultipleEdit && !data.id) {
       const bulkUpdates = cartIds.map(cartId => {
         const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
@@ -51,15 +50,7 @@ export function CartDialog({
       })
       onSubmit(bulkUpdates)
     } else {
-      // For single edit, if RFID is unchanged, use the original
-      if (editingCart && data.rfidTag === editingCart.rfidTag) {
-        onSubmit({
-          ...data,
-          rfidTag: editingCart.rfidTag
-        })
-      } else {
-        onSubmit(data)
-      }
+      onSubmit(data)
     }
   }
 
