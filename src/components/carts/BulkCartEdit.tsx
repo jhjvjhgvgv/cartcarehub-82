@@ -63,7 +63,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
       <TabsContent value="bulk">
         <CartForm
           initialData={{
-            rfidTag: "Multiple RFIDs - Will Be Preserved",
+            rfidTag: "",
             store: editingCart?.store || "",
             status: editingCart?.status || "active",
             lastMaintenance: editingCart?.lastMaintenance || "",
@@ -72,6 +72,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
           onSubmit={onSubmit}
           onCancel={onCancel}
           disableRfidTag={true}
+          isBulkEdit={true}
         />
       </TabsContent>
     </Tabs>

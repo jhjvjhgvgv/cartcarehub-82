@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-// Mock data for managed stores (this would come from your auth/backend)
 const managedStores = [
   { id: "store1", name: "SuperMart Downtown" },
   { id: "store2", name: "FreshMart Heights" },
@@ -42,9 +41,16 @@ interface CartFormProps {
   onSubmit: (data: CartFormValues) => void
   onCancel: () => void
   disableRfidTag?: boolean
+  isBulkEdit?: boolean
 }
 
-export function CartForm({ initialData, onSubmit, onCancel, disableRfidTag = false }: CartFormProps) {
+export function CartForm({ 
+  initialData, 
+  onSubmit, 
+  onCancel, 
+  disableRfidTag = false,
+  isBulkEdit = false 
+}: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
     defaultValues: initialData || {
@@ -67,7 +73,7 @@ export function CartForm({ initialData, onSubmit, onCancel, disableRfidTag = fal
               <FormLabel>RFID Tag</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="Enter RFID tag" 
+                  placeholder={isBulkEdit ? "Multiple RFIDs - Will Be Preserved" : "Enter RFID tag"}
                   {...field} 
                   disabled={disableRfidTag}
                   className={disableRfidTag ? "bg-gray-100" : ""}
