@@ -46,17 +46,27 @@ export function CartForm({
   }, [initialData, form])
 
   const handleSubmit = (data: CartFormValues) => {
-    // For bulk edit, preserve original RFID if no new one is provided
+    // Create an object to store only modified values
+    const modifiedValues: Partial<CartFormValues> = {}
+
+    // Compare each field with initial data and only include changed values
+    Object.keys(data).forEach((key) => {
+      const fieldKey = key as keyof CartFormValues
+      if (initialData && data[fieldKey] !== initialData[fieldKey]) {
+        modifiedValues[fieldKey] = data[fieldKey]
+      }
+    })
+
+    // For bulk edit or disabled RFID, preserve original RFID
     if (isBulkEdit || (disableRfidTag && initialData?.rfidTag)) {
-      data.rfidTag = initialData?.rfidTag || data.rfidTag
-    }
-    
-    // Ensure we have a valid RFID tag
-    if (!data.rfidTag && initialData?.rfidTag) {
-      data.rfidTag = initialData.rfidTag
+      delete modifiedValues.rfidTag
     }
 
-    onSubmit(data)
+    // Submit only modified values along with the original data for reference
+    onSubmit({
+      ...initialData,
+      ...modifiedValues,
+    })
   }
 
   return (
