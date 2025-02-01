@@ -53,11 +53,10 @@ export function CartForm({
     Object.keys(data).forEach((key) => {
       const fieldKey = key as keyof CartFormValues
       if (initialData && data[fieldKey] !== initialData[fieldKey]) {
-        // Ensure status is one of the allowed values
-        if (fieldKey === 'status' && typeof data[fieldKey] === 'string') {
-          const status = data[fieldKey] as string
-          if (['active', 'maintenance', 'retired'].includes(status)) {
-            modifiedValues[fieldKey] = status as 'active' | 'maintenance' | 'retired'
+        if (fieldKey === 'status') {
+          const status = data[fieldKey]
+          if (status === 'active' || status === 'maintenance' || status === 'retired') {
+            modifiedValues[fieldKey] = status
           }
         } else {
           modifiedValues[fieldKey] = data[fieldKey]
