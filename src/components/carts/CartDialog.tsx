@@ -40,20 +40,27 @@ export function CartDialog({
     }
     
     if (isMultipleEdit && !data.id) {
+      // For bulk updates, preserve original RFID tags and IDs
       const bulkUpdates = cartIds.map(cartId => {
         const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
         return {
           ...data,
           id: cartId,
-          rfidTag: originalCart?.rfidTag || ""
+          rfidTag: originalCart?.rfidTag || "",
+          store: data.store || originalCart?.store || "",
+          status: data.status || originalCart?.status || "active",
+          lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance || "",
+          issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
         }
       })
       onSubmit(bulkUpdates)
     } else {
-      // For single cart edit
+      // For single cart edit, preserve the ID and merge with new data
       const submissionData = {
-        ...data,
-        id: editingCart?.id
+        ...editingCart,  // Keep all original values
+        ...data,         // Override with any changed values
+        id: editingCart?.id,
+        issues: data.issues ? data.issues.split('\n') : editingCart?.issues || [],
       }
       onSubmit(submissionData)
     }
