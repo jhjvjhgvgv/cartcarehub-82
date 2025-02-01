@@ -29,35 +29,35 @@ export function CartForm({
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
-    defaultValues: {
-      rfidTag: initialData?.rfidTag || "",
-      store: initialData?.store || "",
-      status: initialData?.status || "active",
-      lastMaintenance: initialData?.lastMaintenance || new Date().toISOString().split("T")[0],
-      issues: initialData?.issues || "",
+    defaultValues: initialData || {
+      rfidTag: "",
+      store: "",
+      status: "active",
+      lastMaintenance: new Date().toISOString().split("T")[0],
+      issues: "",
     },
   })
 
   // Reset form when initialData changes
   React.useEffect(() => {
     if (initialData) {
-      form.reset({
-        rfidTag: initialData.rfidTag,
-        store: initialData.store,
-        status: initialData.status,
-        lastMaintenance: initialData.lastMaintenance,
-        issues: initialData.issues,
-      })
+      form.reset(initialData)
     }
   }, [initialData, form])
 
   const handleSubmit = (data: CartFormValues) => {
-    // If RFID field is empty and we have initial data, use the initial RFID
-    if (!data.rfidTag && initialData?.rfidTag) {
-      data.rfidTag = initialData.rfidTag;
+    // For bulk edit, preserve original RFID if no new one is provided
+    if (isBulkEdit || (disableRfidTag && initialData?.rfidTag)) {
+      data.rfidTag = initialData?.rfidTag || data.rfidTag
     }
-    onSubmit(data);
-  };
+    
+    // Ensure we have a valid RFID tag
+    if (!data.rfidTag && initialData?.rfidTag) {
+      data.rfidTag = initialData.rfidTag
+    }
+
+    onSubmit(data)
+  }
 
   return (
     <Form {...form}>

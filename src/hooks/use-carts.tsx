@@ -7,77 +7,41 @@ export const useCarts = (initialCarts: Cart[]) => {
   const { toast } = useToast()
 
   const handleSubmit = (data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
-    if (editingCart) {
-      if (editingCart.id.includes(",")) {
-        // Handle individual cart updates
-        if (data.id) {
-          const updatedCarts = carts.map(cart => {
-            if (cart.id === data.id) {
-              const store = managedStores.find(s => s.name === data.store)
-              return {
-                ...cart,
-                rfidTag: data.rfidTag,
-                store: data.store,
-                storeId: store?.id || cart.storeId,
-                status: data.status,
-                lastMaintenance: data.lastMaintenance,
-                issues: data.issues ? data.issues.split('\n') : [],
-              }
-            }
-            return cart
-          })
-          setCarts(updatedCarts)
-          toast({
-            title: "Cart Updated",
-            description: `Cart ${data.id} has been successfully updated.`,
-          })
-        } else {
-          // Handle bulk update
-          const cartIds = editingCart.id.split(",")
-          const updatedCarts = carts.map(cart => {
-            if (cartIds.includes(cart.id)) {
-              const store = managedStores.find(s => s.name === data.store)
-              return {
-                ...cart,
-                status: data.status || cart.status,
-                store: data.store || cart.store,
-                storeId: store?.id || cart.storeId,
-                lastMaintenance: data.lastMaintenance || cart.lastMaintenance,
-                issues: data.issues ? data.issues.split('\n') : cart.issues,
-              }
-            }
-            return cart
-          })
-          setCarts(updatedCarts)
-          toast({
-            title: "Carts Updated",
-            description: `Successfully updated ${cartIds.length} carts.`,
-          })
-        }
-      } else {
-        // Handle single cart update
-        const store = managedStores.find(s => s.name === data.store)
-        if (!store) return
+    if (Array.isArray(data)) {
+      // Handle bulk updates
+      const updatedCarts = carts.map(cart => {
+        const update = data.find(update => update.id === cart.id)
+        return update || cart
+      })
+      
+      setCarts(updatedCarts)
+      toast({
+        title: "Carts Updated",
+        description: `Successfully updated ${data.length} carts.`,
+      })
+    } else if (editingCart) {
+      // Handle single cart update
+      const store = managedStores.find(s => s.name === data.store)
+      if (!store) return
 
-        const updatedCarts = carts.map((cart) =>
-          cart.id === editingCart.id
-            ? {
-                ...cart,
-                rfidTag: data.rfidTag,
-                store: data.store,
-                storeId: store.id,
-                status: data.status,
-                lastMaintenance: data.lastMaintenance,
-                issues: data.issues ? data.issues.split('\n') : [],
-              }
-            : cart
-        )
-        setCarts(updatedCarts)
-        toast({
-          title: "Cart Updated",
-          description: "Cart details have been successfully updated.",
-        })
-      }
+      const updatedCarts = carts.map((cart) =>
+        cart.id === editingCart.id
+          ? {
+              ...cart,
+              rfidTag: data.rfidTag || cart.rfidTag,
+              store: data.store,
+              storeId: store.id,
+              status: data.status,
+              lastMaintenance: data.lastMaintenance,
+              issues: data.issues ? data.issues.split('\n') : [],
+            }
+          : cart
+      )
+      setCarts(updatedCarts)
+      toast({
+        title: "Cart Updated",
+        description: "Cart details have been successfully updated.",
+      })
     } else {
       // Handle adding new cart
       const store = managedStores.find(s => s.name === data.store)

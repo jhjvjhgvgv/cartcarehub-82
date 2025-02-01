@@ -36,39 +36,46 @@ export function CartDialog({
       return
     }
     
-    if (isMultipleEdit && !data.id) {
+    if (isMultipleEdit) {
       // For bulk updates, preserve original RFID tags and IDs
-      const bulkUpdates = cartIds.map(cartId => {
-        const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
-        return {
-          ...originalCart, // Keep all original values
-          ...data, // Only override fields that were actually changed
-          id: cartId,
-          rfidTag: originalCart?.rfidTag || "", // Preserve original RFID
-          issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
-        }
-      })
-      onSubmit(bulkUpdates)
-    } else {
-      // For single cart edit, preserve all original values and only update changed fields
-      const submissionData = {
-        ...editingCart, // Keep all original values
-        ...data, // Only override fields that were actually changed
-        id: editingCart?.id,
-        rfidTag: data.rfidTag || editingCart?.rfidTag, // Preserve original RFID if not changed
-        issues: data.issues ? data.issues.split('\n') : editingCart?.issues || [],
+      if (!data.id) {
+        const bulkUpdates = cartIds.map(cartId => {
+          const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
+          return {
+            ...originalCart,
+            store: data.store || originalCart?.store,
+            storeId: store.id,
+            status: data.status || originalCart?.status,
+            lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance,
+            issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
+          }
+        })
+        onSubmit(bulkUpdates)
+      } else {
+        // Individual cart update within bulk edit
+        const originalCart = editingCart?.originalCarts?.find(cart => cart.id === data.id)
+        onSubmit({
+          ...originalCart,
+          ...data,
+          id: data.id,
+          storeId: store.id,
+          rfidTag: data.rfidTag || originalCart?.rfidTag,
+          issues: data.issues ? data.issues.split('\n') : [],
+        })
       }
-      onSubmit(submissionData)
+    } else {
+      // Single cart edit
+      onSubmit({
+        ...editingCart,
+        ...data,
+        id: editingCart?.id,
+        storeId: store.id,
+        rfidTag: data.rfidTag || editingCart?.rfidTag,
+        issues: data.issues ? data.issues.split('\n') : [],
+      })
     }
-  }
-
-  const handleDelete = (cartId: string) => {
-    onDelete(cartId)
+    
     onOpenChange(false)
-    toast({
-      title: "Cart Deleted",
-      description: "The cart has been successfully deleted.",
-    })
   }
 
   return (
@@ -93,7 +100,7 @@ export function CartDialog({
             cartIds={cartIds}
             onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
-            onDelete={handleDelete}
+            onDelete={onDelete}
           />
         ) : (
           editingCart && (
@@ -101,7 +108,7 @@ export function CartDialog({
               cart={editingCart}
               onSubmit={handleSubmit}
               onCancel={() => onOpenChange(false)}
-              onDelete={handleDelete}
+              onDelete={onDelete}
             />
           )
         )}
