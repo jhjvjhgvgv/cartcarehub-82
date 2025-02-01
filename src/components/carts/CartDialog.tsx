@@ -50,7 +50,12 @@ export function CartDialog({
       })
       onSubmit(bulkUpdates)
     } else {
-      onSubmit(data)
+      // For single cart edit
+      const submissionData = {
+        ...data,
+        id: editingCart?.id
+      }
+      onSubmit(submissionData)
     }
   }
 
