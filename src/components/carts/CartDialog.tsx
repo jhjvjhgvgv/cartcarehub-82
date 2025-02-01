@@ -70,7 +70,7 @@ export function CartDialog({
         ...data,
         id: editingCart?.id,
         storeId: store.id,
-        rfidTag: data.rfidTag || editingCart?.rfidTag,
+        rfidTag: data.rfidTag,  // Use the actual RFID tag value
         issues: data.issues ? data.issues.split('\n') : [],
       })
     }
