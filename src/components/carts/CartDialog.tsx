@@ -38,7 +38,21 @@ export function CartDialog({
       })
       return
     }
-    onSubmit(data)
+    
+    // If it's a bulk edit, preserve the original RFID tags
+    if (isMultipleEdit && !data.id) {
+      const bulkUpdates = cartIds.map(cartId => {
+        const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
+        return {
+          ...data,
+          id: cartId,
+          rfidTag: originalCart?.rfidTag || ""
+        }
+      })
+      onSubmit(bulkUpdates)
+    } else {
+      onSubmit(data)
+    }
   }
 
   const handleDelete = (cartId: string) => {
@@ -115,7 +129,7 @@ export function CartDialog({
             <TabsContent value="bulk">
               <CartForm
                 initialData={{
-                  rfidTag: editingCart?.rfidTag || "",
+                  rfidTag: "Multiple RFIDs - Will Be Preserved",
                   store: editingCart?.store || "",
                   status: editingCart?.status || "active",
                   lastMaintenance: editingCart?.lastMaintenance || "",
