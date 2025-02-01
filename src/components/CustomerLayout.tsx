@@ -95,17 +95,25 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
               </div>
             </SheetContent>
           </Sheet>
-        ) : null}
+        ) : (
+          <nav className="hidden md:block">
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
+              <Menu className="h-6 w-6" />
+            </Button>
+          </nav>
+        )}
       </div>
       
       <div className="flex">
-        <nav className="hidden border-r bg-white md:block md:w-64">
-          <div className="flex h-[calc(100vh-4rem)] flex-col gap-2 p-4">
-            <div className="flex-1">
-              <NavLinks />
+        {(!isMobile || isOpen) && (
+          <nav className="hidden border-r bg-white md:block md:w-64">
+            <div className="flex h-[calc(100vh-4rem)] flex-col gap-2 p-4">
+              <div className="flex-1">
+                <NavLinks />
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>
