@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -14,10 +14,15 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Redirect /customer to /customer/dashboard
+  if (location.pathname === '/customer') {
+    return <Navigate to="/customer/dashboard" replace />;
+  }
+
   const navigation = [
     {
       name: "Dashboard",
-      href: "/customer",
+      href: "/customer/dashboard",
       icon: Home,
     },
     {
@@ -77,7 +82,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
-        <Link to="/customer" className="flex items-center gap-2">
+        <Link to="/customer/dashboard" className="flex items-center gap-2">
           <ShoppingCart className="h-6 w-6 text-primary" />
           <span className="font-semibold text-gray-900">CartCareHub</span>
         </Link>
