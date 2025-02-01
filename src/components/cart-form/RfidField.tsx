@@ -21,6 +21,7 @@ export function RfidField({ form, disabled = false, placeholder = "Enter RFID ta
             <Input 
               placeholder={placeholder}
               {...field} 
+              defaultValue={field.value}
               disabled={disabled}
               className={disabled ? "bg-gray-100" : ""}
             />

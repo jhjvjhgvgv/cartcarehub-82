@@ -38,10 +38,12 @@ export function CartForm({
     },
   })
 
-  // Reset form when initialData changes
+  // Reset form when initialData changes to ensure original values are displayed
   React.useEffect(() => {
     if (initialData) {
-      form.reset(initialData)
+      Object.keys(initialData).forEach((key) => {
+        form.setValue(key as keyof CartFormValues, initialData[key as keyof CartFormValues])
+      })
     }
   }, [initialData, form])
 
