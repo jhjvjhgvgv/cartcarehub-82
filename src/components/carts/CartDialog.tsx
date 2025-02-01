@@ -48,6 +48,7 @@ export function CartDialog({
             status: data.status || originalCart?.status,
             lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance,
             issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
+            rfidTag: originalCart?.rfidTag, // Preserve original RFID
           }
         })
         onSubmit(bulkUpdates)
@@ -59,6 +60,7 @@ export function CartDialog({
           ...data,
           id: data.id,
           storeId: store.id,
+          rfidTag: originalCart?.rfidTag, // Preserve original RFID
           issues: data.issues ? data.issues.split('\n') : [],
         })
       }
@@ -69,6 +71,7 @@ export function CartDialog({
         ...data,
         id: editingCart?.id,
         storeId: store.id,
+        rfidTag: editingCart?.rfidTag, // Preserve original RFID
         issues: data.issues ? data.issues.split('\n') : [],
       })
     }
