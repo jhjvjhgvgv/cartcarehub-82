@@ -42,6 +42,7 @@ interface CartFormProps {
   onCancel: () => void
   disableRfidTag?: boolean
   isBulkEdit?: boolean
+  rfidPlaceholder?: string
 }
 
 export function CartForm({ 
@@ -49,7 +50,8 @@ export function CartForm({
   onSubmit, 
   onCancel, 
   disableRfidTag = false,
-  isBulkEdit = false 
+  isBulkEdit = false,
+  rfidPlaceholder = "Enter RFID tag"
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
@@ -73,7 +75,7 @@ export function CartForm({
               <FormLabel>RFID Tag</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder={isBulkEdit ? "Multiple RFIDs - Will Be Preserved" : "Enter RFID tag"}
+                  placeholder={rfidPlaceholder}
                   {...field} 
                   disabled={disableRfidTag}
                   className={disableRfidTag ? "bg-gray-100" : ""}

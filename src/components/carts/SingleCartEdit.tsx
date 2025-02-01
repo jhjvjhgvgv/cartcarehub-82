@@ -35,6 +35,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
         onSubmit={onSubmit}
         onCancel={onCancel}
         disableRfidTag={false}
+        rfidPlaceholder={cart.rfidTag}
       />
     </div>
   )

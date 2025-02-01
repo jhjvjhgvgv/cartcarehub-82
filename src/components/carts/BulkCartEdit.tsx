@@ -53,6 +53,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                     onSubmit={(data) => onSubmit({ ...data, id: cartId })}
                     onCancel={onCancel}
                     disableRfidTag={false}
+                    rfidPlaceholder={originalCart?.rfidTag || "Enter RFID tag"}
                   />
                 </div>
               )
@@ -73,6 +74,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
           onCancel={onCancel}
           disableRfidTag={true}
           isBulkEdit={true}
+          rfidPlaceholder="Multiple RFIDs - Will Be Preserved"
         />
       </TabsContent>
     </Tabs>
