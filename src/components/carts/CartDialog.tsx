@@ -99,7 +99,6 @@ export function CartDialog({
                 <div className="space-y-6">
                   {cartIds.map((cartId) => {
                     const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
-
                     return (
                       <div key={cartId} className="border rounded-lg p-4">
                         <div className="flex justify-between items-center mb-4">
@@ -119,10 +118,10 @@ export function CartDialog({
                         <CartForm
                           initialData={{
                             rfidTag: originalCart?.rfidTag || "",
-                            store: originalCart?.store || editingCart?.store || "",
-                            status: originalCart?.status || editingCart?.status || "active",
-                            lastMaintenance: originalCart?.lastMaintenance || editingCart?.lastMaintenance || "",
-                            issues: Array.isArray(originalCart?.issues) ? originalCart.issues.join("\n") : "",
+                            store: originalCart?.store || "",
+                            status: originalCart?.status || "active",
+                            lastMaintenance: originalCart?.lastMaintenance || "",
+                            issues: originalCart?.issues ? originalCart.issues.join("\n") : "",
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
@@ -141,9 +140,7 @@ export function CartDialog({
                   store: editingCart?.store || "",
                   status: editingCart?.status || "active",
                   lastMaintenance: editingCart?.lastMaintenance || "",
-                  issues: Array.isArray(editingCart?.issues) 
-                    ? editingCart.issues.join("\n") 
-                    : "",
+                  issues: editingCart?.issues ? editingCart.issues.join("\n") : "",
                 }}
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
@@ -173,9 +170,7 @@ export function CartDialog({
                       store: editingCart.store || "",
                       status: editingCart.status || "active",
                       lastMaintenance: editingCart.lastMaintenance || "",
-                      issues: Array.isArray(editingCart.issues) 
-                        ? editingCart.issues.join("\n") 
-                        : "",
+                      issues: editingCart.issues ? editingCart.issues.join("\n") : "",
                     }
                   : undefined
               }
