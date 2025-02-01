@@ -51,7 +51,15 @@ export function CartDialog({
       })
       onSubmit(bulkUpdates)
     } else {
-      onSubmit(data)
+      // For single edit, if RFID is unchanged, use the original
+      if (editingCart && data.rfidTag === editingCart.rfidTag) {
+        onSubmit({
+          ...data,
+          rfidTag: editingCart.rfidTag
+        })
+      } else {
+        onSubmit(data)
+      }
     }
   }
 
@@ -118,7 +126,7 @@ export function CartDialog({
                           }}
                           onSubmit={(data) => handleSubmit({ ...data, id: cartId })}
                           onCancel={() => onOpenChange(false)}
-                          disableRfidTag={true}
+                          disableRfidTag={false}
                         />
                       </div>
                     )
@@ -173,7 +181,7 @@ export function CartDialog({
               }
               onSubmit={handleSubmit}
               onCancel={() => onOpenChange(false)}
-              disableRfidTag={!!editingCart}
+              disableRfidTag={false}
             />
           </div>
         )}
