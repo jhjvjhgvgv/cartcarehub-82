@@ -22,7 +22,8 @@ export function RfidField({ form, disabled = false, placeholder = "Enter RFID ta
               {...field}
               placeholder={placeholder}
               disabled={disabled}
-              className={disabled ? "bg-gray-100" : ""}
+              readOnly={disabled}
+              className={disabled ? "bg-gray-100 cursor-not-allowed" : ""}
             />
           </FormControl>
           <FormMessage />
