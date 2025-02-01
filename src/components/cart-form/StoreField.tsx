@@ -20,7 +20,7 @@ export function StoreField({ form }: StoreFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Store</FormLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select store" />

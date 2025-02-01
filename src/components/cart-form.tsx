@@ -27,23 +27,27 @@ export function CartForm({
   isBulkEdit = false,
   rfidPlaceholder = "Enter RFID tag"
 }: CartFormProps) {
-  const defaultValues: CartFormValues = {
-    rfidTag: "",
-    store: "",
-    status: "active",
-    lastMaintenance: new Date().toISOString().split("T")[0],
-    issues: "",
-  }
-
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
-    defaultValues: initialData || defaultValues,
+    defaultValues: {
+      rfidTag: initialData?.rfidTag || "",
+      store: initialData?.store || "",
+      status: initialData?.status || "active",
+      lastMaintenance: initialData?.lastMaintenance || new Date().toISOString().split("T")[0],
+      issues: initialData?.issues || "",
+    },
   })
 
   // Reset form when initialData changes
   React.useEffect(() => {
     if (initialData) {
-      form.reset(initialData)
+      form.reset({
+        rfidTag: initialData.rfidTag,
+        store: initialData.store,
+        status: initialData.status,
+        lastMaintenance: initialData.lastMaintenance,
+        issues: initialData.issues,
+      })
     }
   }, [initialData, form])
 

@@ -15,7 +15,7 @@ export function StatusField({ form }: StatusFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Status</FormLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
