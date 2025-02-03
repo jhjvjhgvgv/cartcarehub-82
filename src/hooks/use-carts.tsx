@@ -11,7 +11,17 @@ export const useCarts = (initialCarts: Cart[]) => {
       // Handle bulk updates
       const updatedCarts = carts.map(cart => {
         const update = data.find(update => update.id === cart.id)
-        return update || cart
+        if (!update) return cart
+
+        const store = managedStores.find(s => s.name === update.store)
+        if (!store) return cart
+
+        return {
+          ...cart,
+          ...update,
+          storeId: store.id,
+          issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : []),
+        }
       })
       
       setCarts(updatedCarts)
@@ -54,7 +64,7 @@ export const useCarts = (initialCarts: Cart[]) => {
         storeId: store.id,
         status: data.status,
         lastMaintenance: data.lastMaintenance,
-        issues: data.issues ? data.issues.split('\n') : [],
+        issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
       }
       setCarts([...carts, newCart])
       toast({
