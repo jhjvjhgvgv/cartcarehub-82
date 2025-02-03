@@ -33,7 +33,7 @@ export const useCarts = (initialCarts: Cart[]) => {
               storeId: store.id,
               status: data.status,
               lastMaintenance: data.lastMaintenance,
-              issues: data.issues ? data.issues.split('\n') : [],
+              issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
             }
           : cart
       )
