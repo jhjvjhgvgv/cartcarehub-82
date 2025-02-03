@@ -1,6 +1,10 @@
 import { Button } from "@/components/ui/button"
-import { PencilIcon, Trash2Icon } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Cart } from "@/types/cart"
+import { MoreHorizontal, PencilIcon, Trash2Icon, WrenchIcon } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface CartActionsProps {
   cart: Cart
@@ -9,24 +13,80 @@ interface CartActionsProps {
 }
 
 export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const { toast } = useToast()
+
+  const handleMaintenanceClick = () => {
+    // Update the cart's status to maintenance
+    const updatedCart = {
+      ...cart,
+      status: "maintenance" as const
+    }
+    onEdit(updatedCart)
+    
+    toast({
+      title: "Cart Status Updated",
+      description: `Cart ${cart.rfidTag} has been marked for maintenance.`,
+    })
+  }
+
   return (
-    <div className="flex items-center justify-end gap-2 px-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onEdit(cart)}
-        className="h-8 w-8 p-0 hover:bg-primary-50 flex items-center justify-center"
-      >
-        <PencilIcon className="h-4 w-4 text-primary-600" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDelete(cart.id)}
-        className="h-8 w-8 p-0 hover:bg-red-50 flex items-center justify-center"
-      >
-        <Trash2Icon className="h-4 w-4 text-red-500" />
-      </Button>
+    <div className="flex items-center gap-2">
+      {cart.status !== "maintenance" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleMaintenanceClick}
+          className="hover:bg-yellow-100 hover:text-yellow-900"
+        >
+          <WrenchIcon className="h-4 w-4" />
+        </Button>
+      )}
+      
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit(cart)}>
+            <PencilIcon className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-red-600"
+          >
+            <Trash2Icon className="mr-2 h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the cart
+              and remove its data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDelete(cart.id)
+                setShowDeleteDialog(false)
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
