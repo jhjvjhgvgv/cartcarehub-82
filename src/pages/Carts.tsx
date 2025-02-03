@@ -11,6 +11,7 @@ import { CartFilters as CartFiltersType } from "@/components/cart-filters"
 const managedStores = [
   { id: "store1", name: "SuperMart Downtown" },
   { id: "store2", name: "FreshMart Heights" },
+  { id: "store3", name: "Value Grocery West" },
 ]
 
 const initialCarts: Cart[] = [
@@ -39,6 +40,60 @@ const initialCarts: Cart[] = [
     storeId: "store2",
     status: "active",
     lastMaintenance: "2024-02-10",
+    issues: [],
+  },
+  {
+    id: "CART-004",
+    rfidTag: "RFID-D012",
+    store: "FreshMart Heights",
+    storeId: "store2",
+    status: "retired",
+    lastMaintenance: "2024-01-05",
+    issues: ["Frame damage", "Beyond repair"],
+  },
+  {
+    id: "CART-005",
+    rfidTag: "RFID-E345",
+    store: "Value Grocery West",
+    storeId: "store3",
+    status: "active",
+    lastMaintenance: "2024-02-20",
+    issues: [],
+  },
+  {
+    id: "CART-006",
+    rfidTag: "RFID-F678",
+    store: "Value Grocery West",
+    storeId: "store3",
+    status: "maintenance",
+    lastMaintenance: "2024-02-01",
+    issues: ["Squeaky wheel"],
+  },
+  {
+    id: "CART-007",
+    rfidTag: "RFID-G901",
+    store: "SuperMart Downtown",
+    storeId: "store1",
+    status: "active",
+    lastMaintenance: "2024-02-18",
+    issues: [],
+  },
+  {
+    id: "CART-008",
+    rfidTag: "RFID-H234",
+    store: "FreshMart Heights",
+    storeId: "store2",
+    status: "active",
+    lastMaintenance: "2024-02-17",
+    issues: [],
+  },
+  {
+    id: "CART-009",
+    rfidTag: "RFID-I567",
+    store: "Value Grocery West",
+    storeId: "store3",
+    status: "active",
+    lastMaintenance: "2024-02-19",
     issues: [],
   },
 ]
