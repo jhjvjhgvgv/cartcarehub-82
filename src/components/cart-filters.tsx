@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Card } from "./ui/card"
 
 interface CartFiltersProps {
   onFilterChange: (filters: CartFilters) => void
@@ -30,7 +31,6 @@ export function CartFilters({ onFilterChange, managedStores }: CartFiltersProps)
   const handleFilterChange = (key: keyof CartFilters, value: string) => {
     const newFilters = { ...filters, [key]: value }
     setFilters(newFilters)
-    // Convert "all" back to empty string for filtering logic
     if ((key === "status" || key === "store") && value === "all") {
       onFilterChange({ ...newFilters, [key]: "" })
     } else {
@@ -39,52 +39,55 @@ export function CartFilters({ onFilterChange, managedStores }: CartFiltersProps)
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <div className="space-y-2">
-        <Label htmlFor="rfidTag">RFID Tag</Label>
-        <Input
-          id="rfidTag"
-          placeholder="Search by RFID tag..."
-          value={filters.rfidTag}
-          onChange={(e) => handleFilterChange("rfidTag", e.target.value)}
-        />
+    <Card className="p-4">
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="rfidTag" className="text-sm font-medium">RFID Tag</Label>
+          <Input
+            id="rfidTag"
+            placeholder="Search by RFID tag..."
+            value={filters.rfidTag}
+            onChange={(e) => handleFilterChange("rfidTag", e.target.value)}
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="store" className="text-sm font-medium">Store</Label>
+          <Select
+            value={filters.store === "" ? "all" : filters.store}
+            onValueChange={(value) => handleFilterChange("store", value)}
+          >
+            <SelectTrigger id="store" className="w-full">
+              <SelectValue placeholder="Filter by store" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stores</SelectItem>
+              {managedStores.map((store) => (
+                <SelectItem key={store.id} value={store.name}>
+                  {store.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+          <Select
+            value={filters.status === "" ? "all" : filters.status}
+            onValueChange={(value) => handleFilterChange("status", value)}
+          >
+            <SelectTrigger id="status" className="w-full">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="retired">Retired</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="store">Store</Label>
-        <Select
-          value={filters.store === "" ? "all" : filters.store}
-          onValueChange={(value) => handleFilterChange("store", value)}
-        >
-          <SelectTrigger id="store">
-            <SelectValue placeholder="Filter by store" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stores</SelectItem>
-            {managedStores.map((store) => (
-              <SelectItem key={store.id} value={store.name}>
-                {store.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select
-          value={filters.status === "" ? "all" : filters.status}
-          onValueChange={(value) => handleFilterChange("status", value)}
-        >
-          <SelectTrigger id="status">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="maintenance">Maintenance</SelectItem>
-            <SelectItem value="retired">Retired</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    </Card>
   )
 }

@@ -9,6 +9,7 @@ import { StatusField } from "./cart-form/StatusField"
 import { MaintenanceField } from "./cart-form/MaintenanceField"
 import { IssuesField } from "./cart-form/IssuesField"
 import { cartFormSchema, CartFormValues } from "./cart-form/types"
+import { Card } from "./ui/card"
 
 interface CartFormProps {
   initialData?: CartFormValues
@@ -38,7 +39,6 @@ export function CartForm({
     },
   })
 
-  // Reset form when initialData changes
   React.useEffect(() => {
     if (initialData) {
       form.reset(initialData)
@@ -46,10 +46,8 @@ export function CartForm({
   }, [initialData, form])
 
   const handleSubmit = (data: CartFormValues) => {
-    // Create an object to store only modified values
     const modifiedValues: Partial<CartFormValues> = {}
 
-    // Compare each field with initial data and only include changed values
     Object.keys(data).forEach((key) => {
       const fieldKey = key as keyof CartFormValues
       if (initialData && data[fieldKey] !== initialData[fieldKey]) {
@@ -64,12 +62,10 @@ export function CartForm({
       }
     })
 
-    // For bulk edit or disabled RFID, preserve original RFID
     if (isBulkEdit || (disableRfidTag && initialData?.rfidTag)) {
       delete modifiedValues.rfidTag
     }
 
-    // Submit only modified values along with the original data for reference
     onSubmit({
       ...initialData,
       ...modifiedValues,
@@ -78,22 +74,29 @@ export function CartForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <RfidField 
-          form={form} 
-          disabled={disableRfidTag}
-          placeholder={rfidPlaceholder}
-        />
-        <StoreField form={form} />
-        <StatusField form={form} />
-        <MaintenanceField form={form} />
-        <IssuesField form={form} />
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <Card className="p-6 space-y-6">
+          <RfidField 
+            form={form} 
+            disabled={disableRfidTag}
+            placeholder={rfidPlaceholder}
+          />
+          <StoreField form={form} />
+          <StatusField form={form} />
+          <MaintenanceField form={form} />
+          <IssuesField form={form} />
+        </Card>
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+          >
             Cancel
           </Button>
-          <Button type="submit">Save Cart</Button>
+          <Button type="submit">Save Changes</Button>
         </div>
       </form>
     </Form>

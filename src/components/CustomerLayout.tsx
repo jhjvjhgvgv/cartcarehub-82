@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,7 +14,6 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Redirect /customer to /customer/dashboard
   if (location.pathname === '/customer') {
     return <Navigate to="/customer/dashboard" replace />;
   }
@@ -32,7 +31,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
     },
     {
       name: "Report Issue",
-      href: "/customer/report",
+      href: "/customer/report-issue",
       icon: AlertTriangle,
     },
     {
@@ -58,22 +57,22 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
           to={item.href}
           onClick={() => setIsOpen(false)}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-primary-50",
+            "flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-all hover:bg-primary-50",
             location.pathname === item.href
-              ? "bg-primary text-primary-foreground"
-              : "text-gray-700"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-gray-700 hover:text-gray-900"
           )}
         >
-          <item.icon className="h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           {item.name}
         </Link>
       ))}
       <Button
         variant="ghost"
-        className="w-full justify-start gap-3 px-3 text-gray-700 hover:bg-primary-50 hover:text-gray-900"
+        className="w-full justify-start gap-3 px-4 py-3 text-gray-700 hover:bg-destructive/10 hover:text-destructive"
         onClick={handleSignOut}
       >
-        <LogOut className="h-4 w-4" />
+        <LogOut className="h-5 w-5" />
         Sign Out
       </Button>
     </>
@@ -81,7 +80,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-white px-4 md:px-6 shadow-sm">
         <Link to="/customer/dashboard" className="flex items-center gap-2">
           <ShoppingCart className="h-6 w-6 text-primary" />
           <span className="font-semibold text-gray-900">CartCareHub</span>
@@ -90,12 +89,23 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
         {isMobile ? (
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-4">
-              <div className="flex flex-col gap-2">
+            <SheetContent side="left" className="w-72 p-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between mb-4">
+                  <Link to="/customer/dashboard" className="flex items-center gap-2">
+                    <ShoppingCart className="h-6 w-6 text-primary" />
+                    <span className="font-semibold text-gray-900">CartCareHub</span>
+                  </Link>
+                  <SheetClose asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </SheetClose>
+                </div>
                 <NavLinks />
               </div>
             </SheetContent>
@@ -107,11 +117,11 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
             </Button>
           </nav>
         )}
-      </div>
+      </header>
       
       <div className="flex">
         {(!isMobile || isOpen) && (
-          <nav className="hidden border-r bg-white md:block md:w-64">
+          <nav className="hidden border-r bg-white md:block md:w-72">
             <div className="flex h-[calc(100vh-4rem)] flex-col gap-2 p-4">
               <div className="flex-1">
                 <NavLinks />

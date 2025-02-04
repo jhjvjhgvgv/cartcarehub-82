@@ -2,15 +2,35 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/comp
 import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const navigation = [
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Carts",
+      href: "/carts",
+      icon: ShoppingCart,
+    },
+    {
+      name: "Customers",
+      href: "/customers",
+      icon: Users,
+    },
+    {
+      name: "Settings",
+      href: "/settings",
+      icon: Settings,
+    },
+  ];
 
   const handleSignOut = () => {
     toast({
@@ -31,56 +51,27 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                   CartRepairPros
                 </span>
               </h2>
-              <nav className="space-y-1.5">
-                <Link 
-                  to="/dashboard" 
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    isActive('/dashboard') 
-                      ? 'bg-primary-50 text-primary-900' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="font-medium">Dashboard</span>
-                </Link>
-                <Link 
-                  to="/carts" 
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    isActive('/carts')
-                      ? 'bg-primary-50 text-primary-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  <span className="font-medium">Carts</span>
-                </Link>
-                <Link 
-                  to="/customers" 
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    isActive('/customers')
-                      ? 'bg-primary-50 text-primary-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="font-medium">Customers</span>
-                </Link>
-                <Link 
-                  to="/settings" 
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    isActive('/settings')
-                      ? 'bg-primary-50 text-primary-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="font-medium">Settings</span>
-                </Link>
+              <nav className="space-y-1">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-all",
+                      location.pathname === item.href
+                        ? "bg-primary-50 text-primary-900 shadow-sm"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                ))}
                 <button
                   onClick={handleSignOut}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm transition-all text-gray-600 hover:bg-destructive/10 hover:text-destructive"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-5 w-5" />
                   <span className="font-medium">Sign Out</span>
                 </button>
               </nav>
@@ -89,7 +80,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </Sidebar>
         <main className="flex-1 overflow-hidden">
           <SidebarTrigger className="p-4" />
-          {children}
+          <div className="p-4 md:p-6">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>
