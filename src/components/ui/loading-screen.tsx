@@ -18,9 +18,9 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           onLoadingComplete?.();
           return 100;
         }
-        return prevProgress + 1; // Changed back to 1
+        return prevProgress + 1;
       });
-    }, 20); // Keeping the shorter interval for smooth animation
+    }, 20);
 
     return () => clearInterval(timer);
   }, [onLoadingComplete]);
@@ -39,7 +39,7 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
             style={{ 
               left: `${progress}%`,
               transform: `translate(-50%, -50%)`,
-              transition: 'left 0.3s ease-in-out' // Keeping smooth transition for cart movement
+              transition: 'all 20ms linear' // Synchronized with the progress update interval
             }}
           >
             <ShoppingCart 
