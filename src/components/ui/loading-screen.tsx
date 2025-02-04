@@ -18,9 +18,9 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
           onLoadingComplete?.();
           return 100;
         }
-        return prevProgress + 1;
+        return prevProgress + 0.5; // Reduced increment for smoother movement
       });
-    }, 40);
+    }, 20); // Reduced interval for smoother animation
 
     return () => clearInterval(timer);
   }, [onLoadingComplete]);
@@ -33,13 +33,13 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
         </h2>
         
         <div className="relative w-full">
-          <Progress value={progress} className="h-4" />
+          <Progress value={progress} className="h-4 transition-all duration-300 ease-in-out" />
           <div 
             className="absolute top-1/2 -translate-y-1/2 z-10"
             style={{ 
               left: `${progress}%`,
               transform: `translate(-50%, -50%)`,
-              transition: 'left 0.04s linear'
+              transition: 'left 0.3s ease-in-out' // Smoother transition for cart movement
             }}
           >
             <ShoppingCart 
