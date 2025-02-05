@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+type UserRole = "maintenance" | "store";
+
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -15,6 +17,7 @@ const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,7 +48,8 @@ const Index = () => {
     }, 200);
   };
 
-  const handlePortalClick = () => {
+  const handlePortalClick = (role: UserRole) => {
+    setSelectedRole(role);
     setIsAuthView(true);
   };
 
@@ -62,7 +66,15 @@ const Index = () => {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate password for sign up
+    if (!selectedRole) {
+      toast({
+        title: "Error",
+        description: "Please select a portal first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (isSignUp) {
       const { isValid, message } = validatePassword(password);
       if (!isValid) {
@@ -86,6 +98,16 @@ const Index = () => {
 
         if (authResponse.error) {
           throw authResponse.error;
+        }
+
+        // After successful signup, update the user's role
+        if (authResponse.data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ role: selectedRole })
+            .eq('id', authResponse.data.user.id);
+
+          if (profileError) throw profileError;
         }
 
         toast({
@@ -184,7 +206,10 @@ const Index = () => {
                   type="button"
                   variant="ghost"
                   className="w-full"
-                  onClick={() => setIsAuthView(false)}
+                  onClick={() => {
+                    setIsAuthView(false);
+                    setSelectedRole(null);
+                  }}
                 >
                   Back to Portals
                 </Button>
