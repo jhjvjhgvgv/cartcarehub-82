@@ -45,12 +45,36 @@ const Index = () => {
     }, 200);
   };
 
-  const handlePortalClick = (portal: 'maintenance' | 'store') => {
+  const handlePortalClick = () => {
     setIsAuthView(true);
+  };
+
+  const validatePassword = (password: string): { isValid: boolean; message: string } => {
+    if (password.length < 6) {
+      return { 
+        isValid: false, 
+        message: "Password must be at least 6 characters long" 
+      };
+    }
+    return { isValid: true, message: "" };
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate password for sign up
+    if (isSignUp) {
+      const { isValid, message } = validatePassword(password);
+      if (!isValid) {
+        toast({
+          title: "Invalid Password",
+          description: message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       let authResponse;
       
@@ -59,36 +83,46 @@ const Index = () => {
           email,
           password,
         });
+
+        if (authResponse.error) {
+          throw authResponse.error;
+        }
+
+        toast({
+          title: "Success",
+          description: "Account created successfully. Please check your email for confirmation.",
+        });
+        setIsSignUp(false);
+        return;
       } else {
         authResponse = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-      }
 
-      if (authResponse.error) {
-        throw authResponse.error;
-      }
+        if (authResponse.error) {
+          if (authResponse.error.message.includes('Email not confirmed')) {
+            toast({
+              title: "Email Not Confirmed",
+              description: "Please check your email and confirm your account before signing in.",
+              variant: "destructive",
+            });
+            return;
+          }
+          throw authResponse.error;
+        }
 
-      if (isSignUp) {
-        toast({
-          title: "Success",
-          description: "Account created successfully. Please sign in.",
-        });
-        setIsSignUp(false);
-        return;
-      }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', authResponse.data.user!.id)
+          .maybeSingle();
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authResponse.data.user!.id)
-        .maybeSingle();
-
-      if (profile?.role === 'maintenance') {
-        navigate('/dashboard');
-      } else if (profile?.role === 'store') {
-        navigate('/customer/dashboard');
+        if (profile?.role === 'maintenance') {
+          navigate('/dashboard');
+        } else if (profile?.role === 'store') {
+          navigate('/customer/dashboard');
+        }
       }
     } catch (error: any) {
       toast({
@@ -127,7 +161,13 @@ const Index = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
+                  {isSignUp && (
+                    <p className="text-sm text-gray-500">
+                      Password must be at least 6 characters long
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full">
                   {isSignUp ? "Sign Up" : "Sign In"}
@@ -148,6 +188,16 @@ const Index = () => {
                 >
                   Back to Portals
                 </Button>
+                {!isSignUp && (
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full"
+                    onClick={() => navigate("/forgot-password")}
+                  >
+                    Forgot Password?
+                  </Button>
+                )}
               </form>
             </CardContent>
           </Card>
