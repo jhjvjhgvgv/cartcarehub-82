@@ -1,13 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Wrench, Key, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { LoadingScreen } from "@/components/ui/loading-screen";
+import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthView, setIsAuthView] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profile?.role === 'maintenance') {
+          navigate('/dashboard');
+        } else if (profile?.role === 'store') {
+          navigate('/customer/dashboard');
+        }
+      }
+      setIsLoading(false);
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleLoadingComplete = () => {
     setTimeout(() => {
@@ -15,8 +45,115 @@ const Index = () => {
     }, 200);
   };
 
+  const handlePortalClick = (portal: 'maintenance' | 'store') => {
+    setIsAuthView(true);
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      let authResponse;
+      
+      if (isSignUp) {
+        authResponse = await supabase.auth.signUp({
+          email,
+          password,
+        });
+      } else {
+        authResponse = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      }
+
+      if (authResponse.error) {
+        throw authResponse.error;
+      }
+
+      if (isSignUp) {
+        toast({
+          title: "Success",
+          description: "Account created successfully. Please sign in.",
+        });
+        setIsSignUp(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authResponse.data.user!.id)
+        .maybeSingle();
+
+      if (profile?.role === 'maintenance') {
+        navigate('/dashboard');
+      } else if (profile?.role === 'store') {
+        navigate('/customer/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
+
+  if (isAuthView) {
+    return (
+      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100">
+        <div className="w-full max-w-md px-4 py-6 sm:py-8">
+          <Card className="w-full shadow-xl bg-white/95 backdrop-blur-sm border-primary-100">
+            <CardContent className="p-6 sm:p-8">
+              <h2 className="text-2xl font-bold text-center mb-6">
+                {isSignUp ? "Create Account" : "Sign In"}
+              </h2>
+              <form onSubmit={handleAuth} className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  {isSignUp ? "Sign Up" : "Sign In"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                >
+                  {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setIsAuthView(false)}
+                >
+                  Back to Portals
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -42,7 +179,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 sm:py-6 flex items-center justify-between space-x-3 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md group"
-                onClick={() => navigate("/dashboard")}
+                onClick={() => handlePortalClick('maintenance')}
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 sm:p-3 bg-primary-50 rounded-full flex-shrink-0 group-hover:bg-primary-100 transition-colors">
@@ -59,7 +196,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 sm:py-6 flex items-center justify-between space-x-3 hover:bg-primary-50 transition-all duration-300 shadow-sm hover:shadow-md group"
-                onClick={() => navigate("/customer")}
+                onClick={() => handlePortalClick('store')}
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 sm:p-3 bg-primary-50 rounded-full flex-shrink-0 group-hover:bg-primary-100 transition-colors">
