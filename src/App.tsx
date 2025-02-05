@@ -21,6 +21,10 @@ function App() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
+  const isValidRole = (role: string | null): role is 'maintenance' | 'store' => {
+    return role === 'maintenance' || role === 'store'
+  }
+
   useEffect(() => {
     // Check auth state and get user role
     const checkAuth = async () => {
@@ -34,7 +38,12 @@ function App() {
             .maybeSingle()
           
           if (error) throw error
-          setUserRole(profile?.role || null)
+          const role = profile?.role
+          if (isValidRole(role)) {
+            setUserRole(role)
+          } else {
+            setUserRole(null)
+          }
         } else {
           setUserRole(null)
         }
@@ -65,7 +74,12 @@ function App() {
           setUserRole(null)
           return
         }
-        setUserRole(profile?.role || null)
+        const role = profile?.role
+        if (isValidRole(role)) {
+          setUserRole(role)
+        } else {
+          setUserRole(null)
+        }
       } else {
         setUserRole(null)
       }
