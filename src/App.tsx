@@ -105,7 +105,7 @@ function App() {
   }
 
   return (
-    <React.StrictMode>
+    <>
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -162,7 +162,7 @@ function App() {
           <Route path="/customer/report-issue" element={
             <ProtectedStoreRoute>
               <ReportIssue />
-            </ProtectedStoreStore>
+            </ProtectedStoreRoute>
           } />
           <Route path="/customer/settings" element={
             <ProtectedStoreRoute>
@@ -172,7 +172,7 @@ function App() {
         </Routes>
         <Toaster />
       </Router>
-    </React.StrictMode>
+    </>
   )
 }
 
