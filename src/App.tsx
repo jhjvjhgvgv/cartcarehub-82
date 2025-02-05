@@ -27,12 +27,13 @@ function App() {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
-            .single()
+            .maybeSingle()
           
+          if (error) throw error
           setUserRole(profile?.role || null)
         } else {
           setUserRole(null)
@@ -53,12 +54,17 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
         
+        if (error) {
+          console.error('Error fetching profile:', error)
+          setUserRole(null)
+          return
+        }
         setUserRole(profile?.role || null)
       } else {
         setUserRole(null)
