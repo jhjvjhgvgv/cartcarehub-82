@@ -75,55 +75,49 @@ const Index = () => {
       return;
     }
 
-    if (isSignUp) {
-      const { isValid, message } = validatePassword(password);
-      if (!isValid) {
-        toast({
-          title: "Invalid Password",
-          description: message,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
     try {
-      let authResponse;
-      
       if (isSignUp) {
-        authResponse = await supabase.auth.signUp({
+        const { isValid, message } = validatePassword(password);
+        if (!isValid) {
+          toast({
+            title: "Invalid Password",
+            description: message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
-        if (authResponse.error) {
-          throw authResponse.error;
+        if (signUpError) {
+          throw signUpError;
         }
 
-        // After successful signup, update the user's role
-        if (authResponse.data.user) {
+        if (signUpData.user) {
           const { error: profileError } = await supabase
             .from('profiles')
             .update({ role: selectedRole })
-            .eq('id', authResponse.data.user.id);
+            .eq('id', signUpData.user.id);
 
           if (profileError) throw profileError;
-        }
 
-        toast({
-          title: "Success",
-          description: "Account created successfully. Please check your email for confirmation.",
-        });
-        setIsSignUp(false);
-        return;
+          toast({
+            title: "Success",
+            description: "Account created successfully. Please check your email for confirmation.",
+          });
+          setIsSignUp(false);
+        }
       } else {
-        authResponse = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (authResponse.error) {
-          if (authResponse.error.message.includes('Email not confirmed')) {
+        if (signInError) {
+          if (signInError.message.includes('Email not confirmed')) {
             toast({
               title: "Email Not Confirmed",
               description: "Please check your email and confirm your account before signing in.",
@@ -131,19 +125,21 @@ const Index = () => {
             });
             return;
           }
-          throw authResponse.error;
+          throw signInError;
         }
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authResponse.data.user!.id)
-          .maybeSingle();
+        if (signInData.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', signInData.user.id)
+            .maybeSingle();
 
-        if (profile?.role === 'maintenance') {
-          navigate('/dashboard');
-        } else if (profile?.role === 'store') {
-          navigate('/customer/dashboard');
+          if (profile?.role === 'maintenance') {
+            navigate('/dashboard');
+          } else if (profile?.role === 'store') {
+            navigate('/customer/dashboard');
+          }
         }
       }
     } catch (error: any) {
