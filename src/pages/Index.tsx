@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,20 +16,28 @@ const Index = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
+      // Add a minimum delay to ensure loading screen is visible
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const sessionCheck = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (profile?.role === 'maintenance') {
-          navigate('/dashboard');
-        } else if (profile?.role === 'store') {
-          navigate('/customer/dashboard');
+          if (profile?.role === 'maintenance') {
+            navigate('/dashboard');
+          } else if (profile?.role === 'store') {
+            navigate('/customer/dashboard');
+          }
         }
-      }
+      };
+
+      // Wait for both the minimum delay and session check
+      await Promise.all([minDelay, sessionCheck()]);
       setIsLoading(false);
     };
     
@@ -36,9 +45,8 @@ const Index = () => {
   }, [navigate]);
 
   const handleLoadingComplete = () => {
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 200);
+    // Don't set loading to false immediately after completion
+    // The loading state is already managed by checkSession
   };
 
   const handlePortalClick = (role: UserRole) => {
