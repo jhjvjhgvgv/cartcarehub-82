@@ -9,7 +9,7 @@ interface RfidFieldProps {
   placeholder?: string
 }
 
-export function RfidField({ form, disabled = false, placeholder = "Enter RFID tag" }: RfidFieldProps) {
+export function RfidField({ form, disabled = false, placeholder = "Enter QR code" }: RfidFieldProps) {
   return (
     <FormField
       control={form.control}
