@@ -17,8 +17,8 @@ interface BulkCartEditProps {
 export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelete }: BulkCartEditProps) {
   // Get the original cart if only one is selected
   const singleCart = cartIds.length === 1 ? editingCart?.originalCarts?.find(cart => cart.id === cartIds[0]) : null
-  const rfidDisplay = singleCart?.rfidTag || "Multiple RFIDs"
-  const rfidPlaceholder = singleCart?.rfidTag || "Multiple RFIDs - Will Be Preserved"
+  const rfidDisplay = singleCart?.rfidTag || "Multiple QR Codes"
+  const rfidPlaceholder = singleCart?.rfidTag || "Multiple QR Codes - Will Be Preserved"
 
   return (
     <Tabs defaultValue="individual" className="w-full">

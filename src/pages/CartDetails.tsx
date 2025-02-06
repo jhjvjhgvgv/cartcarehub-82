@@ -137,7 +137,7 @@ export default function CartDetails() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">RFID Tag</p>
+                  <p className="text-sm font-medium text-gray-500">QR Code</p>
                   <p className="text-lg">{cart.rfidTag}</p>
                 </div>
                 <div>

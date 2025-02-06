@@ -16,7 +16,7 @@ export function RfidField({ form, disabled = false, placeholder = "Enter RFID ta
       name="rfidTag"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>RFID Tag</FormLabel>
+          <FormLabel>QR Code</FormLabel>
           <FormControl>
             <Input 
               {...field}

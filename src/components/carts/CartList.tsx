@@ -67,7 +67,7 @@ export function CartList({ carts, onEditCart, onDeleteCart, onEditMultiple }: Ca
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead className="py-4 px-4">RFID Tag</TableHead>
+              <TableHead className="py-4 px-4">QR Code</TableHead>
               <TableHead className="hidden sm:table-cell py-4 px-4">Store</TableHead>
               <TableHead className="py-4 px-4">Status</TableHead>
               <TableHead className="hidden sm:table-cell py-4 px-4">Last Maintenance</TableHead>
