@@ -58,7 +58,7 @@ export const useCarts = (initialCarts: Cart[]) => {
       if (!store) return
 
       const newCart: Cart = {
-        id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
+        id: `QR-${String(carts.length + 1).padStart(3, "0")}`,
         rfidTag: data.rfidTag,
         store: data.store,
         storeId: store.id,
