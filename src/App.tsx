@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import Index from "@/pages/Index"
 import Dashboard from "@/pages/Dashboard"
@@ -15,113 +15,23 @@ import CartStatus from "@/pages/customer/CartStatus"
 import ReportIssue from "@/pages/customer/ReportIssue"
 import CustomerSettings from "@/pages/customer/Settings"
 import { useToast } from "@/hooks/use-toast"
+import { LoadingView } from "@/components/auth/LoadingView"
 
 function App() {
-  const [userRole, setUserRole] = useState<'maintenance' | 'store' | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  const isValidRole = (role: string | null): role is 'maintenance' | 'store' => {
-    return role === 'maintenance' || role === 'store'
-  }
-
   useEffect(() => {
-    // Check auth state and get user role
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle()
-          
-          if (error) throw error
-          const role = profile?.role
-          if (isValidRole(role)) {
-            setUserRole(role)
-          } else {
-            setUserRole(null)
-          }
-        } else {
-          setUserRole(null)
-        }
-      } catch (error) {
-        console.error('Error checking auth state:', error)
-        toast({
-          title: "Error",
-          description: "Failed to check authentication status",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
+    // Simple loading delay
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 1000)
 
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle()
-        
-        if (error) {
-          console.error('Error fetching profile:', error)
-          setUserRole(null)
-          return
-        }
-        const role = profile?.role
-        if (isValidRole(role)) {
-          setUserRole(role)
-        } else {
-          setUserRole(null)
-        }
-      } else {
-        setUserRole(null)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [toast])
+    return () => clearTimeout(timer)
+  }, [])
 
   if (loading) {
-    return <div>Loading...</div>
-  }
-
-  const ProtectedMaintenanceRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!userRole) {
-      return <Navigate to="/" replace />
-    }
-    if (userRole !== 'maintenance') {
-      toast({
-        title: "Access Denied",
-        description: "You don't have access to the maintenance portal",
-        variant: "destructive",
-      })
-      return <Navigate to="/customer/dashboard" replace />
-    }
-    return <>{children}</>
-  }
-
-  const ProtectedStoreRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!userRole) {
-      return <Navigate to="/" replace />
-    }
-    if (userRole !== 'store') {
-      toast({
-        title: "Access Denied",
-        description: "You don't have access to the store portal",
-        variant: "destructive",
-      })
-      return <Navigate to="/dashboard" replace />
-    }
-    return <>{children}</>
+    return <LoadingView onLoadingComplete={() => setLoading(false)} />
   }
 
   return (
@@ -131,64 +41,19 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
-          {/* Maintenance Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedMaintenanceRoute>
-              <Dashboard />
-            </ProtectedMaintenanceRoute>
-          } />
-          <Route path="/carts" element={
-            <ProtectedMaintenanceRoute>
-              <Carts />
-            </ProtectedMaintenanceRoute>
-          } />
-          <Route path="/carts/:cartId" element={
-            <ProtectedMaintenanceRoute>
-              <CartDetails />
-            </ProtectedMaintenanceRoute>
-          } />
-          <Route path="/customers" element={
-            <ProtectedMaintenanceRoute>
-              <Customers />
-            </ProtectedMaintenanceRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedMaintenanceRoute>
-              <Settings />
-            </ProtectedMaintenanceRoute>
-          } />
-          <Route path="/store/:id" element={
-            <ProtectedMaintenanceRoute>
-              <Store />
-            </ProtectedMaintenanceRoute>
-          } />
+          {/* Maintenance Routes - No longer protected */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/carts" element={<Carts />} />
+          <Route path="/carts/:cartId" element={<CartDetails />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/store/:id" element={<Store />} />
 
-          {/* Store Routes */}
-          <Route path="/customer" element={
-            <ProtectedStoreRoute>
-              <Navigate to="/customer/dashboard" replace />
-            </ProtectedStoreRoute>
-          } />
-          <Route path="/customer/dashboard" element={
-            <ProtectedStoreRoute>
-              <CustomerDashboard />
-            </ProtectedStoreRoute>
-          } />
-          <Route path="/customer/cart-status" element={
-            <ProtectedStoreRoute>
-              <CartStatus />
-            </ProtectedStoreRoute>
-          } />
-          <Route path="/customer/report-issue" element={
-            <ProtectedStoreRoute>
-              <ReportIssue />
-            </ProtectedStoreRoute>
-          } />
-          <Route path="/customer/settings" element={
-            <ProtectedStoreRoute>
-              <CustomerSettings />
-            </ProtectedStoreRoute>
-          } />
+          {/* Store Routes - No longer protected */}
+          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+          <Route path="/customer/cart-status" element={<CartStatus />} />
+          <Route path="/customer/report-issue" element={<ReportIssue />} />
+          <Route path="/customer/settings" element={<CustomerSettings />} />
         </Routes>
         <Toaster />
       </Router>
