@@ -13,10 +13,12 @@ export const LoadingScreen = ({ onLoadingComplete }: LoadingScreenProps) => {
       setProgress((prevProgress) => {
         if (prevProgress >= 100) {
           clearInterval(timer);
-          onLoadingComplete?.();
+          if (onLoadingComplete) {
+            setTimeout(onLoadingComplete, 500); // Add a small delay before completion
+          }
           return 100;
         }
-        return prevProgress + 1;
+        return prevProgress + 2; // Increase speed slightly
       });
     }, 20);
 
