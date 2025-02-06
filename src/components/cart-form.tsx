@@ -26,7 +26,7 @@ export function CartForm({
   onCancel, 
   disableRfidTag = false,
   isBulkEdit = false,
-  rfidPlaceholder = "Enter RFID tag"
+  rfidPlaceholder = "Enter QR code"
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
