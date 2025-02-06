@@ -11,47 +11,27 @@ type UserRole = "maintenance" | "store";
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthView, setIsAuthView] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    const checkSession = async () => {
-      // Add a minimum delay to ensure loading screen is visible
-      const minDelay = new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const sessionCheck = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profile?.role === 'maintenance') {
-            navigate('/dashboard');
-          } else if (profile?.role === 'store') {
-            navigate('/customer/dashboard');
-          }
-        }
-      };
-
-      // Wait for both the minimum delay and session check
-      await Promise.all([minDelay, sessionCheck()]);
+    // Add a minimum delay to ensure loading screen is visible
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    };
+    }, 2000);
     
-    checkSession();
-  }, [navigate]);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLoadingComplete = () => {
     // Don't set loading to false immediately after completion
-    // The loading state is already managed by checkSession
+    // The loading state is already managed by the timer
   };
 
   const handlePortalClick = (role: UserRole) => {
-    setSelectedRole(role);
-    setIsAuthView(true);
+    if (role === 'maintenance') {
+      navigate('/dashboard');
+    } else if (role === 'store') {
+      navigate('/customer/dashboard');
+    }
   };
 
   if (isLoading) {
@@ -71,17 +51,7 @@ const Index = () => {
           </p>
         </div>
 
-        {isAuthView ? (
-          <AuthForm
-            selectedRole={selectedRole}
-            onBack={() => {
-              setIsAuthView(false);
-              setSelectedRole(null);
-            }}
-          />
-        ) : (
-          <PortalSelection onPortalClick={handlePortalClick} />
-        )}
+        <PortalSelection onPortalClick={handlePortalClick} />
       </div>
     </div>
   );
