@@ -50,7 +50,7 @@ export function CartDialog({
             status: data.status || originalCart?.status,
             lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance,
             issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
-            rfidTag: originalCart?.rfidTag, // Preserve original RFID
+            rfidTag: originalCart?.rfidTag,
           }
         })
         onSubmit(bulkUpdates)
@@ -62,18 +62,19 @@ export function CartDialog({
           ...data,
           id: data.id,
           storeId: store.id,
-          rfidTag: originalCart?.rfidTag, // Preserve original RFID
+          rfidTag: originalCart?.rfidTag,
           issues: data.issues ? data.issues.split('\n') : [],
         })
       }
     } else if (editingCart) {
-      // Single cart edit
+      // Single cart edit - preserve ID and properly handle all fields
       onSubmit({
-        ...editingCart,
-        ...data,
-        id: editingCart?.id,
+        id: editingCart.id,
+        rfidTag: editingCart.rfidTag,
+        store: data.store,
         storeId: store.id,
-        rfidTag: editingCart?.rfidTag, // Preserve original RFID
+        status: data.status,
+        lastMaintenance: data.lastMaintenance,
         issues: data.issues ? data.issues.split('\n') : [],
       })
     } else {
