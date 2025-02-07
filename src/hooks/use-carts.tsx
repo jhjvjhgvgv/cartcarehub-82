@@ -13,7 +13,17 @@ export const useCarts = (initialCarts: Cart[]) => {
       const updatedCarts = carts.map(cart => {
         const update = data.find(update => update.id === cart.id)
         if (!update) return cart
-        return update
+        
+        // Ensure correct data structure for bulk updates
+        return {
+          id: cart.id,
+          rfidTag: cart.rfidTag,
+          store: update.store || cart.store,
+          storeId: update.storeId || cart.storeId,
+          status: update.status || cart.status,
+          lastMaintenance: update.lastMaintenance || cart.lastMaintenance,
+          issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
+        }
       })
       
       setCarts(updatedCarts)
@@ -23,8 +33,21 @@ export const useCarts = (initialCarts: Cart[]) => {
       })
     } else if (editingCart) {
       // Handle single cart update
+      const store = managedStores.find(s => s.name === data.store)
+      if (!store) return
+
       const updatedCarts = carts.map((cart) =>
-        cart.id === editingCart.id ? { ...data } : cart
+        cart.id === editingCart.id
+          ? {
+              id: editingCart.id,
+              rfidTag: editingCart.rfidTag,
+              store: data.store,
+              storeId: store.id,
+              status: data.status,
+              lastMaintenance: data.lastMaintenance,
+              issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+            }
+          : cart
       )
       setCarts(updatedCarts)
       toast({
