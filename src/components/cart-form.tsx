@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -10,6 +11,7 @@ import { MaintenanceField } from "./cart-form/MaintenanceField"
 import { IssuesField } from "./cart-form/IssuesField"
 import { cartFormSchema, CartFormValues } from "./cart-form/types"
 import { Card } from "./ui/card"
+import { ShoppingCart } from "lucide-react"
 
 interface CartFormProps {
   initialData?: CartFormValues
@@ -75,6 +77,16 @@ export function CartForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="p-6 flex flex-col items-center justify-center text-center space-y-4 border-2 border-dashed">
+            <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+            <div>
+              <h3 className="font-medium">Add New Cart</h3>
+              <p className="text-sm text-muted-foreground">Fill in the details below to add a new cart to the system</p>
+            </div>
+          </Card>
+        </div>
+
         <Card className="p-6 space-y-6">
           <RfidField 
             form={form} 

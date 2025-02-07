@@ -1,0 +1,75 @@
+
+import { useState } from "react"
+import { Html5QrcodeScanner } from "html5-qrcode"
+import { useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+
+interface QRScannerProps {
+  onQRCodeDetected: (qrCode: string) => void
+}
+
+export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
+  const [isScanning, setIsScanning] = useState(false)
+  const { toast } = useToast()
+  
+  useEffect(() => {
+    let scanner: Html5QrcodeScanner | null = null
+
+    if (isScanning) {
+      scanner = new Html5QrcodeScanner(
+        "qr-reader",
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      )
+
+      scanner.render(
+        (decodedText) => {
+          onQRCodeDetected(decodedText)
+          scanner?.clear()
+          setIsScanning(false)
+          toast({
+            title: "QR Code Detected",
+            description: "Successfully scanned QR code.",
+          })
+        },
+        (error) => {
+          console.error(error)
+        }
+      )
+    }
+
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(console.error)
+      }
+    }
+  }, [isScanning, onQRCodeDetected, toast])
+
+  return (
+    <Card className="p-4">
+      {!isScanning ? (
+        <Button 
+          type="button" 
+          onClick={() => setIsScanning(true)}
+          className="w-full"
+        >
+          Scan QR Code
+        </Button>
+      ) : (
+        <div className="space-y-4">
+          <div id="qr-reader" className="w-full max-w-sm mx-auto" />
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setIsScanning(false)}
+            className="w-full"
+          >
+            Cancel Scanning
+          </Button>
+        </div>
+      )}
+    </Card>
+  )
+}

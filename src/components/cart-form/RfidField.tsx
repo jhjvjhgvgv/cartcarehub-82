@@ -1,7 +1,9 @@
+
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
 import { CartFormValues } from "./types"
+import { QRScanner } from "./QRScanner"
 
 interface RfidFieldProps {
   form: UseFormReturn<CartFormValues>
@@ -11,24 +13,33 @@ interface RfidFieldProps {
 
 export function RfidField({ form, disabled = false, placeholder = "Enter QR code" }: RfidFieldProps) {
   return (
-    <FormField
-      control={form.control}
-      name="rfidTag"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>QR Code</FormLabel>
-          <FormControl>
-            <Input 
-              {...field}
-              placeholder={placeholder}
-              disabled={disabled}
-              readOnly={disabled}
-              className={disabled ? "bg-gray-100 cursor-not-allowed" : ""}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="rfidTag"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>QR Code</FormLabel>
+            <FormControl>
+              <Input 
+                {...field}
+                placeholder={placeholder}
+                disabled={disabled}
+                readOnly={disabled}
+                className={disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      {!disabled && (
+        <QRScanner
+          onQRCodeDetected={(qrCode) => {
+            form.setValue("rfidTag", qrCode)
+          }}
+        />
       )}
-    />
+    </div>
   )
 }
