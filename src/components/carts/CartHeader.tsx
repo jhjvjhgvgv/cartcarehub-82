@@ -28,13 +28,16 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         <h1 className="text-2xl font-bold text-gray-900">Cart Management</h1>
         <div className="flex gap-2">
           <Button 
-            className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white" 
+            className="flex items-center gap-2 min-w-[140px] bg-purple-500 hover:bg-purple-600 text-white" 
             onClick={() => setIsScanning(true)}
           >
             <ScanLine className="h-4 w-4" />
             Scan QR Code
           </Button>
-          <Button className="flex items-center gap-2" onClick={onAddClick}>
+          <Button 
+            className="flex items-center gap-2 min-w-[140px]" 
+            onClick={onAddClick}
+          >
             <PlusCircle className="h-4 w-4" />
             Add New Cart
           </Button>
@@ -54,4 +57,3 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
     </>
   )
 }
-
