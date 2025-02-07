@@ -39,7 +39,6 @@ export function CartDialog({
     }
     
     if (isMultipleEdit) {
-      // For bulk updates, preserve original RFID tags and IDs
       if (!data.id) {
         const bulkUpdates = cartIds.map(cartId => {
           const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
@@ -55,7 +54,6 @@ export function CartDialog({
         })
         onSubmit(bulkUpdates)
       } else {
-        // Individual cart update within bulk edit
         const originalCart = editingCart?.originalCarts?.find(cart => cart.id === data.id)
         onSubmit({
           ...originalCart,
@@ -67,10 +65,8 @@ export function CartDialog({
         })
       }
     } else if (editingCart) {
-      // Single cart edit - preserve ID and properly handle all fields
       onSubmit({
-        id: editingCart.id,
-        rfidTag: editingCart.rfidTag,
+        ...editingCart, // Keep all existing cart data
         store: data.store,
         storeId: store.id,
         status: data.status,
@@ -78,7 +74,6 @@ export function CartDialog({
         issues: data.issues ? data.issues.split('\n') : [],
       })
     } else {
-      // New cart creation
       onSubmit({
         ...data,
         storeId: store.id,

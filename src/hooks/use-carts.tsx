@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -12,16 +13,7 @@ export const useCarts = (initialCarts: Cart[]) => {
       const updatedCarts = carts.map(cart => {
         const update = data.find(update => update.id === cart.id)
         if (!update) return cart
-
-        const store = managedStores.find(s => s.name === update.store)
-        if (!store) return cart
-
-        return {
-          ...cart,
-          ...update,
-          storeId: store.id,
-          issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : []),
-        }
+        return update
       })
       
       setCarts(updatedCarts)
@@ -31,21 +23,8 @@ export const useCarts = (initialCarts: Cart[]) => {
       })
     } else if (editingCart) {
       // Handle single cart update
-      const store = managedStores.find(s => s.name === data.store)
-      if (!store) return
-
       const updatedCarts = carts.map((cart) =>
-        cart.id === editingCart.id
-          ? {
-              ...cart,
-              rfidTag: data.rfidTag || cart.rfidTag,
-              store: data.store,
-              storeId: store.id,
-              status: data.status,
-              lastMaintenance: data.lastMaintenance,
-              issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-            }
-          : cart
+        cart.id === editingCart.id ? { ...data } : cart
       )
       setCarts(updatedCarts)
       toast({
@@ -58,7 +37,7 @@ export const useCarts = (initialCarts: Cart[]) => {
       if (!store) return
 
       const newCart: Cart = {
-        id: `QR-${String(carts.length + 1).padStart(3, "0")}`,
+        id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
         rfidTag: data.rfidTag,
         store: data.store,
         storeId: store.id,
