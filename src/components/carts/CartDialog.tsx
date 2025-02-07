@@ -90,42 +90,44 @@ export function CartDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogTitle>
-          {isMultipleEdit 
-            ? `Edit Multiple Carts (${cartIds.length} selected)`
-            : editingCart ? "Edit Cart" : "Add New Cart"}
-        </DialogTitle>
-        <DialogDescription className="text-sm">
-          {isMultipleEdit 
-            ? "Edit multiple carts individually or apply changes to all selected carts."
-            : editingCart 
-              ? "Update the cart details below." 
-              : "Fill in the details to add a new cart to the system."}
-        </DialogDescription>
-        
-        <div className="mt-4">
-          {isMultipleEdit ? (
-            <BulkCartEdit
-              editingCart={editingCart}
-              cartIds={cartIds}
-              onSubmit={handleSubmit}
-              onCancel={() => onOpenChange(false)}
-              onDelete={onDelete}
-            />
-          ) : editingCart ? (
-            <SingleCartEdit
-              cart={editingCart}
-              onSubmit={handleSubmit}
-              onCancel={() => onOpenChange(false)}
-              onDelete={onDelete}
-            />
-          ) : (
-            <CartForm
-              onSubmit={handleSubmit}
-              onCancel={() => onOpenChange(false)}
-            />
-          )}
+      <DialogContent className="sm:max-w-[600px]">
+        <div className="max-h-[80vh] overflow-y-auto px-1">
+          <DialogTitle>
+            {isMultipleEdit 
+              ? `Edit Multiple Carts (${cartIds.length} selected)`
+              : editingCart ? "Edit Cart" : "Add New Cart"}
+          </DialogTitle>
+          <DialogDescription className="text-sm">
+            {isMultipleEdit 
+              ? "Edit multiple carts individually or apply changes to all selected carts."
+              : editingCart 
+                ? "Update the cart details below." 
+                : "Fill in the details to add a new cart to the system."}
+          </DialogDescription>
+          
+          <div className="mt-4">
+            {isMultipleEdit ? (
+              <BulkCartEdit
+                editingCart={editingCart}
+                cartIds={cartIds}
+                onSubmit={handleSubmit}
+                onCancel={() => onOpenChange(false)}
+                onDelete={onDelete}
+              />
+            ) : editingCart ? (
+              <SingleCartEdit
+                cart={editingCart}
+                onSubmit={handleSubmit}
+                onCancel={() => onOpenChange(false)}
+                onDelete={onDelete}
+              />
+            ) : (
+              <CartForm
+                onSubmit={handleSubmit}
+                onCancel={() => onOpenChange(false)}
+              />
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
