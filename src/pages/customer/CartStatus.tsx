@@ -1,46 +1,48 @@
+
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Battery, MapPin, AlertTriangle } from "lucide-react";
+import { ShoppingCart, Battery, MapPin, AlertTriangle, ScanLine } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { QRScanner } from "@/components/cart-form/QRScanner";
+import { useToast } from "@/hooks/use-toast";
 
 interface CartInfo {
   id: string;
+  rfidTag: string;
   status: "active" | "maintenance" | "retired";
-  condition: "good" | "fair" | "poor";
-  location: string;
-  lastUsed: string;
+  store: string;
+  lastMaintenance: string;
   issues: string[];
 }
 
+// This would typically come from an API/database
+const mockCarts: CartInfo[] = [
+  {
+    id: "CART-001",
+    rfidTag: "RFID-A123",
+    status: "active",
+    store: "SuperMart Downtown",
+    lastMaintenance: "2024-03-15",
+    issues: [],
+  },
+  {
+    id: "CART-002",
+    rfidTag: "RFID-B456",
+    status: "maintenance",
+    store: "SuperMart Downtown",
+    lastMaintenance: "2024-03-14",
+    issues: ["Wheel alignment needed"],
+  },
+];
+
 const CartStatus = () => {
-  // This would typically come from an API
-  const carts: CartInfo[] = [
-    {
-      id: "A12345",
-      status: "active",
-      condition: "good",
-      location: "Store Section A",
-      lastUsed: "2024-03-15",
-      issues: [],
-    },
-    {
-      id: "B67890",
-      status: "maintenance",
-      condition: "fair",
-      location: "Store Section B",
-      lastUsed: "2024-03-14",
-      issues: ["Wheel alignment needed"],
-    },
-    {
-      id: "C11223",
-      status: "active",
-      condition: "good",
-      location: "Store Section C",
-      lastUsed: "2024-03-15",
-      issues: [],
-    },
-  ];
+  const [carts, setCarts] = useState<CartInfo[]>(mockCarts);
+  const [isScanning, setIsScanning] = useState(false);
+  const { toast } = useToast();
 
   const getStatusBadge = (status: CartInfo["status"]) => {
     switch (status) {
@@ -53,53 +55,70 @@ const CartStatus = () => {
     }
   };
 
+  const handleQRCodeDetected = (qrCode: string) => {
+    const cart = carts.find(c => c.rfidTag === qrCode);
+    if (cart) {
+      toast({
+        title: "Cart Found",
+        description: `Found cart #${cart.id} at ${cart.store}`,
+      });
+    } else {
+      toast({
+        title: "Cart Not Found",
+        description: "No cart found with this QR code.",
+        variant: "destructive",
+      });
+    }
+    setIsScanning(false);
+  };
+
   return (
     <CustomerLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Your Carts</h1>
-          <p className="text-muted-foreground">
-            View detailed information about all your shopping carts.
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Your Carts</h1>
+            <p className="text-muted-foreground">
+              View detailed information about all shopping carts.
+            </p>
+          </div>
+          <Button onClick={() => setIsScanning(true)} className="flex items-center gap-2">
+            <ScanLine className="h-4 w-4" />
+            Scan QR Code
+          </Button>
         </div>
 
         <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {carts.map((cart) => (
               <Card key={cart.id} className="flex flex-col">
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">Cart #{cart.id}</CardTitle>
                     {getStatusBadge(cart.status)}
                   </div>
                 </CardHeader>
-                <CardContent className="flex-1 space-y-4">
+                <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Status</p>
-                        <p className="text-sm text-muted-foreground">
-                          Last used: {cart.lastUsed}
-                        </p>
+                        <p className="text-sm font-medium">Store</p>
+                        <p className="text-sm text-muted-foreground">{cart.store}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Battery className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Condition</p>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {cart.condition}
-                        </p>
+                        <p className="text-sm font-medium">Last Maintenance</p>
+                        <p className="text-sm text-muted-foreground">{cart.lastMaintenance}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">Location</p>
-                        <p className="text-sm text-muted-foreground">
-                          {cart.location}
-                        </p>
+                        <p className="text-sm font-medium">QR Code</p>
+                        <p className="text-sm text-muted-foreground">{cart.rfidTag}</p>
                       </div>
                     </div>
                     {cart.issues.length > 0 && (
@@ -121,6 +140,17 @@ const CartStatus = () => {
             ))}
           </div>
         </ScrollArea>
+
+        <Dialog open={isScanning} onOpenChange={setIsScanning}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Scan Cart QR Code</DialogTitle>
+            </DialogHeader>
+            <div className="mt-4">
+              <QRScanner onQRCodeDetected={handleQRCodeDetected} />
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </CustomerLayout>
   );
