@@ -78,13 +78,15 @@ export function CartForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 gap-4">
-          <Card className="p-4 flex items-center space-x-4 border-2 border-dashed">
-            <ShoppingCart className="h-8 w-8 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="font-medium">Add New Cart</h3>
-              <p className="text-sm text-muted-foreground">Fill in the details below</p>
-            </div>
-          </Card>
+          {!initialData && !isBulkEdit && (
+            <Card className="p-4 flex items-center space-x-4 border-2 border-dashed">
+              <ShoppingCart className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-medium">Add New Cart</h3>
+                <p className="text-sm text-muted-foreground">Fill in the details below</p>
+              </div>
+            </Card>
+          )}
         </div>
 
         <Card className="p-4 space-y-4">
