@@ -3,6 +3,7 @@ import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { SingleCartEdit } from "./SingleCartEdit"
 import { BulkCartEdit } from "./BulkCartEdit"
+import { CartForm } from "../cart-form"
 
 interface CartDialogProps {
   isOpen: boolean
@@ -22,7 +23,7 @@ export function CartDialog({
   managedStores,
 }: CartDialogProps) {
   const { toast } = useToast()
-  const isMultipleEdit = editingCart?.id.includes(",")
+  const isMultipleEdit = editingCart?.id?.includes(",")
   const cartIds = isMultipleEdit ? editingCart?.id.split(",") : []
 
   const handleSubmit = (data: any) => {
@@ -64,7 +65,7 @@ export function CartDialog({
           issues: data.issues ? data.issues.split('\n') : [],
         })
       }
-    } else {
+    } else if (editingCart) {
       // Single cart edit
       onSubmit({
         ...editingCart,
@@ -72,6 +73,13 @@ export function CartDialog({
         id: editingCart?.id,
         storeId: store.id,
         rfidTag: editingCart?.rfidTag, // Preserve original RFID
+        issues: data.issues ? data.issues.split('\n') : [],
+      })
+    } else {
+      // New cart creation
+      onSubmit({
+        ...data,
+        storeId: store.id,
         issues: data.issues ? data.issues.split('\n') : [],
       })
     }
@@ -103,15 +111,18 @@ export function CartDialog({
             onCancel={() => onOpenChange(false)}
             onDelete={onDelete}
           />
+        ) : editingCart ? (
+          <SingleCartEdit
+            cart={editingCart}
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+            onDelete={onDelete}
+          />
         ) : (
-          editingCart && (
-            <SingleCartEdit
-              cart={editingCart}
-              onSubmit={handleSubmit}
-              onCancel={() => onOpenChange(false)}
-              onDelete={onDelete}
-            />
-          )
+          <CartForm
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+          />
         )}
       </DialogContent>
     </Dialog>
