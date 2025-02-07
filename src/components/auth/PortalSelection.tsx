@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Wrench, Key, ArrowRight } from "lucide-react";
 
-type UserRole = "maintenance" | "store";
+type UserRole = "maintenance" | "store" | "forgot-password";
 
 interface PortalSelectionProps {
   onPortalClick: (role: UserRole) => void;
