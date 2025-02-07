@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -89,13 +90,13 @@ export function CartDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogTitle>
           {isMultipleEdit 
             ? `Edit Multiple Carts (${cartIds.length} selected)`
             : editingCart ? "Edit Cart" : "Add New Cart"}
         </DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="text-sm">
           {isMultipleEdit 
             ? "Edit multiple carts individually or apply changes to all selected carts."
             : editingCart 
@@ -103,27 +104,29 @@ export function CartDialog({
               : "Fill in the details to add a new cart to the system."}
         </DialogDescription>
         
-        {isMultipleEdit ? (
-          <BulkCartEdit
-            editingCart={editingCart}
-            cartIds={cartIds}
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-            onDelete={onDelete}
-          />
-        ) : editingCart ? (
-          <SingleCartEdit
-            cart={editingCart}
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-            onDelete={onDelete}
-          />
-        ) : (
-          <CartForm
-            onSubmit={handleSubmit}
-            onCancel={() => onOpenChange(false)}
-          />
-        )}
+        <div className="mt-4">
+          {isMultipleEdit ? (
+            <BulkCartEdit
+              editingCart={editingCart}
+              cartIds={cartIds}
+              onSubmit={handleSubmit}
+              onCancel={() => onOpenChange(false)}
+              onDelete={onDelete}
+            />
+          ) : editingCart ? (
+            <SingleCartEdit
+              cart={editingCart}
+              onSubmit={handleSubmit}
+              onCancel={() => onOpenChange(false)}
+              onDelete={onDelete}
+            />
+          ) : (
+            <CartForm
+              onSubmit={handleSubmit}
+              onCancel={() => onOpenChange(false)}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )

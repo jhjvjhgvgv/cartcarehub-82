@@ -76,18 +76,18 @@ export function CartForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="p-6 flex flex-col items-center justify-center text-center space-y-4 border-2 border-dashed">
-            <ShoppingCart className="h-12 w-12 text-muted-foreground" />
-            <div>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          <Card className="p-4 flex items-center space-x-4 border-2 border-dashed">
+            <ShoppingCart className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1">
               <h3 className="font-medium">Add New Cart</h3>
-              <p className="text-sm text-muted-foreground">Fill in the details below to add a new cart to the system</p>
+              <p className="text-sm text-muted-foreground">Fill in the details below</p>
             </div>
           </Card>
         </div>
 
-        <Card className="p-6 space-y-6">
+        <Card className="p-4 space-y-4">
           <RfidField 
             form={form} 
             disabled={disableRfidTag}
