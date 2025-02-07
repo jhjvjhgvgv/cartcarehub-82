@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Cart } from "@/types/cart"
@@ -5,6 +6,7 @@ import { MoreHorizontal, PencilIcon, Trash2Icon, WrenchIcon } from "lucide-react
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { useLocation, useNavigate } from "react-router-dom"
 
 interface CartActionsProps {
   cart: Cart
@@ -15,6 +17,8 @@ interface CartActionsProps {
 export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const { toast } = useToast()
+  const location = useLocation()
+  const isDetailsPage = location.pathname.includes(`/carts/${cart.id}`)
 
   const handleMaintenanceClick = () => {
     // Update the cart's status to maintenance
@@ -28,6 +32,12 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
       title: "Cart Status Updated",
       description: `Cart ${cart.rfidTag} has been marked for maintenance.`,
     })
+  }
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onEdit(cart)
   }
 
   return (
@@ -50,7 +60,7 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onEdit(cart)}>
+          <DropdownMenuItem onClick={handleEditClick}>
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit
           </DropdownMenuItem>
