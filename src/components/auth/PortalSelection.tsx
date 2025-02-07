@@ -1,8 +1,8 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Wrench, Key, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 type UserRole = "maintenance" | "store";
 
@@ -11,8 +11,6 @@ interface PortalSelectionProps {
 }
 
 export const PortalSelection = ({ onPortalClick }: PortalSelectionProps) => {
-  const navigate = useNavigate();
-
   return (
     <Card className="w-full shadow-xl bg-white/95 backdrop-blur-sm border-primary-100 animate-scale-in">
       <CardContent className="p-6 sm:p-8">
@@ -59,7 +57,7 @@ export const PortalSelection = ({ onPortalClick }: PortalSelectionProps) => {
             <Button
               variant="ghost"
               className="text-primary-600 hover:text-primary-800 hover:bg-primary-50 flex items-center gap-2 text-sm sm:text-base group"
-              onClick={() => navigate("/forgot-password")}
+              onClick={() => onPortalClick('forgot-password')}
             >
               <Key className="w-4 h-4 group-hover:rotate-12 transition-transform" />
               Forgot Password?

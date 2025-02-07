@@ -6,7 +6,7 @@ import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
 
-type UserRole = "maintenance" | "store";
+type UserRole = "maintenance" | "store" | "forgot-password";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -31,6 +31,8 @@ const Index = () => {
       navigate('/dashboard');
     } else if (role === 'store') {
       navigate('/customer/dashboard');
+    } else if (role === 'forgot-password') {
+      navigate('/forgot-password');
     }
   };
 
