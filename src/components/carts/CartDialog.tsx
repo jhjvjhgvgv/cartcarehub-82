@@ -28,60 +28,84 @@ export function CartDialog({
   const cartIds = isMultipleEdit ? editingCart?.id.split(",") : []
 
   const handleSubmit = (data: any) => {
-    const store = managedStores.find((s) => s.name === data.store)
-    if (!store) {
-      toast({
-        title: "Error",
-        description: "Selected store is not in your managed stores list.",
-        variant: "destructive",
-      })
-      return
-    }
-    
-    if (isMultipleEdit) {
-      if (!data.id) {
-        const bulkUpdates = cartIds.map(cartId => {
-          const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
-          return {
-            ...originalCart,
-            store: data.store || originalCart?.store,
-            storeId: store.id,
-            status: data.status || originalCart?.status,
-            lastMaintenance: data.lastMaintenance || originalCart?.lastMaintenance,
-            issues: data.issues ? data.issues.split('\n') : originalCart?.issues || [],
-            rfidTag: originalCart?.rfidTag,
-          }
+    try {
+      const store = managedStores.find((s) => s.name === data.store)
+      if (!store) {
+        toast({
+          title: "Error",
+          description: "Selected store is not in your managed stores list.",
+          variant: "destructive",
         })
-        onSubmit(bulkUpdates)
-      } else {
-        const originalCart = editingCart?.originalCarts?.find(cart => cart.id === data.id)
+        return
+      }
+      
+      if (isMultipleEdit) {
+        if (!data.id) {
+          // Handle bulk update for all selected carts
+          const bulkUpdates = cartIds.map(cartId => {
+            const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
+            if (!originalCart) return null
+            return {
+              ...originalCart,
+              store: data.store || originalCart.store,
+              storeId: store.id,
+              status: data.status || originalCart.status,
+              lastMaintenance: data.lastMaintenance || originalCart.lastMaintenance,
+              issues: data.issues ? data.issues.split('\n') : originalCart.issues,
+            }
+          }).filter(Boolean)
+          onSubmit(bulkUpdates)
+        } else {
+          // Handle single cart update within bulk edit
+          const originalCart = editingCart?.originalCarts?.find(cart => cart.id === data.id)
+          if (!originalCart) {
+            toast({
+              title: "Error",
+              description: "Cart not found.",
+              variant: "destructive",
+            })
+            return
+          }
+          onSubmit({
+            ...originalCart,
+            store: data.store,
+            storeId: store.id,
+            status: data.status,
+            lastMaintenance: data.lastMaintenance,
+            issues: data.issues ? data.issues.split('\n') : [],
+          })
+        }
+      } else if (editingCart) {
+        // Handle single cart update
         onSubmit({
-          ...originalCart,
-          ...data,
-          id: data.id,
+          ...editingCart,
+          store: data.store,
           storeId: store.id,
-          rfidTag: originalCart?.rfidTag,
+          status: data.status,
+          lastMaintenance: data.lastMaintenance,
+          issues: data.issues ? data.issues.split('\n') : [],
+        })
+      } else {
+        // Handle new cart
+        onSubmit({
+          rfidTag: data.rfidTag,
+          store: data.store,
+          storeId: store.id,
+          status: data.status,
+          lastMaintenance: data.lastMaintenance,
           issues: data.issues ? data.issues.split('\n') : [],
         })
       }
-    } else if (editingCart) {
-      onSubmit({
-        ...editingCart, // Keep all existing cart data
-        store: data.store,
-        storeId: store.id,
-        status: data.status,
-        lastMaintenance: data.lastMaintenance,
-        issues: data.issues ? data.issues.split('\n') : [],
-      })
-    } else {
-      onSubmit({
-        ...data,
-        storeId: store.id,
-        issues: data.issues ? data.issues.split('\n') : [],
+      
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error in handleSubmit:', error)
+      toast({
+        title: "Error",
+        description: "An error occurred while saving the cart.",
+        variant: "destructive",
       })
     }
-    
-    onOpenChange(false)
   }
 
   return (

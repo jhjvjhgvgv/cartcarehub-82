@@ -15,22 +15,16 @@ export const useCarts = (initialCarts: Cart[]) => {
           const update = data.find(update => update.id === cart.id)
           if (!update) return cart
           
-          const store = managedStores.find(s => s.name === update.store)
-          if (!store) return cart
-
           return {
             ...cart,
-            store: update.store || cart.store,
-            storeId: store.id,
-            status: update.status || cart.status,
-            lastMaintenance: update.lastMaintenance || cart.lastMaintenance,
+            ...update,
             issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
           }
         })
         
         setCarts(updatedCarts)
         toast({
-          title: "Carts Updated",
+          title: "Success",
           description: `Successfully updated ${data.length} carts.`,
         })
       } else if (editingCart) {
@@ -59,8 +53,8 @@ export const useCarts = (initialCarts: Cart[]) => {
         )
         setCarts(updatedCarts)
         toast({
-          title: "Cart Updated",
-          description: "Cart details have been successfully updated.",
+          title: "Success",
+          description: "Cart details have been updated.",
         })
       } else {
         // Handle adding new cart
@@ -85,8 +79,8 @@ export const useCarts = (initialCarts: Cart[]) => {
         }
         setCarts([...carts, newCart])
         toast({
-          title: "Cart Added",
-          description: "New cart has been successfully added to the system.",
+          title: "Success",
+          description: "New cart has been added to the system.",
         })
       }
     } catch (error) {
@@ -102,8 +96,8 @@ export const useCarts = (initialCarts: Cart[]) => {
   const handleDeleteCart = (cartId: string) => {
     setCarts(carts.filter((cart) => cart.id !== cartId))
     toast({
-      title: "Cart Deleted",
-      description: "Cart has been successfully removed from the system.",
+      title: "Success",
+      description: "Cart has been removed from the system.",
       variant: "destructive",
     })
   }
