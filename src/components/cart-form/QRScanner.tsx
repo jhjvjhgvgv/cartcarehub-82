@@ -42,7 +42,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
             facingMode: { exact: "environment" }
           }
         },
-        false
+        true // Changed from false to true to enable HTML elements
       )
 
       const success = (decodedText: string) => {
