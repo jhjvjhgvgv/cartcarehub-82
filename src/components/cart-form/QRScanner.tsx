@@ -39,10 +39,14 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           videoConstraints: {
             width: { min: 640, ideal: 1280, max: 1920 },
             height: { min: 480, ideal: 720, max: 1080 },
-            facingMode: { exact: "environment" }
+            facingMode: { exact: "environment" },
+            advanced: [{
+              focusMode: "continuous",
+              zoom: 2.0
+            }]
           }
         },
-        true // Changed from false to true to enable HTML elements
+        true
       )
 
       const success = (decodedText: string) => {
