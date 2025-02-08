@@ -21,10 +21,14 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
       scanner = new Html5QrcodeScanner(
         "qr-reader",
         { 
-          fps: 15, 
-          qrbox: { width: 150, height: 150 }, // Reduced scanner size
+          fps: 5, // Reduced FPS for better focus
+          qrbox: { width: 150, height: 150 },
           aspectRatio: 1.0,
-          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.AZTEC,
+            Html5QrcodeSupportedFormats.DATA_MATRIX
+          ],
           rememberLastUsedCamera: true,
           showTorchButtonIfSupported: true,
           supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
@@ -33,8 +37,9 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           },
           disableFlip: false,
           videoConstraints: {
-            frameRate: { ideal: 30, min: 15 },
-            facingMode: "environment"
+            frameRate: { ideal: 15, min: 10 },
+            facingMode: { exact: "environment" },
+            focusMode: "continuous"
           }
         },
         false
@@ -54,7 +59,10 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
       }
 
       const error = (err: any) => {
-        console.error("QR Scanner error:", err)
+        // Only log significant errors, not regular scanning attempts
+        if (!err.toString().includes("No QR code detected")) {
+          console.error("QR Scanner error:", err)
+        }
       }
 
       scanner.render(success, error)
