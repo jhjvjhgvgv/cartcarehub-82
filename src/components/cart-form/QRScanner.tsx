@@ -21,13 +21,21 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
       scanner = new Html5QrcodeScanner(
         "qr-reader",
         { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 },
+          fps: 15, 
+          qrbox: { width: 150, height: 150 }, // Reduced scanner size
           aspectRatio: 1.0,
           formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
           rememberLastUsedCamera: true,
           showTorchButtonIfSupported: true,
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true
+          },
+          disableFlip: false,
+          videoConstraints: {
+            frameRate: { ideal: 30, min: 15 },
+            facingMode: "environment"
+          }
         },
         false
       )
@@ -73,7 +81,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         </Button>
       ) : (
         <div className="space-y-4">
-          <div id="qr-reader" className="w-full max-w-sm mx-auto" />
+          <div id="qr-reader" className="w-full max-w-[250px] mx-auto" />
           <Button 
             type="button" 
             variant="outline" 
