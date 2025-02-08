@@ -39,8 +39,8 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           videoConstraints: {
             frameRate: { ideal: 15, min: 10 },
             facingMode: { exact: "environment" },
-            advanced: [{ 
-              focusMode: "continuous",
+            advanced: [{
+              focus: "continuous",
               zoom: 2.0
             }]
           }
