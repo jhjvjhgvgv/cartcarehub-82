@@ -20,29 +20,43 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     if (isScanning) {
       scanner = new Html5QrcodeScanner(
         "qr-reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          formatsToSupport: ["QR_CODE"],
+          rememberLastUsedCamera: true,
+          showTorchButtonIfSupported: true,
+          supportedScanTypes: ["camera"]
+        },
         false
       )
 
-      scanner.render(
-        (decodedText) => {
-          onQRCodeDetected(decodedText)
-          scanner?.clear()
+      const success = (decodedText: string) => {
+        console.log("QR Code detected:", decodedText)
+        onQRCodeDetected(decodedText)
+        if (scanner) {
+          scanner.clear()
           setIsScanning(false)
           toast({
             title: "QR Code Detected",
             description: "Successfully scanned QR code.",
           })
-        },
-        (error) => {
-          console.error(error)
         }
-      )
+      }
+
+      const error = (err: any) => {
+        console.error("QR Scanner error:", err)
+      }
+
+      scanner.render(success, error)
     }
 
     return () => {
       if (scanner) {
-        scanner.clear().catch(console.error)
+        scanner.clear().catch((err) => {
+          console.error("Error clearing scanner:", err)
+        })
       }
     }
   }, [isScanning, onQRCodeDetected, toast])
