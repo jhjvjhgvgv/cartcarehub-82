@@ -37,8 +37,6 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           },
           disableFlip: false,
           videoConstraints: {
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 480, ideal: 720, max: 1080 },
             facingMode: "environment"
           }
         },
@@ -47,13 +45,21 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
       const success = (decodedText: string) => {
         console.log("QR Code detected:", decodedText)
-        onQRCodeDetected(decodedText)
-        if (scanner) {
-          scanner.clear()
-          setIsScanning(false)
+        if (decodedText.startsWith("CART-")) {
+          onQRCodeDetected(decodedText)
+          if (scanner) {
+            scanner.clear()
+            setIsScanning(false)
+            toast({
+              title: "Cart QR Code Detected",
+              description: `Successfully scanned cart: ${decodedText}`,
+            })
+          }
+        } else {
           toast({
-            title: "QR Code Detected",
-            description: "Successfully scanned QR code.",
+            title: "Invalid QR Code",
+            description: "Please scan a valid cart QR code starting with 'CART-'",
+            variant: "destructive"
           })
         }
       }
@@ -79,10 +85,11 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
   const handleTestScan = () => {
     // Simulate a QR code detection with test data
-    onQRCodeDetected("RFID-A123")
+    const testCartCode = "CART-123"
+    onQRCodeDetected(testCartCode)
     toast({
       title: "Test QR Code",
-      description: "Successfully simulated QR code scan with test data: RFID-A123",
+      description: `Successfully simulated cart scan: ${testCartCode}`,
     })
   }
 
@@ -103,7 +110,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
             onClick={handleTestScan}
             className="w-full"
           >
-            Test Scanner (Simulate RFID-A123)
+            Test Scanner (Simulate CART-123)
           </Button>
         </div>
       ) : (
