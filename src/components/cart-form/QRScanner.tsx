@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Camera, CheckCircle2 } from "lucide-react"
+import { CartDialog } from "@/components/carts/CartDialog"
 
 interface QRScannerProps {
   onQRCodeDetected: (qrCode: string) => void
@@ -13,6 +14,8 @@ interface QRScannerProps {
 
 export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
+  const [isCartDialogOpen, setIsCartDialogOpen] = useState(false)
+  const [scannedQRCode, setScannedQRCode] = useState("")
   const { toast } = useToast()
   
   useEffect(() => {
@@ -34,10 +37,12 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
       scanner.render((decodedText) => {
         console.log("QR Code detected:", decodedText)
+        setScannedQRCode(decodedText)
         onQRCodeDetected(decodedText)
         if (scanner) {
           scanner.clear()
           setIsScanning(false)
+          setIsCartDialogOpen(true)
           toast({
             title: "QR Code Detected",
             description: `Successfully scanned QR code: ${decodedText}`,
@@ -62,7 +67,9 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
   const handleTestScan = () => {
     const testCode = "Test QR Code Data"
+    setScannedQRCode(testCode)
     onQRCodeDetected(testCode)
+    setIsCartDialogOpen(true)
     toast({
       title: "Test QR Code",
       description: `Successfully simulated scan: ${testCode}`,
@@ -70,49 +77,79 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
   }
 
   return (
-    <Card className="p-6 space-y-4">
-      {!isScanning ? (
-        <div className="space-y-4">
-          <div className="text-center">
-            <div className="mb-4">
-              <Camera className="w-12 h-12 mx-auto text-primary opacity-80" />
+    <>
+      <Card className="p-6 space-y-4">
+        {!isScanning ? (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="mb-4">
+                <Camera className="w-12 h-12 mx-auto text-primary opacity-80" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">QR Code Scanner</h3>
+              <p className="text-sm text-muted-foreground">
+                Scan a cart's QR code to view its details
+              </p>
             </div>
-            <h3 className="text-lg font-semibold mb-1">QR Code Scanner</h3>
-            <p className="text-sm text-muted-foreground">
-              Scan a cart's QR code to view its details
-            </p>
+            <Button 
+              type="button" 
+              onClick={() => setIsScanning(true)}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <Camera className="w-4 h-4" />
+              Start Scanning
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={handleTestScan}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Test Scanner
+            </Button>
           </div>
-          <Button 
-            type="button" 
-            onClick={() => setIsScanning(true)}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <Camera className="w-4 h-4" />
-            Start Scanning
-          </Button>
-          <Button 
-            type="button" 
-            variant="secondary"
-            onClick={handleTestScan}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Test Scanner
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div id="qr-reader" className="w-full max-w-[300px] mx-auto rounded-lg overflow-hidden" />
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => setIsScanning(false)}
-            className="w-full"
-          >
-            Cancel Scanning
-          </Button>
-        </div>
-      )}
-    </Card>
+        ) : (
+          <div className="space-y-4">
+            <div id="qr-reader" className="w-full max-w-[300px] mx-auto rounded-lg overflow-hidden" />
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsScanning(false)}
+              className="w-full"
+            >
+              Cancel Scanning
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      <CartDialog
+        isOpen={isCartDialogOpen}
+        onOpenChange={setIsCartDialogOpen}
+        onSubmit={(data) => {
+          console.log("Cart updated:", data)
+          setIsCartDialogOpen(false)
+        }}
+        onDelete={(cartId) => {
+          console.log("Cart deleted:", cartId)
+          setIsCartDialogOpen(false)
+        }}
+        editingCart={{
+          id: "new",
+          rfidTag: scannedQRCode,
+          store: "",
+          storeId: "",
+          status: "active",
+          lastMaintenance: new Date().toISOString().split("T")[0],
+          issues: [],
+        }}
+        managedStores={[
+          { id: "store1", name: "SuperMart Downtown" },
+          { id: "store2", name: "FreshMart Heights" },
+          { id: "store3", name: "Value Grocery West" },
+        ]}
+      />
+    </>
   )
 }
+
