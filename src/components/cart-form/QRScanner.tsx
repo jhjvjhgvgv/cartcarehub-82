@@ -25,11 +25,11 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
-          defaultDeviceId: true, // This will prefer the back camera
+          preferredFacingMode: "environment", // This will use the back camera
+          formatsToSupport: ["QR_CODE"],
           showTorchButtonIfSupported: false,
           showZoomSliderIfSupported: false,
-          hideSelectScanningrectangle: true,
-          useBarCodeDetectorIfSupported: true,
+          hideSelectScanningRect: true,
         },
         /* verbose= */ false
       )
