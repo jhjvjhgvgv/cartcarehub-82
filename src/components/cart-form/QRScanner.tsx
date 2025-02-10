@@ -77,16 +77,35 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     }
   }, [isScanning, onQRCodeDetected, toast])
 
+  const handleTestScan = () => {
+    // Simulate a QR code detection with test data
+    onQRCodeDetected("RFID-A123")
+    toast({
+      title: "Test QR Code",
+      description: "Successfully simulated QR code scan with test data: RFID-A123",
+    })
+  }
+
   return (
     <Card className="p-4">
       {!isScanning ? (
-        <Button 
-          type="button" 
-          onClick={() => setIsScanning(true)}
-          className="w-full"
-        >
-          Scan QR Code
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            type="button" 
+            onClick={() => setIsScanning(true)}
+            className="w-full"
+          >
+            Scan QR Code
+          </Button>
+          <Button 
+            type="button" 
+            variant="secondary"
+            onClick={handleTestScan}
+            className="w-full"
+          >
+            Test Scanner (Simulate RFID-A123)
+          </Button>
+        </div>
       ) : (
         <div className="space-y-4">
           <div id="qr-reader" className="w-full max-w-[400px] mx-auto" />
