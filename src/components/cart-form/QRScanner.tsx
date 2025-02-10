@@ -37,8 +37,10 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           },
           disableFlip: false,
           videoConstraints: {
-            facingMode: "environment"
-          }
+            facingMode: "environment",
+            focusMode: "continuous"
+          },
+          defaultZoomValueIfSupported: 1
         },
         true
       )
