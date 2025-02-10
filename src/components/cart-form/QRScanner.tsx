@@ -1,6 +1,6 @@
 
 import { useState } from "react"
-import { Html5QrcodeScanner } from "html5-qrcode"
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode"
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
           preferredFacingMode: "environment", // This will use the back camera
-          formatsToSupport: ["QR_CODE"],
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
           showTorchButtonIfSupported: false,
           showZoomSliderIfSupported: false,
           hideSelectScanningRect: true,
