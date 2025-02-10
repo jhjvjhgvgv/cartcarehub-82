@@ -41,8 +41,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
             height: { min: 480, ideal: 720, max: 1080 },
             facingMode: { exact: "environment" },
             advanced: [{
-              autoFocus: "continuous",
-              zoom: 2.0
+              focusMode: 'continuous'
             }]
           }
         },
