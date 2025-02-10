@@ -28,7 +28,6 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
           showTorchButtonIfSupported: false,
           showZoomSliderIfSupported: false,
-          hideSelectScanningRect: true,
         },
         /* verbose= */ false
       )
