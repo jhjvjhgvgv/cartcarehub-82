@@ -25,7 +25,6 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
-          preferredFacingMode: "environment", // This will use the back camera
           formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
           showTorchButtonIfSupported: false,
           showZoomSliderIfSupported: false,
