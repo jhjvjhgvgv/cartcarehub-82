@@ -69,6 +69,41 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
       }
 
       scanner.render(success, error)
+
+      // Add touch focus functionality
+      const qrReader = document.getElementById('qr-reader')
+      if (qrReader) {
+        const video = qrReader.querySelector('video')
+        if (video) {
+          video.addEventListener('touchstart', async (e) => {
+            e.preventDefault()
+            try {
+              const track = (video as any).srcObject?.getVideoTracks()[0]
+              if (track && track.getCapabilities().focusMode) {
+                await track.applyConstraints({
+                  advanced: [{
+                    focusMode: "manual"
+                  }]
+                })
+                const rect = video.getBoundingClientRect()
+                const x = (e.touches[0].clientX - rect.left) / rect.width
+                const y = (e.touches[0].clientY - rect.top) / rect.height
+                await track.applyConstraints({
+                  advanced: [{
+                    focusPoint: { x, y }
+                  }]
+                })
+                toast({
+                  title: "Focus Updated",
+                  description: "Camera focus point updated",
+                })
+              }
+            } catch (err) {
+              console.error("Error setting focus point:", err)
+            }
+          })
+        }
+      }
     }
 
     return () => {
@@ -112,7 +147,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div id="qr-reader" className="w-full max-w-[400px] mx-auto" />
+          <div id="qr-reader" className="w-full max-w-[400px] mx-auto touch-none" />
           <Button 
             type="button" 
             variant="outline" 
