@@ -38,7 +38,9 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           disableFlip: false,
           videoConstraints: {
             facingMode: "environment",
-            focusMode: "continuous"
+            advanced: [{
+              focusMode: "continuous"
+            }]
           },
           defaultZoomValueIfSupported: 1
         },
@@ -123,4 +125,3 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     </Card>
   )
 }
-
