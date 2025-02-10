@@ -35,7 +35,9 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         /* verbose= */ false
       )
 
-      scanner.render((decodedText) => {
+      scanner.render(success, error)
+
+      function success(decodedText: string) {
         console.log("QR Code detected:", decodedText)
         setScannedQRCode(decodedText)
         onQRCodeDetected(decodedText)
@@ -48,12 +50,14 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
             description: `Successfully scanned QR code: ${decodedText}`,
           })
         }
-      }, (err) => {
+      }
+
+      function error(err: any) {
         // Only log significant errors, not regular scanning attempts
         if (!err.toString().includes("No QR code detected")) {
           console.error("QR Scanner error:", err)
         }
-      })
+      }
     }
 
     return () => {
