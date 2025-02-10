@@ -45,21 +45,13 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
       const success = (decodedText: string) => {
         console.log("QR Code detected:", decodedText)
-        if (decodedText.startsWith("CART-")) {
-          onQRCodeDetected(decodedText)
-          if (scanner) {
-            scanner.clear()
-            setIsScanning(false)
-            toast({
-              title: "Cart QR Code Detected",
-              description: `Successfully scanned cart: ${decodedText}`,
-            })
-          }
-        } else {
+        onQRCodeDetected(decodedText)
+        if (scanner) {
+          scanner.clear()
+          setIsScanning(false)
           toast({
-            title: "Invalid QR Code",
-            description: "Please scan a valid cart QR code starting with 'CART-'",
-            variant: "destructive"
+            title: "QR Code Detected",
+            description: `Successfully scanned QR code: ${decodedText}`,
           })
         }
       }
@@ -85,11 +77,11 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
 
   const handleTestScan = () => {
     // Simulate a QR code detection with test data
-    const testCartCode = "CART-123"
-    onQRCodeDetected(testCartCode)
+    const testCode = "Test QR Code Data"
+    onQRCodeDetected(testCode)
     toast({
       title: "Test QR Code",
-      description: `Successfully simulated cart scan: ${testCartCode}`,
+      description: `Successfully simulated scan: ${testCode}`,
     })
   }
 
@@ -110,7 +102,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
             onClick={handleTestScan}
             className="w-full"
           >
-            Test Scanner (Simulate CART-123)
+            Test Scanner
           </Button>
         </div>
       ) : (
@@ -129,3 +121,4 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     </Card>
   )
 }
+
