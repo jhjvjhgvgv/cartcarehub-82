@@ -39,8 +39,8 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
           videoConstraints: {
             facingMode: "environment",
             advanced: [{
-              focus: "continuous"
-            }]
+              focusMode: "continuous"
+            } as MediaTrackConstraintSet]
           },
           defaultZoomValueIfSupported: 1
         },
