@@ -71,6 +71,16 @@ const CartStatus = () => {
     setIsScanning(false);
   };
 
+  const handleSubmit = (data: any) => {
+    // Placeholder for submit handler
+    console.log("Submit data:", data);
+  };
+
+  const handleDelete = (cartId: string) => {
+    // Placeholder for delete handler
+    console.log("Delete cart:", cartId);
+  };
+
   return (
     <CustomerLayout>
       <div className="space-y-6">
@@ -146,7 +156,12 @@ const CartStatus = () => {
               <DialogTitle>Scan Cart QR Code</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              <QRScanner onQRCodeDetected={handleQRCodeDetected} />
+              <QRScanner 
+                onQRCodeDetected={handleQRCodeDetected}
+                carts={carts}
+                onSubmit={handleSubmit}
+                onDelete={handleDelete}
+              />
             </div>
           </DialogContent>
         </Dialog>

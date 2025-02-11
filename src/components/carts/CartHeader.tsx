@@ -17,7 +17,6 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   const { carts, handleSubmit, handleDeleteCart } = useCarts([]);
 
   const handleQRCodeDetected = (qrCode: string) => {
-    // Find the cart with matching QR code
     const existingCart = carts.find(cart => cart.rfidTag === qrCode);
     
     if (existingCart) {
@@ -62,7 +61,12 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
             <DialogTitle>Scan Cart QR Code</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <QRScanner onQRCodeDetected={handleQRCodeDetected} />
+            <QRScanner 
+              onQRCodeDetected={handleQRCodeDetected} 
+              carts={carts}
+              onSubmit={handleSubmit}
+              onDelete={handleDeleteCart}
+            />
           </div>
         </DialogContent>
       </Dialog>
