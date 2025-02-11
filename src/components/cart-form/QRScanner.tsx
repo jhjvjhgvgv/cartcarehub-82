@@ -35,9 +35,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         /* verbose= */ false
       )
 
-      scanner.render(success, error)
-
-      function success(decodedText: string) {
+      const onScanSuccess = (decodedText: string) => {
         console.log("QR Code detected:", decodedText)
         setScannedQRCode(decodedText)
         onQRCodeDetected(decodedText)
@@ -52,12 +50,14 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         }
       }
 
-      function error(err: any) {
+      const onScanError = (err: any) => {
         // Only log significant errors, not regular scanning attempts
         if (!err.toString().includes("No QR code detected")) {
           console.error("QR Scanner error:", err)
         }
       }
+
+      scanner.render(onScanSuccess, onScanError)
     }
 
     return () => {
@@ -77,6 +77,25 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     toast({
       title: "Test QR Code",
       description: `Successfully simulated scan: ${testCode}`,
+    })
+  }
+
+  const handleSubmit = (data: any) => {
+    console.log("Cart data submitted:", data)
+    setIsCartDialogOpen(false)
+    toast({
+      title: "Success",
+      description: "Cart details have been saved.",
+    })
+  }
+
+  const handleDelete = (cartId: string) => {
+    console.log("Cart deleted:", cartId)
+    setIsCartDialogOpen(false)
+    toast({
+      title: "Cart Deleted",
+      description: "Cart has been removed from the system.",
+      variant: "destructive",
     })
   }
 
@@ -130,14 +149,8 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
       <CartDialog
         isOpen={isCartDialogOpen}
         onOpenChange={setIsCartDialogOpen}
-        onSubmit={(data) => {
-          console.log("Cart updated:", data)
-          setIsCartDialogOpen(false)
-        }}
-        onDelete={(cartId) => {
-          console.log("Cart deleted:", cartId)
-          setIsCartDialogOpen(false)
-        }}
+        onSubmit={handleSubmit}
+        onDelete={handleDelete}
         editingCart={{
           id: "new",
           rfidTag: scannedQRCode,
