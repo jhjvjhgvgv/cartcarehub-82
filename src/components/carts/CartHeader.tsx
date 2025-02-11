@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useState } from "react"
 import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
+import { useCarts } from "@/hooks/use-carts"
 
 interface CartHeaderProps {
   onAddClick: () => void
@@ -13,12 +14,23 @@ interface CartHeaderProps {
 export function CartHeader({ onAddClick }: CartHeaderProps) {
   const [isScanning, setIsScanning] = useState(false);
   const { toast } = useToast();
+  const { carts, handleSubmit, handleDeleteCart } = useCarts([]);
 
   const handleQRCodeDetected = (qrCode: string) => {
-    toast({
-      title: "QR Code Detected",
-      description: `QR Code value: ${qrCode}`,
-    });
+    // Find the cart with matching QR code
+    const existingCart = carts.find(cart => cart.rfidTag === qrCode);
+    
+    if (existingCart) {
+      toast({
+        title: "Cart Found",
+        description: `Found cart: ${existingCart.id}`,
+      });
+    } else {
+      toast({
+        title: "New Cart",
+        description: "No existing cart found with this QR code. Creating new cart.",
+      });
+    }
     setIsScanning(false);
   };
 
