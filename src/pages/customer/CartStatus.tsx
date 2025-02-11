@@ -23,7 +23,7 @@ interface CartInfo {
 const mockCarts: CartInfo[] = [
   {
     id: "CART-001",
-    rfidTag: "RFID-A123",
+    rfidTag: "QR-123456789",
     status: "active",
     store: "SuperMart Downtown",
     lastMaintenance: "2024-03-15",
@@ -31,7 +31,7 @@ const mockCarts: CartInfo[] = [
   },
   {
     id: "CART-002",
-    rfidTag: "RFID-B456",
+    rfidTag: "QR-987654321",
     status: "maintenance",
     store: "SuperMart Downtown",
     lastMaintenance: "2024-03-14",
