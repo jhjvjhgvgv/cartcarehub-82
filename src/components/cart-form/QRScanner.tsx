@@ -1,10 +1,9 @@
 
 import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { CartDialog } from "@/components/carts/CartDialog"
 import { Cart } from "@/types/cart"
 import { QRScannerUI } from "../qr-scanner/QRScannerUI"
 import { useQRScanner } from "../qr-scanner/useQRScanner"
+import { CartDialog } from "@/components/carts/CartDialog"
 
 interface QRScannerProps {
   onQRCodeDetected: (qrCode: string) => void
@@ -22,7 +21,6 @@ export function QRScanner({
   const [isCartDialogOpen, setIsCartDialogOpen] = useState(false)
   const [scannedQRCode, setScannedQRCode] = useState("")
   const [existingCart, setExistingCart] = useState<Cart | null>(null)
-  const { toast } = useToast()
 
   const { isScanning, setIsScanning, handleTestScan } = useQRScanner({
     onQRCodeDetected: (qrCode: string) => {
@@ -33,15 +31,6 @@ export function QRScanner({
     carts,
     onSetExistingCart: setExistingCart
   })
-
-  const handleSubmit = (data: any) => {
-    onSubmit(data)
-    setIsCartDialogOpen(false)
-    toast({
-      title: "Success",
-      description: existingCart ? "Cart details have been updated." : "New cart has been created.",
-    })
-  }
 
   return (
     <>
@@ -55,7 +44,7 @@ export function QRScanner({
       <CartDialog
         isOpen={isCartDialogOpen}
         onOpenChange={setIsCartDialogOpen}
-        onSubmit={handleSubmit}
+        onSubmit={onSubmit}
         onDelete={onDelete}
         editingCart={existingCart || {
           id: "new",

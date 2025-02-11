@@ -35,35 +35,31 @@ export function useQRScanner({
         /* verbose= */ false
       )
 
-      const onScanSuccess = (decodedText: string) => {
-        console.log("QR Code detected:", decodedText)
-        
-        // Find if cart already exists
-        const foundCart = carts.find(cart => cart.rfidTag === decodedText)
-        console.log("Found cart:", foundCart)
-        onSetExistingCart(foundCart || null)
-        
-        if (scanner) {
-          scanner.clear()
-          setIsScanning(false)
-          
-          if (foundCart) {
-            toast({
-              title: "Existing Cart Found",
-              description: `Found cart: ${foundCart.id} at ${foundCart.store}`,
-            })
-          } else {
-            toast({
-              title: "New Cart",
-              description: "No existing cart found with this QR code. Creating new cart.",
-            })
+      const onScanSuccess = async (decodedText: string) => {
+        try {
+          // Stop scanning first to prevent multiple scans
+          if (scanner) {
+            await scanner.clear()
+            setIsScanning(false)
           }
+
+          // Find if cart already exists
+          const foundCart = carts.find(cart => cart.rfidTag === decodedText)
+          onSetExistingCart(foundCart || null)
+          onQRCodeDetected(decodedText)
+          
+        } catch (error) {
+          console.error("Error during QR scan:", error)
+          toast({
+            title: "Scan Error",
+            description: "Failed to process QR code. Please try again.",
+            variant: "destructive",
+          })
         }
-        
-        onQRCodeDetected(decodedText)
       }
 
       const onScanError = (err: any) => {
+        // Only show error for non-standard scanning issues
         if (!err.toString().includes("No QR code detected")) {
           console.error("QR Scanner error:", err)
           toast({
@@ -88,24 +84,7 @@ export function useQRScanner({
 
   const handleTestScan = () => {
     const testCode = "QR-123456789"
-    
-    // Check for existing cart with test QR code
-    const foundCart = carts.find(cart => cart.rfidTag === testCode)
-    console.log("Test scan found cart:", foundCart)
-    onSetExistingCart(foundCart || null)
-    
-    if (foundCart) {
-      toast({
-        title: "Existing Cart Found",
-        description: `Found cart: ${foundCart.id} at ${foundCart.store}`,
-      })
-    } else {
-      toast({
-        title: "New Cart",
-        description: "No existing cart found with this QR code. Creating new cart.",
-      })
-    }
-    
+    onSetExistingCart(carts.find(cart => cart.rfidTag === testCode) || null)
     onQRCodeDetected(testCode)
   }
 
