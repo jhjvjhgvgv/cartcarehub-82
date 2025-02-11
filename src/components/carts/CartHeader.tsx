@@ -33,6 +33,14 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
     setIsScanning(false);
   };
 
+  const handleCartSubmit = (data: any) => {
+    handleSubmit(data, null, [
+      { id: "store1", name: "SuperMart Downtown" },
+      { id: "store2", name: "FreshMart Heights" },
+      { id: "store3", name: "Value Grocery West" },
+    ]);
+  };
+
   return (
     <>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -62,9 +70,9 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
           </DialogHeader>
           <div className="mt-4">
             <QRScanner 
-              onQRCodeDetected={handleQRCodeDetected} 
+              onQRCodeDetected={handleQRCodeDetected}
               carts={carts}
-              onSubmit={handleSubmit}
+              onSubmit={handleCartSubmit}
               onDelete={handleDeleteCart}
             />
           </div>

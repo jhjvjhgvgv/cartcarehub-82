@@ -8,23 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useState } from "react";
 import { QRScanner } from "@/components/cart-form/QRScanner";
 import { useToast } from "@/hooks/use-toast";
+import { Cart } from "@/types/cart";
 
-interface CartInfo {
-  id: string;
-  rfidTag: string;
-  status: "active" | "maintenance" | "retired";
-  store: string;
-  lastMaintenance: string;
-  issues: string[];
-}
-
-// This would typically come from an API/database
-const mockCarts: CartInfo[] = [
+const mockCarts: Cart[] = [
   {
     id: "CART-001",
     rfidTag: "QR-123456789",
     status: "active",
     store: "SuperMart Downtown",
+    storeId: "store1",
     lastMaintenance: "2024-03-15",
     issues: [],
   },
@@ -33,17 +25,18 @@ const mockCarts: CartInfo[] = [
     rfidTag: "QR-987654321",
     status: "maintenance",
     store: "SuperMart Downtown",
+    storeId: "store1",
     lastMaintenance: "2024-03-14",
     issues: ["Wheel alignment needed"],
   },
 ];
 
 const CartStatus = () => {
-  const [carts, setCarts] = useState<CartInfo[]>(mockCarts);
+  const [carts, setCarts] = useState<Cart[]>(mockCarts);
   const [isScanning, setIsScanning] = useState(false);
   const { toast } = useToast();
 
-  const getStatusBadge = (status: CartInfo["status"]) => {
+  const getStatusBadge = (status: Cart["status"]) => {
     switch (status) {
       case "active":
         return <Badge className="bg-green-500">Active</Badge>;
@@ -72,13 +65,25 @@ const CartStatus = () => {
   };
 
   const handleSubmit = (data: any) => {
-    // Placeholder for submit handler
-    console.log("Submit data:", data);
+    const newCart: Cart = {
+      ...data,
+      storeId: "store1",
+      issues: Array.isArray(data.issues) ? data.issues : [],
+    };
+    setCarts([...carts, newCart]);
+    toast({
+      title: "Success",
+      description: "Cart details have been updated.",
+    });
   };
 
   const handleDelete = (cartId: string) => {
-    // Placeholder for delete handler
-    console.log("Delete cart:", cartId);
+    setCarts(carts.filter(cart => cart.id !== cartId));
+    toast({
+      title: "Success",
+      description: "Cart has been removed.",
+      variant: "destructive",
+    });
   };
 
   return (
