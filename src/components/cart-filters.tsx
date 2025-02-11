@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,10 +43,10 @@ export function CartFilters({ onFilterChange, managedStores }: CartFiltersProps)
     <Card className="p-4">
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="rfidTag" className="text-sm font-medium">RFID Tag</Label>
+          <Label htmlFor="rfidTag" className="text-sm font-medium">QR Code</Label>
           <Input
             id="rfidTag"
-            placeholder="Search by RFID tag..."
+            placeholder="Search by QR code..."
             value={filters.rfidTag}
             onChange={(e) => handleFilterChange("rfidTag", e.target.value)}
             className="w-full"
