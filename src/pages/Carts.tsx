@@ -17,7 +17,7 @@ const managedStores = [
 const initialCarts: Cart[] = [
   {
     id: "CART-001",
-    rfidTag: "RFID-A123",
+    rfidTag: "QR-123456789",
     store: "SuperMart Downtown",
     storeId: "store1",
     status: "active",
@@ -26,7 +26,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-002",
-    rfidTag: "RFID-B456",
+    rfidTag: "QR-987654321",
     store: "SuperMart Downtown",
     storeId: "store1",
     status: "maintenance",
@@ -35,7 +35,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-003",
-    rfidTag: "RFID-C789",
+    rfidTag: "QR-456789123",
     store: "FreshMart Heights",
     storeId: "store2",
     status: "active",
@@ -44,7 +44,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-004",
-    rfidTag: "RFID-D012",
+    rfidTag: "QR-789123456",
     store: "FreshMart Heights",
     storeId: "store2",
     status: "retired",
@@ -53,7 +53,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-005",
-    rfidTag: "RFID-E345",
+    rfidTag: "QR-321654987",
     store: "Value Grocery West",
     storeId: "store3",
     status: "active",
@@ -62,7 +62,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-006",
-    rfidTag: "RFID-F678",
+    rfidTag: "QR-654987321",
     store: "Value Grocery West",
     storeId: "store3",
     status: "maintenance",
@@ -71,7 +71,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-007",
-    rfidTag: "RFID-G901",
+    rfidTag: "QR-147258369",
     store: "SuperMart Downtown",
     storeId: "store1",
     status: "active",
@@ -80,7 +80,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-008",
-    rfidTag: "RFID-H234",
+    rfidTag: "QR-258369147",
     store: "FreshMart Heights",
     storeId: "store2",
     status: "active",
@@ -89,7 +89,7 @@ const initialCarts: Cart[] = [
   },
   {
     id: "CART-009",
-    rfidTag: "RFID-I567",
+    rfidTag: "QR-369147258",
     store: "Value Grocery West",
     storeId: "store3",
     status: "active",
