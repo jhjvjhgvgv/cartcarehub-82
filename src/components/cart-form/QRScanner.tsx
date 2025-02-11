@@ -7,20 +7,21 @@ import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Camera, CheckCircle2 } from "lucide-react"
 import { CartDialog } from "@/components/carts/CartDialog"
-import { useCarts } from "@/hooks/use-carts"
 import { Cart } from "@/types/cart"
 
 interface QRScannerProps {
   onQRCodeDetected: (qrCode: string) => void
+  carts: Cart[]
+  onSubmit: (data: any) => void
+  onDelete: (cartId: string) => void
 }
 
-export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
+export function QRScanner({ onQRCodeDetected, carts, onSubmit, onDelete }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [isCartDialogOpen, setIsCartDialogOpen] = useState(false)
   const [scannedQRCode, setScannedQRCode] = useState("")
   const [existingCart, setExistingCart] = useState<Cart | null>(null)
   const { toast } = useToast()
-  const { carts, handleSubmit: handleCartSubmit, handleDeleteCart } = useCarts([])
   
   useEffect(() => {
     let scanner: Html5QrcodeScanner | null = null
@@ -43,8 +44,9 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         console.log("QR Code detected:", decodedText)
         setScannedQRCode(decodedText)
         
-        // Find if cart already exists - now using strict equality
+        // Find if cart already exists
         const foundCart = carts.find(cart => cart.rfidTag === decodedText)
+        console.log("Found cart:", foundCart)
         setExistingCart(foundCart || null)
         
         if (scanner) {
@@ -72,7 +74,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         if (!err.toString().includes("No QR code detected")) {
           console.error("QR Scanner error:", err)
           toast({
-            title: "Scan Error",
+            title: "Scan Error", 
             description: "Failed to scan QR code. Please try again.",
             variant: "destructive",
           })
@@ -97,6 +99,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
     
     // Check for existing cart with test QR code
     const foundCart = carts.find(cart => cart.rfidTag === testCode)
+    console.log("Test scan found cart:", foundCart)
     setExistingCart(foundCart || null)
     
     if (foundCart) {
@@ -116,39 +119,11 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
   }
 
   const handleSubmit = (data: any) => {
-    if (existingCart) {
-      // Updating existing cart
-      handleCartSubmit(data, existingCart, [
-        { id: "store1", name: "SuperMart Downtown" },
-        { id: "store2", name: "FreshMart Heights" },
-        { id: "store3", name: "Value Grocery West" },
-      ])
-      toast({
-        title: "Success",
-        description: "Cart details have been updated.",
-      })
-    } else {
-      // Creating new cart
-      handleCartSubmit(data, null, [
-        { id: "store1", name: "SuperMart Downtown" },
-        { id: "store2", name: "FreshMart Heights" },
-        { id: "store3", name: "Value Grocery West" },
-      ])
-      toast({
-        title: "Success",
-        description: "New cart has been created.",
-      })
-    }
-    setIsCartDialogOpen(false)
-  }
-
-  const handleDelete = (cartId: string) => {
-    handleDeleteCart(cartId)
+    onSubmit(data)
     setIsCartDialogOpen(false)
     toast({
-      title: "Cart Deleted",
-      description: "Cart has been removed from the system.",
-      variant: "destructive",
+      title: "Success",
+      description: existingCart ? "Cart details have been updated." : "New cart has been created.",
     })
   }
 
@@ -203,7 +178,7 @@ export function QRScanner({ onQRCodeDetected }: QRScannerProps) {
         isOpen={isCartDialogOpen}
         onOpenChange={setIsCartDialogOpen}
         onSubmit={handleSubmit}
-        onDelete={handleDelete}
+        onDelete={onDelete}
         editingCart={existingCart || {
           id: "new",
           rfidTag: scannedQRCode,

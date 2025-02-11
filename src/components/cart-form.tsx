@@ -12,6 +12,7 @@ import { IssuesField } from "./cart-form/IssuesField"
 import { cartFormSchema, CartFormValues } from "./cart-form/types"
 import { Card } from "./ui/card"
 import { ShoppingCart } from "lucide-react"
+import { Cart } from "@/types/cart"
 
 interface CartFormProps {
   initialData?: CartFormValues
@@ -20,6 +21,8 @@ interface CartFormProps {
   disableRfidTag?: boolean
   isBulkEdit?: boolean
   rfidPlaceholder?: string
+  carts?: Cart[]
+  onDelete?: (cartId: string) => void
 }
 
 export function CartForm({ 
@@ -28,7 +31,9 @@ export function CartForm({
   onCancel, 
   disableRfidTag = false,
   isBulkEdit = false,
-  rfidPlaceholder = "Enter QR code"
+  rfidPlaceholder = "Enter QR code",
+  carts = [],
+  onDelete = () => {},
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
@@ -94,6 +99,9 @@ export function CartForm({
             form={form} 
             disabled={disableRfidTag}
             placeholder={rfidPlaceholder}
+            carts={carts}
+            onSubmit={onSubmit}
+            onDelete={onDelete}
           />
           <StoreField form={form} />
           <StatusField form={form} />
