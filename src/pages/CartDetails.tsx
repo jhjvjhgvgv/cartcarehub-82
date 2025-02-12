@@ -1,8 +1,11 @@
+
 import React from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ChevronLeft } from "lucide-react"
 import { Cart } from "@/types/cart"
 
 // This would typically come from an API call using the cartId
@@ -101,6 +104,7 @@ const getCartDetails = (cartId: string): Cart => {
 
 export default function CartDetails() {
   const { cartId } = useParams<{ cartId: string }>()
+  const navigate = useNavigate()
   const cart = cartId ? getCartDetails(cartId) : null
 
   if (!cart) {
@@ -129,7 +133,18 @@ export default function CartDetails() {
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Cart Details</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/carts')}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to Carts
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Cart Details</h1>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Cart Information</CardTitle>
