@@ -43,9 +43,6 @@ export function useQRScanner({
             setIsScanning(false)
           }
 
-          // Find if cart already exists
-          const foundCart = carts.find(cart => cart.rfidTag === decodedText)
-          onSetExistingCart(foundCart || null)
           onQRCodeDetected(decodedText)
           
         } catch (error) {
@@ -80,11 +77,10 @@ export function useQRScanner({
         })
       }
     }
-  }, [isScanning, onQRCodeDetected, toast, carts, onSetExistingCart])
+  }, [isScanning, onQRCodeDetected, toast])
 
   const handleTestScan = () => {
     const testCode = "QR-123456789"
-    onSetExistingCart(carts.find(cart => cart.rfidTag === testCode) || null)
     onQRCodeDetected(testCode)
   }
 

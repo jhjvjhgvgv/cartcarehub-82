@@ -24,21 +24,6 @@ export function QRScanner({
   const { isScanning, setIsScanning, handleTestScan } = useQRScanner({
     onQRCodeDetected: (qrCode: string) => {
       setScannedQRCode(qrCode)
-      const existingCart = carts.find(cart => cart.rfidTag === qrCode)
-      
-      if (existingCart) {
-        toast({
-          title: "Cart Found",
-          description: `Found cart: ${existingCart.id}`,
-        })
-      } else {
-        toast({
-          title: "Cart Not Found",
-          description: "This cart is not registered in the system.",
-          variant: "destructive"
-        })
-      }
-      
       onQRCodeDetected(qrCode)
     },
     carts,
