@@ -7,6 +7,14 @@ export const useCarts = (initialCarts: Cart[]) => {
   const [carts, setCarts] = useState<Cart[]>(initialCarts)
   const { toast } = useToast()
 
+  const generateCartId = () => {
+    const lastCart = carts[carts.length - 1]
+    if (!lastCart) return "CART-001"
+    
+    const lastNumber = parseInt(lastCart.id.split('-')[1])
+    return `CART-${String(lastNumber + 1).padStart(3, '0')}`
+  }
+
   const handleSubmit = (data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
     try {
       if (Array.isArray(data)) {
@@ -89,9 +97,9 @@ export const useCarts = (initialCarts: Cart[]) => {
           return
         }
 
-        // Add new cart with validated data
+        // Add new cart with validated data and generated ID
         const newCart: Cart = {
-          id: data.id,
+          id: generateCartId(),
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
@@ -100,7 +108,7 @@ export const useCarts = (initialCarts: Cart[]) => {
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
         }
 
-        setCarts([...carts, newCart])
+        setCarts(prevCarts => [...prevCarts, newCart])
         toast({
           title: "Success",
           description: "New cart has been added to the system.",
