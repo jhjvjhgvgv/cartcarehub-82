@@ -27,7 +27,17 @@ export function QRScanner({
   const { isScanning, setIsScanning, handleTestScan } = useQRScanner({
     onQRCodeDetected: (qrCode: string) => {
       setScannedQRCode(qrCode)
-      setIsCartDialogOpen(true)
+      const cartExists = carts.some(cart => cart.rfidTag === qrCode)
+      
+      if (cartExists) {
+        toast({
+          title: "Cart Found",
+          description: "This cart is already registered in the system.",
+        })
+      } else {
+        setIsCartDialogOpen(true)
+      }
+      
       onQRCodeDetected(qrCode)
     },
     carts,
@@ -39,7 +49,7 @@ export function QRScanner({
     setIsCartDialogOpen(false)
     toast({
       title: "Success",
-      description: existingCart ? "Cart details have been updated." : "New cart has been created.",
+      description: "New cart has been created.",
     })
   }
 
@@ -60,7 +70,7 @@ export function QRScanner({
           onDelete(cartId)
           setIsCartDialogOpen(false)
         }}
-        editingCart={existingCart || {
+        editingCart={{
           id: "new",
           rfidTag: scannedQRCode,
           store: "",
