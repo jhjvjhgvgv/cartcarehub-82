@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode"
 import { useToast } from "@/hooks/use-toast"
 import { Cart } from "@/types/cart"
@@ -17,12 +17,11 @@ export function useQRScanner({
 }: UseQRScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const { toast } = useToast()
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null)
 
   useEffect(() => {
-    let scanner: Html5QrcodeScanner | null = null
-
-    if (isScanning) {
-      scanner = new Html5QrcodeScanner(
+    if (isScanning && !scannerRef.current) {
+      scannerRef.current = new Html5QrcodeScanner(
         "qr-reader",
         { 
           fps: 10,
@@ -38,8 +37,9 @@ export function useQRScanner({
       const onScanSuccess = async (decodedText: string) => {
         try {
           // Stop scanning first to prevent multiple scans
-          if (scanner) {
-            await scanner.clear()
+          if (scannerRef.current) {
+            await scannerRef.current.clear()
+            scannerRef.current = null
             setIsScanning(false)
           }
 
@@ -67,14 +67,15 @@ export function useQRScanner({
         }
       }
 
-      scanner.render(onScanSuccess, onScanError)
+      scannerRef.current.render(onScanSuccess, onScanError)
     }
 
     return () => {
-      if (scanner) {
-        scanner.clear().catch((err) => {
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch((err) => {
           console.error("Error clearing scanner:", err)
         })
+        scannerRef.current = null
       }
     }
   }, [isScanning, onQRCodeDetected, toast])
