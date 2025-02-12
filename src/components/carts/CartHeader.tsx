@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { PlusCircle, ScanLine } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
 import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
@@ -99,30 +100,32 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
       </Dialog>
 
       <Dialog open={isAddingCart} onOpenChange={setIsAddingCart}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Add New Cart</DialogTitle>
             <DialogDescription>
               Fill in the cart details and scan or enter its QR code
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            <CartForm 
-              initialData={{
-                rfidTag: newCartRfid,
-                store: "",
-                status: "active",
-                lastMaintenance: new Date().toISOString().split("T")[0],
-                issues: "",
-              }}
-              onSubmit={handleAddCartSubmit}
-              onCancel={() => setIsAddingCart(false)}
-              disableRfidTag={false}
-              rfidPlaceholder="Scan QR code below or enter manually"
-              carts={carts}
-              onDelete={() => {}}
-            />
-          </div>
+          <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
+            <div className="mt-4">
+              <CartForm 
+                initialData={{
+                  rfidTag: newCartRfid,
+                  store: "",
+                  status: "active",
+                  lastMaintenance: new Date().toISOString().split("T")[0],
+                  issues: "",
+                }}
+                onSubmit={handleAddCartSubmit}
+                onCancel={() => setIsAddingCart(false)}
+                disableRfidTag={false}
+                rfidPlaceholder="Scan QR code below or enter manually"
+                carts={carts}
+                onDelete={() => {}}
+              />
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
