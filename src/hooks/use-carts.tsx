@@ -58,10 +58,11 @@ export const useCarts = (initialCarts: Cart[]) => {
         })
       } else {
         // Handle adding new cart
-        if (!data.id || !data.rfidTag) {
+        const store = managedStores.find(s => s.name === data.store)
+        if (!store) {
           toast({
             title: "Error",
-            description: "Invalid cart data.",
+            description: "Selected store not found.",
             variant: "destructive",
           })
           return
@@ -78,8 +79,28 @@ export const useCarts = (initialCarts: Cart[]) => {
           return
         }
 
-        // Add new cart
-        setCarts([...carts, data])
+        // Ensure we have a valid cart object
+        if (!data.rfidTag || !data.store || !data.status) {
+          toast({
+            title: "Error",
+            description: "Please fill in all required fields.",
+            variant: "destructive",
+          })
+          return
+        }
+
+        // Add new cart with validated data
+        const newCart: Cart = {
+          id: data.id,
+          rfidTag: data.rfidTag,
+          store: data.store,
+          storeId: store.id,
+          status: data.status,
+          lastMaintenance: data.lastMaintenance || new Date().toISOString().split('T')[0],
+          issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+        }
+
+        setCarts([...carts, newCart])
         toast({
           title: "Success",
           description: "New cart has been added to the system.",
