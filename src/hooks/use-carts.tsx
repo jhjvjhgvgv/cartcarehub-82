@@ -58,26 +58,28 @@ export const useCarts = (initialCarts: Cart[]) => {
         })
       } else {
         // Handle adding new cart
-        const store = managedStores.find(s => s.name === data.store)
-        if (!store) {
+        if (!data.id || !data.rfidTag) {
           toast({
             title: "Error",
-            description: "Selected store not found.",
+            description: "Invalid cart data.",
             variant: "destructive",
           })
           return
         }
 
-        const newCart: Cart = {
-          id: `CART-${String(carts.length + 1).padStart(3, "0")}`,
-          rfidTag: data.rfidTag,
-          store: data.store,
-          storeId: store.id,
-          status: data.status,
-          lastMaintenance: data.lastMaintenance,
-          issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+        // Check if cart with same RFID already exists
+        const existingCart = carts.find(cart => cart.rfidTag === data.rfidTag)
+        if (existingCart) {
+          toast({
+            title: "Error",
+            description: "A cart with this QR code already exists.",
+            variant: "destructive",
+          })
+          return
         }
-        setCarts([...carts, newCart])
+
+        // Add new cart
+        setCarts([...carts, data])
         toast({
           title: "Success",
           description: "New cart has been added to the system.",

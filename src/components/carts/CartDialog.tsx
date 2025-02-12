@@ -86,18 +86,24 @@ export function CartDialog({
           issues: data.issues ? data.issues.split('\n') : [],
         })
       } else {
-        // Handle new cart
-        onSubmit({
+        // Handle new cart creation
+        const newCart: Cart = {
+          id: `CART-${Date.now().toString().slice(-6)}`,
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
           status: data.status,
           lastMaintenance: data.lastMaintenance,
           issues: data.issues ? data.issues.split('\n') : [],
-        })
+        }
+        onSubmit(newCart)
       }
       
       onOpenChange(false)
+      toast({
+        title: "Success",
+        description: editingCart ? "Cart updated successfully" : "New cart added successfully",
+      })
     } catch (error) {
       console.error('Error in handleSubmit:', error)
       toast({
