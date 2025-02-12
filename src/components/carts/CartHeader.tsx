@@ -24,11 +24,6 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         title: "Cart Found",
         description: `Found cart: ${existingCart.id}`,
       });
-    } else {
-      toast({
-        title: "New Cart",
-        description: "No existing cart found with this QR code. Creating new cart.",
-      });
     }
   };
 
@@ -38,6 +33,10 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
       { id: "store2", name: "FreshMart Heights" },
       { id: "store3", name: "Value Grocery West" },
     ]);
+    toast({
+      title: "Success",
+      description: "New cart has been created.",
+    });
     setIsScanning(false);
   };
 
