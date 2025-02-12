@@ -36,15 +36,12 @@ export function useQRScanner({
 
       const onScanSuccess = async (decodedText: string) => {
         try {
-          // Stop scanning first to prevent multiple scans
           if (scannerRef.current) {
             await scannerRef.current.clear()
             scannerRef.current = null
-            setIsScanning(false)
           }
-
+          setIsScanning(false)
           onQRCodeDetected(decodedText)
-          
         } catch (error) {
           console.error("Error during QR scan:", error)
           toast({
@@ -56,8 +53,11 @@ export function useQRScanner({
       }
 
       const onScanError = (err: any) => {
-        // Only show error for non-standard scanning issues
-        if (!err.toString().includes("No QR code detected")) {
+        // Ignore common "no QR code found" messages to reduce noise
+        const errorMessage = err.toString().toLowerCase()
+        if (!errorMessage.includes("no qr code") && 
+            !errorMessage.includes("no barcode") && 
+            !errorMessage.includes("no multiformat readers")) {
           console.error("QR Scanner error:", err)
           toast({
             title: "Scan Error", 
@@ -70,12 +70,16 @@ export function useQRScanner({
       scannerRef.current.render(onScanSuccess, onScanError)
     }
 
+    // Cleanup function
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch((err) => {
+        try {
+          scannerRef.current.clear()
+        } catch (err) {
           console.error("Error clearing scanner:", err)
-        })
-        scannerRef.current = null
+        } finally {
+          scannerRef.current = null
+        }
       }
     }
   }, [isScanning, onQRCodeDetected, toast])
