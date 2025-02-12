@@ -24,29 +24,25 @@ export function QRScanner({
   const { isScanning, setIsScanning, handleTestScan } = useQRScanner({
     onQRCodeDetected: (qrCode: string) => {
       setScannedQRCode(qrCode)
-      const cartExists = carts.some(cart => cart.rfidTag === qrCode)
+      const existingCart = carts.find(cart => cart.rfidTag === qrCode)
       
-      if (cartExists) {
+      if (existingCart) {
         toast({
           title: "Cart Found",
-          description: "This cart is already registered in the system.",
+          description: `Found cart: ${existingCart.id}`,
         })
       } else {
-        onSubmit({
-          id: "new",
-          rfidTag: qrCode,
-          store: "",
-          storeId: "",
-          status: "active",
-          lastMaintenance: new Date().toISOString().split("T")[0],
-          issues: [],
+        toast({
+          title: "Cart Not Found",
+          description: "This cart is not registered in the system.",
+          variant: "destructive"
         })
       }
       
       onQRCodeDetected(qrCode)
     },
     carts,
-    onSetExistingCart: () => {} // We don't need this anymore since we're not showing the dialog
+    onSetExistingCart: () => {}
   })
 
   return (

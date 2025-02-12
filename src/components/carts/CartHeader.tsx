@@ -27,19 +27,6 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
     }
   };
 
-  const handleCartSubmit = (data: any) => {
-    handleSubmit(data, null, [
-      { id: "store1", name: "SuperMart Downtown" },
-      { id: "store2", name: "FreshMart Heights" },
-      { id: "store3", name: "Value Grocery West" },
-    ]);
-    toast({
-      title: "Success",
-      description: "New cart has been created.",
-    });
-    setIsScanning(false);
-  };
-
   return (
     <>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -50,7 +37,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
             onClick={() => setIsScanning(true)}
           >
             <ScanLine className="h-4 w-4" />
-            Scan QR Code
+            Find Cart
           </Button>
           <Button 
             className="flex items-center gap-2 min-w-[140px]" 
@@ -65,16 +52,16 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
       <Dialog open={isScanning} onOpenChange={setIsScanning}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Scan Cart QR Code</DialogTitle>
+            <DialogTitle>Find Cart by QR Code</DialogTitle>
             <DialogDescription>
-              Scan a QR code to view or edit cart details
+              Scan a QR code to find an existing cart
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             <QRScanner 
               onQRCodeDetected={handleQRCodeDetected}
               carts={carts}
-              onSubmit={handleCartSubmit}
+              onSubmit={() => {}}
               onDelete={handleDeleteCart}
             />
           </div>
