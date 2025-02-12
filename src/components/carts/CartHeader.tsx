@@ -103,19 +103,10 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
           <DialogHeader>
             <DialogTitle>Add New Cart</DialogTitle>
             <DialogDescription>
-              Fill in the cart details and scan its QR code
+              Fill in the cart details and scan or enter its QR code
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-6">
-            <div className="border rounded-lg p-4">
-              <h3 className="text-sm font-medium mb-2">Scan QR Code</h3>
-              <QRScanner 
-                onQRCodeDetected={handleNewCartQRCode}
-                carts={carts}
-                onSubmit={() => {}}
-                onDelete={() => {}}
-              />
-            </div>
+          <div className="mt-4">
             <CartForm 
               initialData={{
                 rfidTag: newCartRfid,
@@ -127,7 +118,9 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
               onSubmit={handleAddCartSubmit}
               onCancel={() => setIsAddingCart(false)}
               disableRfidTag={false}
-              rfidPlaceholder="Scan QR code above or enter manually"
+              rfidPlaceholder="Scan QR code below or enter manually"
+              carts={carts}
+              onDelete={() => {}}
             />
           </div>
         </DialogContent>
