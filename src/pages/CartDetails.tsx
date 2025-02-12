@@ -1,4 +1,3 @@
-
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
@@ -135,12 +134,11 @@ export default function CartDetails() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Button
-              variant="ghost"
-              size="sm"
               onClick={() => navigate('/carts')}
-              className="flex items-center gap-2"
+              className="bg-primary-50 hover:bg-primary-100 text-primary-800 font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm hover:shadow focus:ring-2 focus:ring-primary-200 focus:outline-none"
+              variant="ghost"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
               Back to Carts
             </Button>
             <h1 className="text-2xl font-bold text-gray-900">Cart Details</h1>
