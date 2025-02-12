@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { PlusCircle, ScanLine } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useState } from "react"
 import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
@@ -30,7 +30,6 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         description: "No existing cart found with this QR code. Creating new cart.",
       });
     }
-    setIsScanning(false);
   };
 
   const handleCartSubmit = (data: any) => {
@@ -39,6 +38,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
       { id: "store2", name: "FreshMart Heights" },
       { id: "store3", name: "Value Grocery West" },
     ]);
+    setIsScanning(false);
   };
 
   return (
@@ -67,6 +67,9 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Scan Cart QR Code</DialogTitle>
+            <DialogDescription>
+              Scan a QR code to view or edit cart details
+            </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             <QRScanner 
