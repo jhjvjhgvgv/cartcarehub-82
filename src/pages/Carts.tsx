@@ -99,8 +99,7 @@ const initialCarts: Cart[] = [
 ]
 
 const Carts = () => {
-  const [localCarts, setLocalCarts] = useState<Cart[]>(initialCarts)
-  const { carts, handleSubmit, handleDeleteCart } = useCarts(localCarts)
+  const { carts, handleSubmit, handleDeleteCart } = useCarts(initialCarts)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -108,15 +107,6 @@ const Carts = () => {
     status: "",
     store: "",
   })
-
-  useEffect(() => {
-    console.log('Local carts updated:', localCarts)
-  }, [localCarts])
-
-  useEffect(() => {
-    console.log('Syncing carts with localCarts:', carts)
-    setLocalCarts(carts)
-  }, [carts])
 
   const filteredCarts = carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
