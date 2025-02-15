@@ -7,14 +7,6 @@ export const useCarts = (initialCarts: Cart[]) => {
   const [carts, setCarts] = useState<Cart[]>(initialCarts)
   const { toast } = useToast()
 
-  const generateCartId = useCallback(() => {
-    const lastCart = carts[carts.length - 1]
-    if (!lastCart) return "CART-001"
-    
-    const lastNumber = parseInt(lastCart.id.split('-')[1])
-    return `CART-${String(lastNumber + 1).padStart(3, '0')}`
-  }, [carts])
-
   const handleSubmit = useCallback((data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
     try {
       console.log('handleSubmit called with data:', data); // Debug log
@@ -102,12 +94,12 @@ export const useCarts = (initialCarts: Cart[]) => {
             return prevCarts
           }
 
+          // Generate new cart ID
           const lastCart = prevCarts[prevCarts.length - 1]
-          const newId = lastCart 
-            ? `CART-${String(parseInt(lastCart.id.split('-')[1]) + 1).padStart(3, '0')}`
-            : "CART-001"
+          const lastNumber = lastCart ? parseInt(lastCart.id.split('-')[1]) : 0
+          const newId = `CART-${String(lastNumber + 1).padStart(3, '0')}`
 
-          // Add new cart with validated data and generated ID
+          // Create new cart
           const newCart: Cart = {
             id: newId,
             rfidTag: data.rfidTag,
@@ -119,12 +111,17 @@ export const useCarts = (initialCarts: Cart[]) => {
           }
 
           console.log('Adding new cart:', newCart); // Debug log
+          
+          // Return updated cart list
+          const updatedCarts = [...prevCarts, newCart]
+          console.log('Updated carts list:', updatedCarts); // Debug log
+          
           toast({
             title: "Success",
             description: "New cart has been added to the system.",
           })
           
-          return [...prevCarts, newCart]
+          return updatedCarts
         })
       }
     } catch (error) {
@@ -135,7 +132,7 @@ export const useCarts = (initialCarts: Cart[]) => {
         variant: "destructive",
       })
     }
-  }, [toast]) // Remove carts from dependency array
+  }, [toast])
 
   const handleDeleteCart = useCallback((cartId: string) => {
     setCarts(prevCarts => prevCarts.filter((cart) => cart.id !== cartId))

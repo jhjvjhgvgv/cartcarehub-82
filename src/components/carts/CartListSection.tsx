@@ -35,7 +35,6 @@ export function CartListSection({
       </CardHeader>
       <CardContent className="rounded-md bg-indigo-100">
         <CartList 
-          key={filteredCarts.length} // Force re-render when cart count changes
           carts={filteredCarts} 
           onEditCart={onEditCart} 
           onDeleteCart={onDeleteCart} 
