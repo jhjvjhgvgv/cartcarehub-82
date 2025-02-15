@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -145,6 +146,13 @@ const Carts = () => {
     setIsAddDialogOpen(true)
   }
 
+  const handleDialogClose = (open: boolean) => {
+    setIsAddDialogOpen(open)
+    if (!open) {
+      setEditingCart(null)
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
@@ -165,11 +173,11 @@ const Carts = () => {
 
         <CartDialog
           isOpen={isAddDialogOpen || !!editingCart}
-          onOpenChange={(open) => {
-            setIsAddDialogOpen(open)
-            if (!open) setEditingCart(null)
+          onOpenChange={handleDialogClose}
+          onSubmit={(data) => {
+            handleSubmit(data, editingCart, managedStores)
+            handleDialogClose(false)
           }}
-          onSubmit={(data) => handleSubmit(data, editingCart, managedStores)}
           onDelete={handleDeleteCart}
           editingCart={editingCart}
           managedStores={managedStores}
