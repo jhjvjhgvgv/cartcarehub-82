@@ -7,13 +7,13 @@ export const useCarts = (initialCarts: Cart[]) => {
   const [carts, setCarts] = useState<Cart[]>(initialCarts)
   const { toast } = useToast()
 
-  const generateCartId = () => {
+  const generateCartId = useCallback(() => {
     const lastCart = carts[carts.length - 1]
     if (!lastCart) return "CART-001"
     
     const lastNumber = parseInt(lastCart.id.split('-')[1])
     return `CART-${String(lastNumber + 1).padStart(3, '0')}`
-  }
+  }, [carts])
 
   const handleSubmit = useCallback((data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
     try {
@@ -80,44 +80,51 @@ export const useCarts = (initialCarts: Cart[]) => {
           return
         }
 
-        // Check if cart with same RFID already exists
-        const existingCart = carts.find(cart => cart.rfidTag === data.rfidTag)
-        if (existingCart) {
+        setCarts(prevCarts => {
+          // Check if cart with same RFID already exists
+          const existingCart = prevCarts.find(cart => cart.rfidTag === data.rfidTag)
+          if (existingCart) {
+            toast({
+              title: "Error",
+              description: "A cart with this QR code already exists.",
+              variant: "destructive",
+            })
+            return prevCarts
+          }
+
+          // Ensure we have a valid cart object
+          if (!data.rfidTag || !data.store || !data.status) {
+            toast({
+              title: "Error",
+              description: "Please fill in all required fields.",
+              variant: "destructive",
+            })
+            return prevCarts
+          }
+
+          const lastCart = prevCarts[prevCarts.length - 1]
+          const newId = lastCart 
+            ? `CART-${String(parseInt(lastCart.id.split('-')[1]) + 1).padStart(3, '0')}`
+            : "CART-001"
+
+          // Add new cart with validated data and generated ID
+          const newCart: Cart = {
+            id: newId,
+            rfidTag: data.rfidTag,
+            store: data.store,
+            storeId: store.id,
+            status: data.status,
+            lastMaintenance: data.lastMaintenance || new Date().toISOString().split('T')[0],
+            issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+          }
+
+          console.log('Adding new cart:', newCart); // Debug log
           toast({
-            title: "Error",
-            description: "A cart with this QR code already exists.",
-            variant: "destructive",
+            title: "Success",
+            description: "New cart has been added to the system.",
           })
-          return
-        }
-
-        // Ensure we have a valid cart object
-        if (!data.rfidTag || !data.store || !data.status) {
-          toast({
-            title: "Error",
-            description: "Please fill in all required fields.",
-            variant: "destructive",
-          })
-          return
-        }
-
-        // Add new cart with validated data and generated ID
-        const newCart: Cart = {
-          id: generateCartId(),
-          rfidTag: data.rfidTag,
-          store: data.store,
-          storeId: store.id,
-          status: data.status,
-          lastMaintenance: data.lastMaintenance || new Date().toISOString().split('T')[0],
-          issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-        }
-
-        console.log('Adding new cart:', newCart); // Debug log
-        setCarts(prevCarts => [...prevCarts, newCart])
-        
-        toast({
-          title: "Success",
-          description: "New cart has been added to the system.",
+          
+          return [...prevCarts, newCart]
         })
       }
     } catch (error) {
@@ -128,7 +135,7 @@ export const useCarts = (initialCarts: Cart[]) => {
         variant: "destructive",
       })
     }
-  }, [carts, toast])
+  }, [toast]) // Remove carts from dependency array
 
   const handleDeleteCart = useCallback((cartId: string) => {
     setCarts(prevCarts => prevCarts.filter((cart) => cart.id !== cartId))
