@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
 import { CartDialog } from "@/components/carts/CartDialog"
@@ -100,7 +100,8 @@ const initialCarts: Cart[] = [
 ]
 
 const Carts = () => {
-  const { carts, handleSubmit, handleDeleteCart } = useCarts(initialCarts)
+  const [localCarts, setLocalCarts] = useState<Cart[]>(initialCarts)
+  const { carts, handleSubmit, handleDeleteCart } = useCarts(localCarts)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -108,6 +109,10 @@ const Carts = () => {
     status: "",
     store: "",
   })
+
+  useEffect(() => {
+    console.log('Local carts updated:', localCarts)
+  }, [localCarts])
 
   const filteredCarts = carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
