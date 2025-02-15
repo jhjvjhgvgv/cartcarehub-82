@@ -49,6 +49,22 @@ export const useCarts = (initialCarts: Cart[]) => {
             return prevCarts
           }
 
+          if (editingCart.id.includes(',')) {
+            // Handle multiple cart edit
+            const cartIds = editingCart.id.split(',')
+            return prevCarts.map(cart => {
+              if (!cartIds.includes(cart.id)) return cart
+              return {
+                ...cart,
+                store: data.store,
+                storeId: store.id,
+                status: data.status,
+                lastMaintenance: data.lastMaintenance,
+                issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+              }
+            })
+          }
+
           const updatedCarts = prevCarts.map((cart) =>
             cart.id === editingCart.id
               ? {
@@ -87,16 +103,6 @@ export const useCarts = (initialCarts: Cart[]) => {
           toast({
             title: "Error",
             description: "A cart with this QR code already exists.",
-            variant: "destructive",
-          })
-          return prevCarts
-        }
-
-        // Ensure we have a valid cart object
-        if (!data.rfidTag || !data.store || !data.status) {
-          toast({
-            title: "Error",
-            description: "Please fill in all required fields.",
             variant: "destructive",
           })
           return prevCarts
@@ -144,7 +150,6 @@ export const useCarts = (initialCarts: Cart[]) => {
       toast({
         title: "Success",
         description: "Cart has been removed from the system.",
-        variant: "destructive",
       })
       return newCarts
     })
