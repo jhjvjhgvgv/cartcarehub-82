@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -113,6 +112,11 @@ const Carts = () => {
   useEffect(() => {
     console.log('Local carts updated:', localCarts)
   }, [localCarts])
+
+  useEffect(() => {
+    console.log('Syncing carts with localCarts:', carts)
+    setLocalCarts(carts)
+  }, [carts])
 
   const filteredCarts = carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
