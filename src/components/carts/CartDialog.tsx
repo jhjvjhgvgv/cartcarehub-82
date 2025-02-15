@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast"
 import { SingleCartEdit } from "./SingleCartEdit"
 import { BulkCartEdit } from "./BulkCartEdit"
 import { CartForm } from "../cart-form"
+import { useEffect } from "react"
 
 interface CartDialogProps {
   isOpen: boolean
@@ -27,7 +28,13 @@ export function CartDialog({
   const isMultipleEdit = editingCart?.id?.includes(",")
   const cartIds = isMultipleEdit ? editingCart?.id.split(",") : []
 
+  useEffect(() => {
+    console.log('Dialog state changed:', { isOpen, editingCart })
+  }, [isOpen, editingCart])
+
   const handleSubmit = (data: any) => {
+    console.log('Dialog handleSubmit called with:', data)
+    
     try {
       const store = managedStores.find((s) => s.name === data.store)
       if (!store) {
@@ -39,73 +46,9 @@ export function CartDialog({
         return
       }
       
-      if (isMultipleEdit) {
-        if (!data.id) {
-          // Handle bulk update for all selected carts
-          const bulkUpdates = cartIds.map(cartId => {
-            const originalCart = editingCart?.originalCarts?.find(cart => cart.id === cartId)
-            if (!originalCart) return null
-            return {
-              ...originalCart,
-              store: data.store || originalCart.store,
-              storeId: store.id,
-              status: data.status || originalCart.status,
-              lastMaintenance: data.lastMaintenance || originalCart.lastMaintenance,
-              issues: data.issues ? data.issues.split('\n') : originalCart.issues,
-            }
-          }).filter(Boolean)
-          onSubmit(bulkUpdates)
-        } else {
-          // Handle single cart update within bulk edit
-          const originalCart = editingCart?.originalCarts?.find(cart => cart.id === data.id)
-          if (!originalCart) {
-            toast({
-              title: "Error",
-              description: "Cart not found.",
-              variant: "destructive",
-            })
-            return
-          }
-          onSubmit({
-            ...originalCart,
-            store: data.store,
-            storeId: store.id,
-            status: data.status,
-            lastMaintenance: data.lastMaintenance,
-            issues: data.issues ? data.issues.split('\n') : [],
-          })
-        }
-      } else if (editingCart) {
-        // Handle single cart update
-        onSubmit({
-          ...editingCart,
-          store: data.store,
-          storeId: store.id,
-          status: data.status,
-          lastMaintenance: data.lastMaintenance,
-          issues: data.issues ? data.issues.split('\n') : [],
-        })
-      } else {
-        // Handle new cart creation
-        const newCart: Cart = {
-          id: `CART-${Date.now().toString().slice(-6)}`,
-          rfidTag: data.rfidTag,
-          store: data.store,
-          storeId: store.id,
-          status: data.status,
-          lastMaintenance: data.lastMaintenance,
-          issues: data.issues ? data.issues.split('\n') : [],
-        }
-        onSubmit(newCart)
-      }
-      
-      onOpenChange(false)
-      toast({
-        title: "Success",
-        description: editingCart ? "Cart updated successfully" : "New cart added successfully",
-      })
+      onSubmit(data)
     } catch (error) {
-      console.error('Error in handleSubmit:', error)
+      console.error('Error in dialog submit:', error)
       toast({
         title: "Error",
         description: "An error occurred while saving the cart.",
