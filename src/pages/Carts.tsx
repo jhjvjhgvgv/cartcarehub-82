@@ -142,6 +142,7 @@ const Carts = () => {
       rfidTag: "Multiple Carts",
       storeId: store?.id || "",
       ...commonValues,
+      originalCarts: selectedCarts,
     } as Cart)
     setIsAddDialogOpen(true)
   }
@@ -151,6 +152,11 @@ const Carts = () => {
     if (!open) {
       setEditingCart(null)
     }
+  }
+
+  const handleSubmitDialog = (data: any) => {
+    handleSubmit(data, editingCart, managedStores)
+    handleDialogClose(false)
   }
 
   return (
@@ -174,10 +180,7 @@ const Carts = () => {
         <CartDialog
           isOpen={isAddDialogOpen || !!editingCart}
           onOpenChange={handleDialogClose}
-          onSubmit={(data) => {
-            handleSubmit(data, editingCart, managedStores)
-            handleDialogClose(false)
-          }}
+          onSubmit={handleSubmitDialog}
           onDelete={handleDeleteCart}
           editingCart={editingCart}
           managedStores={managedStores}
