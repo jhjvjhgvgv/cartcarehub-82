@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 
@@ -15,22 +15,26 @@ export const useCarts = (initialCarts: Cart[]) => {
     return `CART-${String(lastNumber + 1).padStart(3, '0')}`
   }
 
-  const handleSubmit = (data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
+  const handleSubmit = useCallback((data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
     try {
+      console.log('handleSubmit called with data:', data); // Debug log
+      
       if (Array.isArray(data)) {
         // Handle bulk updates
-        const updatedCarts = carts.map(cart => {
-          const update = data.find(update => update.id === cart.id)
-          if (!update) return cart
-          
-          return {
-            ...cart,
-            ...update,
-            issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
-          }
+        setCarts(prevCarts => {
+          const updatedCarts = prevCarts.map(cart => {
+            const update = data.find(update => update.id === cart.id)
+            if (!update) return cart
+            
+            return {
+              ...cart,
+              ...update,
+              issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
+            }
+          })
+          return updatedCarts
         })
         
-        setCarts(updatedCarts)
         toast({
           title: "Success",
           description: `Successfully updated ${data.length} carts.`,
@@ -47,7 +51,7 @@ export const useCarts = (initialCarts: Cart[]) => {
           return
         }
 
-        const updatedCarts = carts.map((cart) =>
+        setCarts(prevCarts => prevCarts.map((cart) =>
           cart.id === editingCart.id
             ? {
                 ...cart,
@@ -58,8 +62,8 @@ export const useCarts = (initialCarts: Cart[]) => {
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
               }
             : cart
-        )
-        setCarts(updatedCarts)
+        ))
+        
         toast({
           title: "Success",
           description: "Cart details have been updated.",
@@ -108,7 +112,9 @@ export const useCarts = (initialCarts: Cart[]) => {
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
         }
 
+        console.log('Adding new cart:', newCart); // Debug log
         setCarts(prevCarts => [...prevCarts, newCart])
+        
         toast({
           title: "Success",
           description: "New cart has been added to the system.",
@@ -122,16 +128,16 @@ export const useCarts = (initialCarts: Cart[]) => {
         variant: "destructive",
       })
     }
-  }
+  }, [carts, toast])
 
-  const handleDeleteCart = (cartId: string) => {
-    setCarts(carts.filter((cart) => cart.id !== cartId))
+  const handleDeleteCart = useCallback((cartId: string) => {
+    setCarts(prevCarts => prevCarts.filter((cart) => cart.id !== cartId))
     toast({
       title: "Success",
       description: "Cart has been removed from the system.",
       variant: "destructive",
     })
-  }
+  }, [toast])
 
   return {
     carts,
