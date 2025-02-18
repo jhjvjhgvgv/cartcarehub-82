@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -14,7 +15,7 @@ const managedStores = [
   { id: "store3", name: "Value Grocery West" },
 ]
 
-const initialCarts: Cart[] = [
+const initialCartsData: Cart[] = [
   {
     id: "CART-001",
     rfidTag: "QR-123456789",
@@ -99,7 +100,9 @@ const initialCarts: Cart[] = [
 ]
 
 const Carts = () => {
-  const { carts, handleSubmit, handleDeleteCart } = useCarts(initialCarts)
+  // Use local state to manage the carts data
+  const [localCarts, setLocalCarts] = useState<Cart[]>(initialCartsData)
+  const { carts, handleSubmit, handleDeleteCart } = useCarts(localCarts)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -107,6 +110,11 @@ const Carts = () => {
     status: "",
     store: "",
   })
+
+  // Update local carts when the carts state changes
+  useEffect(() => {
+    setLocalCarts(carts)
+  }, [carts])
 
   const filteredCarts = carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
