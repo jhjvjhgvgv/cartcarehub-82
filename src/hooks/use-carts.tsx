@@ -1,26 +1,14 @@
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback } from "react"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 
 export const useCarts = (initialCarts: Cart[]) => {
-  const initialized = useRef(false)
-  const [carts, setCarts] = useState<Cart[]>([])
+  const [carts, setCarts] = useState<Cart[]>(initialCarts)
   const { toast } = useToast()
 
-  // Initialize carts only once
-  useEffect(() => {
-    if (!initialized.current) {
-      console.log('Initializing carts with:', initialCarts)
-      setCarts(initialCarts)
-      initialized.current = true
-    }
-  }, [initialCarts])
-
   // Debug effect to track cart state changes
-  useEffect(() => {
-    console.log('Carts state updated:', carts)
-  }, [carts])
+  console.log('Current carts state:', carts)
 
   const handleSubmit = useCallback((data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
     console.log('handleSubmit called:', { data, editingCart })
