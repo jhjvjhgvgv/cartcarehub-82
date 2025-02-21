@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
@@ -16,6 +17,17 @@ import ReportIssue from "@/pages/customer/ReportIssue"
 import CustomerSettings from "@/pages/customer/Settings"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingView } from "@/components/auth/LoadingView"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // 1 minute
+      retry: 1,
+    },
+  },
+})
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -35,7 +47,7 @@ function App() {
   }
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -57,7 +69,7 @@ function App() {
         </Routes>
         <Toaster />
       </Router>
-    </>
+    </QueryClientProvider>
   )
 }
 
