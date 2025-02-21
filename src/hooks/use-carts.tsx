@@ -63,7 +63,8 @@ export const useCarts = (initialCarts: Cart[]) => {
             })
           }
 
-          const updatedCarts = prevCarts.map((cart) =>
+          // Handle single cart edit
+          return prevCarts.map((cart) =>
             cart.id === editingCart.id
               ? {
                   ...cart,
@@ -75,13 +76,6 @@ export const useCarts = (initialCarts: Cart[]) => {
                 }
               : cart
           )
-          
-          toast({
-            title: "Success",
-            description: "Cart details have been updated.",
-          })
-          
-          return updatedCarts
         }
         
         // Handle adding new cart
