@@ -1,23 +1,22 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { PostgrestResponse } from "@supabase/supabase-js"
+
+// Helper type for Supabase response
+type SupabaseResponse<T> = PostgrestResponse & {
+  data: T | null
+  error: Error | null
+}
 
 // Fetch carts from Supabase
 const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
     .from('carts')
-    .select('*')
-    .order('id', { ascending: true }) as unknown as { 
-      data: Cart[] | null; 
-      error: Error | null 
-    }
+    .select() as SupabaseResponse<Cart[]>
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
+  if (error) throw new Error(error.message)
   return data || []
 }
 
@@ -35,19 +34,10 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
     })
     .eq('id', cart.id)
     .select()
-    .single() as unknown as {
-      data: Cart | null;
-      error: Error | null;
-    }
+    .single() as SupabaseResponse<Cart>
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  if (!data) {
-    throw new Error("Failed to update cart")
-  }
-
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error("Failed to update cart")
   return data
 }
 
@@ -55,21 +45,19 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
 const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
   const { data, error } = await supabase
     .from('carts')
-    .insert([cart])
+    .insert([{
+      rfidTag: cart.rfidTag,
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      lastMaintenance: cart.lastMaintenance,
+      issues: cart.issues,
+    }])
     .select()
-    .single() as unknown as {
-      data: Cart | null;
-      error: Error | null;
-    }
+    .single() as SupabaseResponse<Cart>
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  if (!data) {
-    throw new Error("Failed to create cart")
-  }
-
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error("Failed to create cart")
   return data
 }
 
@@ -78,13 +66,9 @@ const deleteCart = async (cartId: string): Promise<void> => {
   const { error } = await supabase
     .from('carts')
     .delete()
-    .eq('id', cartId) as unknown as {
-      error: Error | null;
-    }
+    .eq('id', cartId) as SupabaseResponse<null>
 
-  if (error) {
-    throw new Error(error.message)
-  }
+  if (error) throw new Error(error.message)
 }
 
 export const useCarts = () => {

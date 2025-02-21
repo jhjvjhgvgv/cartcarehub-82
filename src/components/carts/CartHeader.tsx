@@ -8,6 +8,7 @@ import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
 import { useCarts } from "@/hooks/use-carts"
 import { CartForm } from "@/components/cart-form"
+import { Cart } from "@/types/cart"
 
 interface CartHeaderProps {
   onAddClick: () => void
@@ -18,7 +19,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   const [isAddingCart, setIsAddingCart] = useState(false)
   const [newCartRfid, setNewCartRfid] = useState("")
   const { toast } = useToast()
-  const { carts, handleSubmit, handleDeleteCart } = useCarts([])
+  const { carts, handleSubmit } = useCarts()
 
   const handleQRCodeDetected = (qrCode: string) => {
     const existingCart = carts.find(cart => cart.rfidTag === qrCode)
@@ -32,30 +33,17 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   }
 
   const handleAddCartSubmit = (data: any) => {
-    handleSubmit(data, null, [
-      { id: "store1", name: "SuperMart Downtown" },
-      { id: "store2", name: "FreshMart Heights" },
-      { id: "store3", name: "Value Grocery West" },
-    ])
+    handleSubmit({
+      data,
+      editingCart: null,
+      managedStores: [
+        { id: "store1", name: "SuperMart Downtown" },
+        { id: "store2", name: "FreshMart Heights" },
+        { id: "store3", name: "Value Grocery West" },
+      ]
+    })
     setIsAddingCart(false)
     setNewCartRfid("")
-  }
-
-  const handleNewCartQRCode = (qrCode: string) => {
-    const existingCart = carts.find(cart => cart.rfidTag === qrCode)
-    if (existingCart) {
-      toast({
-        title: "Cart Already Exists",
-        description: "This QR code is already registered to another cart.",
-        variant: "destructive"
-      })
-    } else {
-      setNewCartRfid(qrCode)
-      toast({
-        title: "QR Code Scanned",
-        description: "QR code has been added to the new cart.",
-      })
-    }
   }
 
   return (
@@ -72,7 +60,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
           </Button>
           <Button 
             className="flex items-center gap-2 min-w-[140px]" 
-            onClick={() => setIsAddingCart(true)}
+            onClick={onAddClick}
           >
             <PlusCircle className="h-4 w-4" />
             Add New Cart
@@ -89,43 +77,8 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <QRScanner 
-              onQRCodeDetected={handleQRCodeDetected}
-              carts={carts}
-              onSubmit={() => {}}
-              onDelete={handleDeleteCart}
-            />
+            <QRScanner onQRCodeDetected={handleQRCodeDetected} />
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAddingCart} onOpenChange={setIsAddingCart}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Add New Cart</DialogTitle>
-            <DialogDescription>
-              Fill in the cart details and scan or enter its QR code
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[calc(90vh-8rem)] pr-4">
-            <div className="mt-4">
-              <CartForm 
-                initialData={{
-                  rfidTag: newCartRfid,
-                  store: "",
-                  status: "active",
-                  lastMaintenance: new Date().toISOString().split("T")[0],
-                  issues: "",
-                }}
-                onSubmit={handleAddCartSubmit}
-                onCancel={() => setIsAddingCart(false)}
-                disableRfidTag={false}
-                rfidPlaceholder="Scan QR code below or enter manually"
-                carts={carts}
-                onDelete={() => {}}
-              />
-            </div>
-          </ScrollArea>
         </DialogContent>
       </Dialog>
     </>
