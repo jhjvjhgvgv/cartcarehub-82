@@ -1,23 +1,27 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { Database } from "@/types/supabase"
+
+type Tables = Database['public']['Tables']
 
 // Fetch carts from Supabase
 const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
     .from('carts')
-    .select()
+    .select<'carts', Tables['carts']['Row']>('*')
 
   if (error) throw new Error(error.message)
-  return (data as Cart[]) || []
+  return data || []
 }
 
 // Update a cart in Supabase
 const updateCart = async (cart: Cart): Promise<Cart> => {
   const { data, error } = await supabase
     .from('carts')
-    .update({
+    .update<Tables['carts']['Row']>({
       rfidTag: cart.rfidTag,
       store: cart.store,
       storeId: cart.storeId,
@@ -31,20 +35,27 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to update cart")
-  return data as Cart
+  return data
 }
 
 // Create a new cart in Supabase
 const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
   const { data, error } = await supabase
     .from('carts')
-    .insert([cart])
+    .insert<Tables['carts']['Row']>([{
+      rfidTag: cart.rfidTag,
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      lastMaintenance: cart.lastMaintenance,
+      issues: cart.issues,
+    }])
     .select()
     .single()
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to create cart")
-  return data as Cart
+  return data
 }
 
 // Delete a cart from Supabase
