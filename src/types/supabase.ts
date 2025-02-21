@@ -1,5 +1,13 @@
 
-export type Database = {
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
   public: {
     Tables: {
       carts: {
@@ -11,12 +19,44 @@ export type Database = {
           status: "active" | "maintenance" | "retired"
           lastMaintenance: string
           issues: string[]
-          created_at?: string
-          updated_at?: string
+          created_at: string | null
+          updated_at: string | null
         }
-        Insert: Omit<Database['public']['Tables']['carts']['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['carts']['Row']>
+        Insert: {
+          rfidTag: string
+          store: string
+          storeId: string
+          status: "active" | "maintenance" | "retired"
+          lastMaintenance: string
+          issues: string[]
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          rfidTag?: string
+          store?: string
+          storeId?: string
+          status?: "active" | "maintenance" | "retired"
+          lastMaintenance?: string
+          issues?: string[]
+          id?: string
+          created_at?: string | null
+          updated_at?: string | null
+        }
       }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

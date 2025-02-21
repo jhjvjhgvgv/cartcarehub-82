@@ -6,56 +6,63 @@ import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/types/supabase"
 
 type Tables = Database['public']['Tables']
+type CartRow = Tables['carts']['Row']
+type CartInsert = Tables['carts']['Insert']
+type CartUpdate = Tables['carts']['Update']
 
 // Fetch carts from Supabase
 const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
     .from('carts')
-    .select<'carts', Tables['carts']['Row']>('*')
+    .select('*')
 
   if (error) throw new Error(error.message)
-  return data || []
+  return (data as CartRow[]) || []
 }
 
 // Update a cart in Supabase
 const updateCart = async (cart: Cart): Promise<Cart> => {
+  const updateData: CartUpdate = {
+    rfidTag: cart.rfidTag,
+    store: cart.store,
+    storeId: cart.storeId,
+    status: cart.status,
+    lastMaintenance: cart.lastMaintenance,
+    issues: cart.issues,
+  }
+
   const { data, error } = await supabase
     .from('carts')
-    .update<Tables['carts']['Row']>({
-      rfidTag: cart.rfidTag,
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues,
-    })
+    .update(updateData)
     .eq('id', cart.id)
     .select()
     .single()
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to update cart")
-  return data
+  return data as Cart
 }
 
 // Create a new cart in Supabase
 const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
+  const insertData: CartInsert = {
+    rfidTag: cart.rfidTag,
+    store: cart.store,
+    storeId: cart.storeId,
+    status: cart.status,
+    lastMaintenance: cart.lastMaintenance,
+    issues: cart.issues,
+  }
+
   const { data, error } = await supabase
     .from('carts')
-    .insert<Tables['carts']['Row']>([{
-      rfidTag: cart.rfidTag,
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues,
-    }])
+    .insert(insertData)
     .select()
     .single()
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to create cart")
-  return data
+  return data as Cart
 }
 
 // Delete a cart from Supabase
