@@ -9,13 +9,16 @@ const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
     .from('carts')
     .select('*')
-    .order('id', { ascending: true })
+    .order('id', { ascending: true }) as unknown as { 
+      data: Cart[] | null; 
+      error: Error | null 
+    }
 
   if (error) {
     throw new Error(error.message)
   }
 
-  return data as Cart[]
+  return data || []
 }
 
 // Update a cart in Supabase
@@ -23,6 +26,7 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
   const { data, error } = await supabase
     .from('carts')
     .update({
+      rfidTag: cart.rfidTag,
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
@@ -31,13 +35,20 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
     })
     .eq('id', cart.id)
     .select()
-    .single()
+    .single() as unknown as {
+      data: Cart | null;
+      error: Error | null;
+    }
 
   if (error) {
     throw new Error(error.message)
   }
 
-  return data as Cart
+  if (!data) {
+    throw new Error("Failed to update cart")
+  }
+
+  return data
 }
 
 // Create a new cart in Supabase
@@ -46,13 +57,20 @@ const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
     .from('carts')
     .insert([cart])
     .select()
-    .single()
+    .single() as unknown as {
+      data: Cart | null;
+      error: Error | null;
+    }
 
   if (error) {
     throw new Error(error.message)
   }
 
-  return data as Cart
+  if (!data) {
+    throw new Error("Failed to create cart")
+  }
+
+  return data
 }
 
 // Delete a cart from Supabase
@@ -60,7 +78,9 @@ const deleteCart = async (cartId: string): Promise<void> => {
   const { error } = await supabase
     .from('carts')
     .delete()
-    .eq('id', cartId)
+    .eq('id', cartId) as unknown as {
+      error: Error | null;
+    }
 
   if (error) {
     throw new Error(error.message)
