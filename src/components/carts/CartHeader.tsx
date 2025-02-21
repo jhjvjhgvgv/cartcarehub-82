@@ -2,12 +2,10 @@
 import { Button } from "@/components/ui/button"
 import { PlusCircle, ScanLine } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
 import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
 import { useCarts } from "@/hooks/use-carts"
-import { CartForm } from "@/components/cart-form"
 import { Cart } from "@/types/cart"
 
 interface CartHeaderProps {
@@ -16,10 +14,8 @@ interface CartHeaderProps {
 
 export function CartHeader({ onAddClick }: CartHeaderProps) {
   const [isScanning, setIsScanning] = useState(false)
-  const [isAddingCart, setIsAddingCart] = useState(false)
-  const [newCartRfid, setNewCartRfid] = useState("")
   const { toast } = useToast()
-  const { carts, handleSubmit } = useCarts()
+  const { carts, handleSubmit, handleDeleteCart } = useCarts()
 
   const handleQRCodeDetected = (qrCode: string) => {
     const existingCart = carts.find(cart => cart.rfidTag === qrCode)
@@ -29,21 +25,8 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         title: "Cart Found",
         description: `Found cart: ${existingCart.id}`,
       })
+      setIsScanning(false)
     }
-  }
-
-  const handleAddCartSubmit = (data: any) => {
-    handleSubmit({
-      data,
-      editingCart: null,
-      managedStores: [
-        { id: "store1", name: "SuperMart Downtown" },
-        { id: "store2", name: "FreshMart Heights" },
-        { id: "store3", name: "Value Grocery West" },
-      ]
-    })
-    setIsAddingCart(false)
-    setNewCartRfid("")
   }
 
   return (
@@ -77,7 +60,12 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <QRScanner onQRCodeDetected={handleQRCodeDetected} />
+            <QRScanner 
+              onQRCodeDetected={handleQRCodeDetected}
+              carts={carts}
+              onSubmit={handleSubmit}
+              onDelete={handleDeleteCart}
+            />
           </div>
         </DialogContent>
       </Dialog>

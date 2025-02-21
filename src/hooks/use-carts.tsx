@@ -2,22 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { PostgrestResponse } from "@supabase/supabase-js"
-
-// Helper type for Supabase response
-type SupabaseResponse<T> = PostgrestResponse & {
-  data: T | null
-  error: Error | null
-}
 
 // Fetch carts from Supabase
 const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
     .from('carts')
-    .select() as SupabaseResponse<Cart[]>
+    .select()
 
   if (error) throw new Error(error.message)
-  return data || []
+  return (data as Cart[]) || []
 }
 
 // Update a cart in Supabase
@@ -34,31 +27,24 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
     })
     .eq('id', cart.id)
     .select()
-    .single() as SupabaseResponse<Cart>
+    .single()
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to update cart")
-  return data
+  return data as Cart
 }
 
 // Create a new cart in Supabase
 const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
   const { data, error } = await supabase
     .from('carts')
-    .insert([{
-      rfidTag: cart.rfidTag,
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues,
-    }])
+    .insert([cart])
     .select()
-    .single() as SupabaseResponse<Cart>
+    .single()
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to create cart")
-  return data
+  return data as Cart
 }
 
 // Delete a cart from Supabase
@@ -66,7 +52,7 @@ const deleteCart = async (cartId: string): Promise<void> => {
   const { error } = await supabase
     .from('carts')
     .delete()
-    .eq('id', cartId) as SupabaseResponse<null>
+    .eq('id', cartId)
 
   if (error) throw new Error(error.message)
 }
