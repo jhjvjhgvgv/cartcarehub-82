@@ -2,78 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { Database } from "@/types/supabase"
-
-type Tables = Database['public']['Tables']
-type CartRow = Tables['carts']['Row']
-type CartInsert = Tables['carts']['Insert']
-type CartUpdate = Tables['carts']['Update']
-
-// Fetch carts from Supabase
-const fetchCarts = async (): Promise<Cart[]> => {
-  const { data, error } = await supabase
-    .from("carts")
-    .select("*") as { data: CartRow[] | null; error: Error | null }
-
-  if (error) throw new Error(error.message)
-  return data || []
-}
-
-// Update a cart in Supabase
-const updateCart = async (cart: Cart): Promise<Cart> => {
-  const updateData: CartUpdate = {
-    rfidTag: cart.rfidTag,
-    store: cart.store,
-    storeId: cart.storeId,
-    status: cart.status,
-    lastMaintenance: cart.lastMaintenance,
-    issues: cart.issues,
-  }
-
-  const { data, error } = await supabase
-    .from("carts")
-    .update(updateData)
-    .eq("id", cart.id)
-    .select()
-    .single() as { data: CartRow | null; error: Error | null }
-
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Failed to update cart")
-  return data as Cart
-}
-
-// Create a new cart in Supabase
-const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
-  const insertData: CartInsert = {
-    rfidTag: cart.rfidTag,
-    store: cart.store,
-    storeId: cart.storeId,
-    status: cart.status,
-    lastMaintenance: cart.lastMaintenance,
-    issues: cart.issues,
-  }
-
-  const { data, error } = await supabase
-    .from("carts")
-    .insert([insertData])
-    .select()
-    .single() as { data: CartRow | null; error: Error | null }
-
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Failed to create cart")
-  return data as Cart
-}
-
-// Delete a cart from Supabase
-const deleteCart = async (cartId: string): Promise<void> => {
-  const { error } = await supabase
-    .from("carts")
-    .delete()
-    .eq("id", cartId)
-
-  if (error) throw new Error(error.message)
-}
+import { fetchCarts, updateCart, createCart, deleteCart } from "@/api/carts"
+import { CartMutationParams } from "@/types/cart-mutations"
 
 export const useCarts = () => {
   const { toast } = useToast()
@@ -87,11 +17,7 @@ export const useCarts = () => {
 
   // Mutation for creating/updating carts
   const { mutate: handleSubmit } = useMutation({
-    mutationFn: async (params: { 
-      data: any, 
-      editingCart: Cart | null, 
-      managedStores: Array<{ id: string; name: string }> 
-    }) => {
+    mutationFn: async (params: CartMutationParams) => {
       const { data, editingCart, managedStores } = params
 
       try {
@@ -169,7 +95,7 @@ export const useCarts = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carts'] })
+      queryClient.invalidateQueries({ queryKey: ["carts"] })
       toast({
         title: "Success",
         description: "Cart has been updated successfully.",
@@ -188,7 +114,7 @@ export const useCarts = () => {
   const { mutate: handleDeleteCart } = useMutation({
     mutationFn: deleteCart,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['carts'] })
+      queryClient.invalidateQueries({ queryKey: ["carts"] })
       toast({
         title: "Success",
         description: "Cart has been removed from the system.",
