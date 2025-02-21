@@ -1,156 +1,204 @@
 
-import { useState, useCallback } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
-export const useCarts = (initialCarts: Cart[]) => {
-  const [carts, setCarts] = useState<Cart[]>(initialCarts)
+// Fetch carts from Supabase
+const fetchCarts = async (): Promise<Cart[]> => {
+  const { data, error } = await supabase
+    .from('carts')
+    .select('*')
+    .order('id', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as Cart[]
+}
+
+// Update a cart in Supabase
+const updateCart = async (cart: Cart): Promise<Cart> => {
+  const { data, error } = await supabase
+    .from('carts')
+    .update({
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      lastMaintenance: cart.lastMaintenance,
+      issues: cart.issues,
+    })
+    .eq('id', cart.id)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as Cart
+}
+
+// Create a new cart in Supabase
+const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
+  const { data, error } = await supabase
+    .from('carts')
+    .insert([cart])
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data as Cart
+}
+
+// Delete a cart from Supabase
+const deleteCart = async (cartId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('carts')
+    .delete()
+    .eq('id', cartId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export const useCarts = () => {
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
-  // Debug effect to track cart state changes
-  console.log('Current carts state:', carts)
+  // Query for fetching carts
+  const { data: carts = [], isLoading, error } = useQuery({
+    queryKey: ['carts'],
+    queryFn: fetchCarts,
+  })
 
-  const handleSubmit = useCallback((data: any, editingCart: Cart | null, managedStores: Array<{ id: string; name: string }>) => {
-    console.log('handleSubmit called:', { data, editingCart })
-    
-    setCarts(prevCarts => {
+  // Mutation for creating/updating carts
+  const { mutate: handleSubmit } = useMutation({
+    mutationFn: async (params: { 
+      data: any, 
+      editingCart: Cart | null, 
+      managedStores: Array<{ id: string; name: string }> 
+    }) => {
+      const { data, editingCart, managedStores } = params
+
       try {
         if (Array.isArray(data)) {
           // Handle bulk updates
-          const updatedCarts = prevCarts.map(cart => {
-            const update = data.find(update => update.id === cart.id)
-            if (!update) return cart
-            return {
+          const updatePromises = data.map(update => {
+            const cart = carts.find(c => c.id === update.id)
+            if (!cart) return null
+            return updateCart({
               ...cart,
               ...update,
               issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
-            }
-          })
-          
-          toast({
-            title: "Success",
-            description: `Successfully updated ${data.length} carts.`,
-          })
-          
-          return updatedCarts
-        } 
-        
-        if (editingCart) {
-          // Handle single cart update
-          const store = managedStores.find(s => s.name === data.store)
-          if (!store) {
-            toast({
-              title: "Error",
-              description: "Selected store not found.",
-              variant: "destructive",
             })
-            return prevCarts
-          }
+          })
 
+          await Promise.all(updatePromises.filter(Boolean))
+          return
+        }
+
+        const store = managedStores.find(s => s.name === data.store)
+        if (!store) {
+          throw new Error("Selected store not found")
+        }
+
+        if (editingCart) {
           if (editingCart.id.includes(',')) {
             // Handle multiple cart edit
             const cartIds = editingCart.id.split(',')
-            return prevCarts.map(cart => {
-              if (!cartIds.includes(cart.id)) return cart
-              return {
+            const updatePromises = cartIds.map(id => {
+              const cart = carts.find(c => c.id === id)
+              if (!cart) return null
+              return updateCart({
                 ...cart,
                 store: data.store,
                 storeId: store.id,
                 status: data.status,
                 lastMaintenance: data.lastMaintenance,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-              }
+              })
             })
+
+            await Promise.all(updatePromises.filter(Boolean))
+            return
           }
 
-          // Handle single cart edit
-          return prevCarts.map((cart) =>
-            cart.id === editingCart.id
-              ? {
-                  ...cart,
-                  store: data.store,
-                  storeId: store.id,
-                  status: data.status,
-                  lastMaintenance: data.lastMaintenance,
-                  issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-                }
-              : cart
-          )
+          // Handle single cart update
+          await updateCart({
+            ...editingCart,
+            store: data.store,
+            storeId: store.id,
+            status: data.status,
+            lastMaintenance: data.lastMaintenance,
+            issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+          })
+          return
         }
-        
+
         // Handle adding new cart
-        const store = managedStores.find(s => s.name === data.store)
-        if (!store) {
-          toast({
-            title: "Error",
-            description: "Selected store not found.",
-            variant: "destructive",
-          })
-          return prevCarts
-        }
-
-        // Check if cart with same RFID already exists
-        const existingCart = prevCarts.find(cart => cart.rfidTag === data.rfidTag)
+        const existingCart = carts.find(cart => cart.rfidTag === data.rfidTag)
         if (existingCart) {
-          toast({
-            title: "Error",
-            description: "A cart with this QR code already exists.",
-            variant: "destructive",
-          })
-          return prevCarts
+          throw new Error("A cart with this QR code already exists")
         }
-
-        // Generate new cart ID
-        const lastCart = prevCarts[prevCarts.length - 1]
-        const lastNumber = lastCart ? parseInt(lastCart.id.split('-')[1]) : 0
-        const newId = `CART-${String(lastNumber + 1).padStart(3, '0')}`
 
         // Create new cart
-        const newCart: Cart = {
-          id: newId,
+        await createCart({
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
           status: data.status,
           lastMaintenance: data.lastMaintenance || new Date().toISOString().split('T')[0],
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-        }
-
-        console.log('Adding new cart:', newCart)
-        const updatedCarts = [...prevCarts, newCart]
-        console.log('Updated carts list:', updatedCarts)
-        
-        toast({
-          title: "Success",
-          description: "New cart has been added to the system.",
         })
-        
-        return updatedCarts
       } catch (error) {
-        console.error('Error in handleSubmit:', error)
-        toast({
-          title: "Error",
-          description: "An error occurred while updating the cart.",
-          variant: "destructive",
-        })
-        return prevCarts
+        throw error
       }
-    })
-  }, [toast])
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carts'] })
+      toast({
+        title: "Success",
+        description: "Cart has been updated successfully.",
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while updating the cart.",
+        variant: "destructive",
+      })
+    },
+  })
 
-  const handleDeleteCart = useCallback((cartId: string) => {
-    setCarts(prevCarts => {
-      const newCarts = prevCarts.filter((cart) => cart.id !== cartId)
+  // Mutation for deleting carts
+  const { mutate: handleDeleteCart } = useMutation({
+    mutationFn: deleteCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carts'] })
       toast({
         title: "Success",
         description: "Cart has been removed from the system.",
       })
-      return newCarts
-    })
-  }, [toast])
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while deleting the cart.",
+        variant: "destructive",
+      })
+    },
+  })
 
   return {
     carts,
+    isLoading,
+    error,
     handleSubmit,
     handleDeleteCart,
   }

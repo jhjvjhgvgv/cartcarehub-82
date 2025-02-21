@@ -9,11 +9,12 @@ import { useCarts } from "@/hooks/use-carts"
 import { Cart } from "@/types/cart"
 import { CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { managedStores } from "@/constants/stores"
-import { initialCartsData } from "@/data/initialCarts"
 import { filterCarts, prepareMultipleCartEdit } from "@/utils/cartUtils"
+import { AlertCircle, Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const Carts = () => {
-  const { carts, handleSubmit, handleDeleteCart } = useCarts(initialCartsData)
+  const { carts, isLoading, error, handleSubmit, handleDeleteCart } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -39,27 +40,51 @@ const Carts = () => {
   }
 
   const handleSubmitDialog = (data: any) => {
-    handleSubmit(data, editingCart, managedStores)
+    handleSubmit({ data, editingCart, managedStores })
     handleDialogClose(false)
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="p-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : "Failed to load carts"}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
-        <CartStats
-          totalCarts={filteredCarts.length}
-          activeCarts={activeCarts}
-          maintenanceNeeded={maintenanceNeeded}
-        />
-        <CartListSection
-          filteredCarts={filteredCarts}
-          onEditCart={setEditingCart}
-          onDeleteCart={handleDeleteCart}
-          onEditMultiple={handleEditMultiple}
-          onFilterChange={setFilters}
-          managedStores={managedStores}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <>
+            <CartStats
+              totalCarts={filteredCarts.length}
+              activeCarts={activeCarts}
+              maintenanceNeeded={maintenanceNeeded}
+            />
+            <CartListSection
+              filteredCarts={filteredCarts}
+              onEditCart={setEditingCart}
+              onDeleteCart={handleDeleteCart}
+              onEditMultiple={handleEditMultiple}
+              onFilterChange={setFilters}
+              managedStores={managedStores}
+            />
+          </>
+        )}
 
         <CartDialog
           isOpen={isAddDialogOpen || !!editingCart}
