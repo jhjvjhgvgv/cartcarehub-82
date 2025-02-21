@@ -13,11 +13,11 @@ type CartUpdate = Tables['carts']['Update']
 // Fetch carts from Supabase
 const fetchCarts = async (): Promise<Cart[]> => {
   const { data, error } = await supabase
-    .from('carts')
-    .select('*')
+    .from("carts")
+    .select("*") as { data: CartRow[] | null; error: Error | null }
 
   if (error) throw new Error(error.message)
-  return (data as CartRow[]) || []
+  return data || []
 }
 
 // Update a cart in Supabase
@@ -32,11 +32,11 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
   }
 
   const { data, error } = await supabase
-    .from('carts')
+    .from("carts")
     .update(updateData)
-    .eq('id', cart.id)
+    .eq("id", cart.id)
     .select()
-    .single()
+    .single() as { data: CartRow | null; error: Error | null }
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to update cart")
@@ -44,7 +44,7 @@ const updateCart = async (cart: Cart): Promise<Cart> => {
 }
 
 // Create a new cart in Supabase
-const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
+const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   const insertData: CartInsert = {
     rfidTag: cart.rfidTag,
     store: cart.store,
@@ -55,10 +55,10 @@ const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
   }
 
   const { data, error } = await supabase
-    .from('carts')
-    .insert(insertData)
+    .from("carts")
+    .insert([insertData])
     .select()
-    .single()
+    .single() as { data: CartRow | null; error: Error | null }
 
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Failed to create cart")
@@ -68,9 +68,9 @@ const createCart = async (cart: Omit<Cart, 'id'>): Promise<Cart> => {
 // Delete a cart from Supabase
 const deleteCart = async (cartId: string): Promise<void> => {
   const { error } = await supabase
-    .from('carts')
+    .from("carts")
     .delete()
-    .eq('id', cartId)
+    .eq("id", cartId)
 
   if (error) throw new Error(error.message)
 }
@@ -81,7 +81,7 @@ export const useCarts = () => {
 
   // Query for fetching carts
   const { data: carts = [], isLoading, error } = useQuery({
-    queryKey: ['carts'],
+    queryKey: ["carts"],
     queryFn: fetchCarts,
   })
 
