@@ -10,65 +10,97 @@ type CartUpdate = Tables['carts']['Update']
 
 // Fetch carts from Supabase
 export const fetchCarts = async (): Promise<Cart[]> => {
-  const { data, error } = await supabase
-    .from("carts")
-    .select("*") as { data: CartRow[] | null; error: Error | null }
+  try {
+    const { data, error } = await supabase
+      .from("carts")
+      .select("*") as { data: CartRow[] | null; error: Error | null }
 
-  if (error) throw new Error(error.message)
-  return data || []
+    if (error) throw error
+    return data || []
+  } catch (error: any) {
+    console.error('Error fetching carts:', error);
+    if (error.message?.includes('Failed to fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection and try again.')
+    }
+    throw error
+  }
 }
 
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
-  const updateData: CartUpdate = {
-    rfidTag: cart.rfidTag,
-    store: cart.store,
-    storeId: cart.storeId,
-    status: cart.status,
-    lastMaintenance: cart.lastMaintenance,
-    issues: cart.issues,
+  try {
+    const updateData: CartUpdate = {
+      rfidTag: cart.rfidTag,
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      lastMaintenance: cart.lastMaintenance,
+      issues: cart.issues,
+    }
+
+    const { data, error } = await supabase
+      .from("carts")
+      .update(updateData)
+      .eq("id", cart.id)
+      .select()
+      .single() as { data: CartRow | null; error: Error | null }
+
+    if (error) throw error
+    if (!data) throw new Error("Failed to update cart")
+    return data as Cart
+  } catch (error: any) {
+    console.error('Error updating cart:', error);
+    if (error.message?.includes('Failed to fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection and try again.')
+    }
+    throw error
   }
-
-  const { data, error } = await supabase
-    .from("carts")
-    .update(updateData)
-    .eq("id", cart.id)
-    .select()
-    .single() as { data: CartRow | null; error: Error | null }
-
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Failed to update cart")
-  return data as Cart
 }
 
 // Create a new cart in Supabase
 export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
-  const insertData: CartInsert = {
-    rfidTag: cart.rfidTag,
-    store: cart.store,
-    storeId: cart.storeId,
-    status: cart.status,
-    lastMaintenance: cart.lastMaintenance,
-    issues: cart.issues,
+  try {
+    const insertData: CartInsert = {
+      rfidTag: cart.rfidTag,
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      lastMaintenance: cart.lastMaintenance,
+      issues: cart.issues,
+    }
+
+    const { data, error } = await supabase
+      .from("carts")
+      .insert([insertData])
+      .select()
+      .single() as { data: CartRow | null; error: Error | null }
+
+    if (error) throw error
+    if (!data) throw new Error("Failed to create cart")
+    return data as Cart
+  } catch (error: any) {
+    console.error('Error creating cart:', error);
+    if (error.message?.includes('Failed to fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection and try again.')
+    }
+    throw error
   }
-
-  const { data, error } = await supabase
-    .from("carts")
-    .insert([insertData])
-    .select()
-    .single() as { data: CartRow | null; error: Error | null }
-
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Failed to create cart")
-  return data as Cart
 }
 
 // Delete a cart from Supabase
 export const deleteCart = async (cartId: string): Promise<void> => {
-  const { error } = await supabase
-    .from("carts")
-    .delete()
-    .eq("id", cartId)
+  try {
+    const { error } = await supabase
+      .from("carts")
+      .delete()
+      .eq("id", cartId)
 
-  if (error) throw new Error(error.message)
+    if (error) throw error
+  } catch (error: any) {
+    console.error('Error deleting cart:', error);
+    if (error.message?.includes('Failed to fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection and try again.')
+    }
+    throw error
+  }
 }
