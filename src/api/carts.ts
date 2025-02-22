@@ -32,11 +32,13 @@ const retryOperation = async <T>(
 export const fetchCarts = async (): Promise<Cart[]> => {
   try {
     const { data, error } = await retryOperation(async () => 
-      supabase.from('carts').select('*')
+      supabase
+        .from('carts')
+        .select('*')
     )
 
     if (error) throw error
-    return (data as CartRow[]) || []
+    return (data ?? []) as Cart[]
   } catch (error: any) {
     console.error('Error fetching carts:', error)
     if (error.message?.includes('Failed to fetch')) {
@@ -49,20 +51,20 @@ export const fetchCarts = async (): Promise<Cart[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
-    const updateData = {
+    const updateData: CartUpdate = {
       rfidTag: cart.rfidTag,
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
       lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues,
-    } satisfies CartUpdate
+      issues: cart.issues
+    }
 
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
         .update(updateData)
-        .eq('id', cart.id)
+        .match({ id: cart.id })
         .select()
         .single()
     )
@@ -82,19 +84,19 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
 // Create a new cart in Supabase
 export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
-    const insertData = {
+    const insertData: CartInsert = {
       rfidTag: cart.rfidTag,
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
       lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues,
-    } satisfies CartInsert
+      issues: cart.issues
+    }
 
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
-        .insert(insertData)
+        .insert([insertData])
         .select()
         .single()
     )
@@ -118,7 +120,7 @@ export const deleteCart = async (cartId: string): Promise<void> => {
       supabase
         .from('carts')
         .delete()
-        .eq('id', cartId)
+        .match({ id: cartId })
     )
 
     if (error) throw error
