@@ -29,7 +29,7 @@ const retryOperation = async <T>(
 }
 
 // Fetch carts from Supabase
-export const fetchCarts = async (): Promise<Cart[]> => {
+export const fetchCarts = async (): Promise<CartRow[]> => {
   try {
     const { data, error } = await retryOperation(async () => 
       supabase
@@ -38,7 +38,7 @@ export const fetchCarts = async (): Promise<Cart[]> => {
     )
 
     if (error) throw error
-    return (data ?? []) as Cart[]
+    return data ?? []
   } catch (error: any) {
     console.error('Error fetching carts:', error)
     if (error.message?.includes('Failed to fetch')) {
@@ -49,29 +49,27 @@ export const fetchCarts = async (): Promise<Cart[]> => {
 }
 
 // Update a cart in Supabase
-export const updateCart = async (cart: Cart): Promise<Cart> => {
+export const updateCart = async (cart: Cart): Promise<CartRow> => {
   try {
-    const updateData: CartUpdate = {
-      rfidTag: cart.rfidTag,
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues
-    }
-
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
-        .update(updateData)
-        .match({ id: cart.id })
+        .update({
+          rfidTag: cart.rfidTag,
+          store: cart.store,
+          storeId: cart.storeId,
+          status: cart.status,
+          lastMaintenance: cart.lastMaintenance,
+          issues: cart.issues
+        })
+        .eq('id', cart.id)
         .select()
         .single()
     )
 
     if (error) throw error
     if (!data) throw new Error("Failed to update cart")
-    return data as Cart
+    return data
   } catch (error: any) {
     console.error('Error updating cart:', error)
     if (error.message?.includes('Failed to fetch')) {
@@ -82,28 +80,19 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
 }
 
 // Create a new cart in Supabase
-export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
+export const createCart = async (cart: Omit<CartRow, "id" | "created_at" | "updated_at">): Promise<CartRow> => {
   try {
-    const insertData: CartInsert = {
-      rfidTag: cart.rfidTag,
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      lastMaintenance: cart.lastMaintenance,
-      issues: cart.issues
-    }
-
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
-        .insert([insertData])
+        .insert([cart])
         .select()
         .single()
     )
 
     if (error) throw error
     if (!data) throw new Error("Failed to create cart")
-    return data as Cart
+    return data
   } catch (error: any) {
     console.error('Error creating cart:', error)
     if (error.message?.includes('Failed to fetch')) {
@@ -120,7 +109,7 @@ export const deleteCart = async (cartId: string): Promise<void> => {
       supabase
         .from('carts')
         .delete()
-        .match({ id: cartId })
+        .eq('id', cartId)
     )
 
     if (error) throw error
