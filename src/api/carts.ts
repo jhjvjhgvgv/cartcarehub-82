@@ -8,12 +8,34 @@ type CartRow = Tables['carts']['Row']
 type CartInsert = Tables['carts']['Insert']
 type CartUpdate = Tables['carts']['Update']
 
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000 // 1 second
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  retries = MAX_RETRIES
+): Promise<T> => {
+  try {
+    return await operation()
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('Failed to fetch')) {
+      await wait(RETRY_DELAY)
+      return retryOperation(operation, retries - 1)
+    }
+    throw error
+  }
+}
+
 // Fetch carts from Supabase
 export const fetchCarts = async (): Promise<Cart[]> => {
   try {
-    const { data, error } = await supabase
-      .from("carts")
-      .select("*") as { data: CartRow[] | null; error: Error | null }
+    const { data, error } = await retryOperation(async () => {
+      return await supabase
+        .from("carts")
+        .select("*") as { data: CartRow[] | null; error: Error | null }
+    })
 
     if (error) throw error
     return data || []
@@ -38,12 +60,14 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
       issues: cart.issues,
     }
 
-    const { data, error } = await supabase
-      .from("carts")
-      .update(updateData)
-      .eq("id", cart.id)
-      .select()
-      .single() as { data: CartRow | null; error: Error | null }
+    const { data, error } = await retryOperation(async () => {
+      return await supabase
+        .from("carts")
+        .update(updateData)
+        .eq("id", cart.id)
+        .select()
+        .single() as { data: CartRow | null; error: Error | null }
+    })
 
     if (error) throw error
     if (!data) throw new Error("Failed to update cart")
@@ -69,11 +93,13 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
       issues: cart.issues,
     }
 
-    const { data, error } = await supabase
-      .from("carts")
-      .insert([insertData])
-      .select()
-      .single() as { data: CartRow | null; error: Error | null }
+    const { data, error } = await retryOperation(async () => {
+      return await supabase
+        .from("carts")
+        .insert([insertData])
+        .select()
+        .single() as { data: CartRow | null; error: Error | null }
+    })
 
     if (error) throw error
     if (!data) throw new Error("Failed to create cart")
@@ -90,10 +116,12 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
 // Delete a cart from Supabase
 export const deleteCart = async (cartId: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from("carts")
-      .delete()
-      .eq("id", cartId)
+    const { error } = await retryOperation(async () => {
+      return await supabase
+        .from("carts")
+        .delete()
+        .eq("id", cartId)
+    })
 
     if (error) throw error
   } catch (error: any) {
