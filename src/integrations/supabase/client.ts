@@ -23,8 +23,3 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   options
 );
-
-// Add error handler
-supabase.auth.onError((error) => {
-  console.error('Supabase error:', error.message);
-});
