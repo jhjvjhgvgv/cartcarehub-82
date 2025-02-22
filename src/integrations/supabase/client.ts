@@ -23,3 +23,16 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   options
 );
+
+// Set up auth state change listener
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    console.log('User signed out');
+  } else if (event === 'SIGNED_IN') {
+    console.log('User signed in');
+  } else if (event === 'TOKEN_REFRESHED') {
+    console.log('Token refreshed');
+  } else if (event === 'USER_UPDATED') {
+    console.log('User updated');
+  }
+});
