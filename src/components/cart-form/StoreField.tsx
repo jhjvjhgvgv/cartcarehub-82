@@ -1,13 +1,9 @@
+
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UseFormReturn } from "react-hook-form"
 import { CartFormValues } from "./types"
-
-const managedStores = [
-  { id: "store1", name: "SuperMart Downtown" },
-  { id: "store2", name: "FreshMart Heights" },
-  { id: "store3", name: "Value Grocery West" },
-]
+import { managedStores } from "@/constants/stores"
 
 interface StoreFieldProps {
   form: UseFormReturn<CartFormValues>
