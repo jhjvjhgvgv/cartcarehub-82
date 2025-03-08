@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -117,7 +118,7 @@ const Index = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[calc(100vh-20rem)] w-full">
-              <div className="min-w-[300px]">
+              <div className="overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
