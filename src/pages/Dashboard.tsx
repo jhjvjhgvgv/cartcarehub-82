@@ -1,12 +1,15 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Building2, ShoppingCart, ChevronRight, BarChart, Percent, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const stores = [
     {
@@ -116,68 +119,66 @@ const Index = () => {
             <CardTitle className="text-base md:text-lg">Stores Overview</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="w-full overflow-auto">
-              <ScrollArea className="h-[calc(100vh-20rem)] w-full">
-                <div className="min-w-[600px] w-full">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[30%] text-xs md:text-sm">Store Name</TableHead>
-                        <TableHead className="w-[20%] text-xs md:text-sm">Location</TableHead>
-                        <TableHead className="text-right w-[25%] text-xs md:text-sm">Cart Status</TableHead>
-                        <TableHead className="text-right w-[15%] text-xs md:text-sm">Utilization</TableHead>
-                        <TableHead className="text-right w-[15%] text-xs md:text-sm">Maintenance</TableHead>
-                        <TableHead className="w-[5%]"></TableHead>
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[600px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[30%] text-xs md:text-sm">Store Name</TableHead>
+                      <TableHead className="w-[20%] text-xs md:text-sm">Location</TableHead>
+                      <TableHead className="text-right w-[25%] text-xs md:text-sm">Cart Status</TableHead>
+                      <TableHead className="text-right w-[15%] text-xs md:text-sm">Utilization</TableHead>
+                      <TableHead className="text-right w-[15%] text-xs md:text-sm">Maintenance</TableHead>
+                      <TableHead className="w-[5%]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stores.map((store) => (
+                      <TableRow 
+                        key={store.id}
+                        className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[140px] md:min-h-[60px]"
+                        onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
+                      >
+                        <TableCell className="font-medium py-4 text-xs md:text-sm">
+                          <div className="flex flex-col md:flex-row items-start md:items-center">
+                            {store.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 text-xs md:text-sm">
+                          <div className="flex flex-col md:flex-row items-start md:items-center">
+                            {store.location}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right py-4">
+                          <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                            <ShoppingCart className="w-4 h-4 text-primary-600" />
+                            <span className="text-xs md:text-sm">{store.activeCarts}/{store.totalCarts}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right py-4">
+                          <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                            <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
+                            <span className={`text-xs md:text-sm ${getUtilizationColor(store.utilizationRate)}`}>
+                              {store.utilizationRate}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right py-4">
+                          <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
+                            <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
+                            <span className={`text-xs md:text-sm ${getMaintenanceColor(store.maintenanceRate)}`}>
+                              {store.maintenanceRate}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stores.map((store) => (
-                        <TableRow 
-                          key={store.id}
-                          className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[140px] md:min-h-[60px]"
-                          onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
-                        >
-                          <TableCell className="font-medium py-4 text-xs md:text-sm">
-                            <div className="flex flex-col md:flex-row items-start md:items-center">
-                              {store.name}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4 text-xs md:text-sm">
-                            <div className="flex flex-col md:flex-row items-start md:items-center">
-                              {store.location}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <ShoppingCart className="w-4 h-4 text-primary-600" />
-                              <span className="text-xs md:text-sm">{store.activeCarts}/{store.totalCarts}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
-                              <span className={`text-xs md:text-sm ${getUtilizationColor(store.utilizationRate)}`}>
-                                {store.utilizationRate}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
-                              <span className={`text-xs md:text-sm ${getMaintenanceColor(store.maintenanceRate)}`}>
-                                {store.maintenanceRate}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </CardContent>
         </Card>
