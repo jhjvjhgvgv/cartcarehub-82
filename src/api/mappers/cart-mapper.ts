@@ -22,6 +22,6 @@ export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id" | "crea
   store: cart.store,
   store_id: cart.storeId, // Map storeId to store_id
   status: cart.status,
-  lastMaintenance: cart.lastMaintenance || null,
+  lastMaintenance: cart.lastMaintenance || new Date().toISOString(), // Ensure this is never null
   issues: cart.issues,
 })

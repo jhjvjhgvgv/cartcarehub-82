@@ -50,6 +50,7 @@ export const useCartSubmit = () => {
                 store_id: store.id,
                 status: data.status,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+                lastMaintenance: data.lastMaintenance || cart.lastMaintenance || new Date().toISOString(),
               })
             })
 
@@ -64,6 +65,7 @@ export const useCartSubmit = () => {
             store_id: store.id,
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+            lastMaintenance: data.lastMaintenance || editingCart.lastMaintenance || new Date().toISOString(),
           })
           return
         }
@@ -73,6 +75,9 @@ export const useCartSubmit = () => {
           throw new Error("A cart with this QR code already exists")
         }
 
+        // Make sure we have a lastMaintenance date when creating a new cart
+        const now = new Date().toISOString();
+        
         await createCart({
           qr_code: data.qr_code,
           store: data.store,
@@ -80,7 +85,7 @@ export const useCartSubmit = () => {
           store_id: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-          lastMaintenance: "",
+          lastMaintenance: data.lastMaintenance || now,
         })
       } catch (error) {
         throw error
