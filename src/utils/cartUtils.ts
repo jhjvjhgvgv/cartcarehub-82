@@ -25,7 +25,7 @@ export const prepareMultipleCartEdit = (selectedCarts: Cart[]): Cart => {
     storeId: store?.id || "",
     ...commonValues,
     originalCarts: selectedCarts,
-  } as Cart
+  }
 }
 
 export const filterCarts = (
