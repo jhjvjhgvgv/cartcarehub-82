@@ -7,9 +7,10 @@ import { managedStores } from "@/constants/stores"
 
 interface StoreFieldProps {
   form: UseFormReturn<CartFormValues>
+  disabled?: boolean
 }
 
-export function StoreField({ form }: StoreFieldProps) {
+export function StoreField({ form, disabled = false }: StoreFieldProps) {
   return (
     <FormField
       control={form.control}
@@ -17,7 +18,7 @@ export function StoreField({ form }: StoreFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Store</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select store" />
