@@ -4,13 +4,14 @@ import { Cart } from "@/types/cart"
 import { fetchCarts } from "@/api/carts"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { addMaintenancePredictions } from "@/utils/maintenance-prediction"
 
 export const useFetchCarts = () => {
   const { toast } = useToast()
   const [isRetrying, setIsRetrying] = useState(false)
 
   const { 
-    data: carts = [], 
+    data: rawCarts = [], 
     isLoading, 
     error, 
     refetch 
@@ -20,6 +21,9 @@ export const useFetchCarts = () => {
     retry: 2,
     retryDelay: 1000,
   })
+
+  // Apply maintenance predictions to all carts
+  const carts = addMaintenancePredictions(rawCarts);
 
   const retryFetchCarts = async () => {
     setIsRetrying(true)

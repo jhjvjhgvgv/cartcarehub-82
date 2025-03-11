@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -149,6 +148,7 @@ const Carts = () => {
               totalCarts={filteredCarts.length}
               activeCarts={activeCarts}
               maintenanceNeeded={maintenanceNeeded}
+              carts={filteredCarts}
             />
             <CartListSection
               filteredCarts={filteredCarts}

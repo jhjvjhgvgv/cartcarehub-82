@@ -4,6 +4,7 @@ import { Cart } from "@/types/cart"
 import { CartStatusBadge } from "./CartStatusBadge"
 import { CartActions } from "./CartActions"
 import { Checkbox } from "@/components/ui/checkbox"
+import { CartPredictionBadge } from "./CartPredictionBadge"
 
 interface CartTableRowProps {
   cart: Cart
@@ -54,7 +55,15 @@ export function CartTableRow({
         <div>{cart.store}</div>
       </TableCell>
       <TableCell className="py-4 px-4">
-        <CartStatusBadge status={cart.status} />
+        <div className="flex flex-col gap-1">
+          <CartStatusBadge status={cart.status} />
+          {cart.maintenancePrediction && cart.status === "active" && (
+            <CartPredictionBadge 
+              probability={cart.maintenancePrediction.probability}
+              daysUntilMaintenance={cart.maintenancePrediction.daysUntilMaintenance}
+            />
+          )}
+        </div>
       </TableCell>
       <TableCell className="hidden sm:table-cell py-4 px-4">
         <div>{cart.lastMaintenance}</div>

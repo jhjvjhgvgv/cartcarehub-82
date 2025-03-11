@@ -10,4 +10,9 @@ export interface Cart {
   last_maintenance?: string // Added to match the database field
   issues: string[]
   originalCarts?: Cart[]
+  maintenancePrediction?: {
+    probability: number
+    daysUntilMaintenance: number
+    lastCalculated: string
+  }
 }
