@@ -1,4 +1,3 @@
-
 import { Cart } from "@/types/cart"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/types/supabase"
@@ -63,7 +62,7 @@ const retryOperation = async <T>(
 // Convert from database row to application Cart
 const mapToCart = (row: CartRow): Cart => ({
   id: row.id,
-  qr_code: row.rfidTag, // Map rfidTag from DB to qr_code for our app
+  qr_code: row.qr_code, // Use qr_code to match the column name in the database
   store: row.store,
   storeId: row.storeId,
   status: row.status,
@@ -117,7 +116,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
       supabase
         .from('carts')
         .update({
-          rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
+          qr_code: cart.qr_code, // Use qr_code to match the column name in the database
           store: cart.store,
           storeId: cart.storeId,
           status: cart.status,
@@ -146,7 +145,7 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
     // Only include fields that exist in the database
     const cartData = {
-      rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
+      qr_code: cart.qr_code, // Use qr_code to match the column name in the database
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
