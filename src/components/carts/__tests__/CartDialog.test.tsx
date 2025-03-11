@@ -44,6 +44,7 @@ describe('CartDialog', () => {
       qr_code: 'QR-123',
       store: 'SuperMart Downtown',
       storeId: 'store1',
+      store_id: 'store1', // Added store_id
       status: 'active',
       lastMaintenance: '2024-02-21',
       issues: [],
@@ -61,6 +62,7 @@ describe('CartDialog', () => {
       qr_code: 'Multiple Carts',
       store: 'SuperMart Downtown',
       storeId: 'store1',
+      store_id: 'store1', // Added store_id
       status: 'active',
       lastMaintenance: '2024-02-21',
       issues: [],

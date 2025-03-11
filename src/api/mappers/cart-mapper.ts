@@ -10,7 +10,8 @@ export const mapToCart = (row: CartRow): Cart => ({
   id: row.id,
   qr_code: row.qr_code,
   store: row.store,
-  storeId: row.store, // Use store as storeId since storeId doesn't exist in the database
+  storeId: row.store_id, // Map the database store_id to our UI's storeId
+  store_id: row.store_id, // Include store_id directly
   status: row.status,
   lastMaintenance: row.lastMaintenance || "",
   issues: row.issues,

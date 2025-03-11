@@ -23,6 +23,7 @@ export const prepareMultipleCartEdit = (selectedCarts: Cart[]): Cart => {
     id: selectedCarts.map(cart => cart.id).join(","),
     qr_code: "Multiple Carts",
     storeId: store?.id || "",
+    store_id: store?.id || "", // Added store_id
     ...commonValues,
     originalCarts: selectedCarts,
   }

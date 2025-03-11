@@ -7,6 +7,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-123456789",
     store: "SuperMart Downtown",
     storeId: "store1",
+    store_id: "store1", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-15",
     issues: ["Wheel alignment needed"],
@@ -16,6 +17,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-987654321",
     store: "SuperMart Downtown",
     storeId: "store1",
+    store_id: "store1", // Added store_id
     status: "maintenance",
     lastMaintenance: "2024-01-20",
     issues: ["Handle loose", "Left wheel damaged"],
@@ -25,6 +27,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-456789123",
     store: "FreshMart Heights",
     storeId: "store2",
+    store_id: "store2", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-10",
     issues: [],
@@ -34,6 +37,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-789123456",
     store: "FreshMart Heights",
     storeId: "store2",
+    store_id: "store2", // Added store_id
     status: "retired",
     lastMaintenance: "2024-01-05",
     issues: ["Frame damage", "Beyond repair"],
@@ -43,6 +47,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-321654987",
     store: "Value Grocery West",
     storeId: "store3",
+    store_id: "store3", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-20",
     issues: [],
@@ -52,6 +57,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-654987321",
     store: "Value Grocery West",
     storeId: "store3",
+    store_id: "store3", // Added store_id
     status: "maintenance",
     lastMaintenance: "2024-02-01",
     issues: ["Squeaky wheel"],
@@ -61,6 +67,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-147258369",
     store: "SuperMart Downtown",
     storeId: "store1",
+    store_id: "store1", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-18",
     issues: [],
@@ -70,6 +77,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-258369147",
     store: "FreshMart Heights",
     storeId: "store2",
+    store_id: "store2", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-17",
     issues: [],
@@ -79,6 +87,7 @@ export const initialCartsData: Cart[] = [
     qr_code: "QR-369147258",
     store: "Value Grocery West",
     storeId: "store3",
+    store_id: "store3", // Added store_id
     status: "active",
     lastMaintenance: "2024-02-19",
     issues: [],
