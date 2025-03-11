@@ -23,7 +23,8 @@ export const useFetchCarts = () => {
   })
 
   // Apply maintenance predictions to all carts
-  const carts = addMaintenancePredictions(rawCarts);
+  // Make sure we safely handle the cart data
+  const carts = Array.isArray(rawCarts) ? addMaintenancePredictions(rawCarts) : [];
 
   const retryFetchCarts = async () => {
     setIsRetrying(true)

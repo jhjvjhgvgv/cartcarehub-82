@@ -5,13 +5,13 @@ import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
 import { TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface CartPredictionBadgeProps {
-  probability: number;
-  daysUntilMaintenance: number;
+  probability?: number;
+  daysUntilMaintenance?: number;
 }
 
-export function CartPredictionBadge({ probability, daysUntilMaintenance }: CartPredictionBadgeProps) {
+export function CartPredictionBadge({ probability = 0, daysUntilMaintenance = 30 }: CartPredictionBadgeProps) {
   // Format probability as percentage
-  const riskPercentage = Math.round(probability * 100);
+  const riskPercentage = Math.round((probability || 0) * 100);
   
   // Determine risk level
   let riskLevel: "low" | "medium" | "high" = "low";
