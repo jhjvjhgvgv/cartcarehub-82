@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -61,9 +60,11 @@ export const useCarts = () => {
           return
         }
 
+        // Ensure proper store validation
         const store = managedStores.find(s => s.name === data.store)
         if (!store) {
-          throw new Error("Selected store not found")
+          console.error("Store validation failed. Selected store:", data.store, "Available stores:", managedStores)
+          throw new Error(`Selected store "${data.store}" is not in your managed stores list`)
         }
 
         if (editingCart) {

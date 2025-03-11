@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const Carts = () => {
+  console.log("Available managed stores:", managedStores)
   const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)

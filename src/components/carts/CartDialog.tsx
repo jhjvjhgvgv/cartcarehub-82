@@ -34,19 +34,21 @@ export function CartDialog({
 
   const handleSubmit = (data: any) => {
     console.log('Dialog handleSubmit called with:', data)
+    console.log('Using managedStores:', managedStores)
     
     try {
       const store = managedStores.find((s) => s.name === data.store)
       if (!store) {
+        console.error("Store validation failed in dialog. Selected store:", data.store, "Available stores:", managedStores)
         toast({
           title: "Error",
-          description: "Selected store is not in your managed stores list.",
+          description: `Selected store "${data.store}" is not in your managed stores list.`,
           variant: "destructive",
         })
         return
       }
       
-      onSubmit(data)
+      onSubmit({...data, managedStores})
     } catch (error) {
       console.error('Error in dialog submit:', error)
       toast({
