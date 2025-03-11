@@ -83,6 +83,7 @@ export const useCarts = () => {
                 storeId: store.id,
                 status: data.status,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+                // lastMaintenance field is not needed as it doesn't exist in the database
               })
             })
 
@@ -97,6 +98,7 @@ export const useCarts = () => {
             storeId: store.id,
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+            // lastMaintenance field is not needed as it doesn't exist in the database
           })
           return
         }
@@ -107,14 +109,14 @@ export const useCarts = () => {
           throw new Error("A cart with this QR code already exists")
         }
 
-        // Create new cart
+        // Create new cart without the lastMaintenance field
         await createCart({
           qr_code: data.qr_code,
           store: data.store,
           storeId: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-          lastMaintenance: data.lastMaintenance || "",
+          lastMaintenance: "", // Keep this as it's part of the Cart type, but it won't be sent to the database
         })
       } catch (error) {
         throw error

@@ -67,7 +67,7 @@ const mapToCart = (row: CartRow): Cart => ({
   store: row.store,
   storeId: row.storeId,
   status: row.status,
-  lastMaintenance: row.lastMaintenance,
+  lastMaintenance: row.lastMaintenance || "",
   issues: row.issues,
 })
 
@@ -112,6 +112,7 @@ export const fetchCarts = async (): Promise<Cart[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
+    // Remove the lastMaintenance field if it doesn't exist in the database
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
@@ -121,7 +122,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
           storeId: cart.storeId,
           status: cart.status,
           issues: cart.issues,
-          lastMaintenance: cart.lastMaintenance
+          // lastMaintenance field removed as it doesn't exist in the database
         })
         .eq('id', cart.id)
         .select()
@@ -150,8 +151,10 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
       storeId: cart.storeId,
       status: cart.status,
       issues: cart.issues,
-      lastMaintenance: cart.lastMaintenance
+      // Removed lastMaintenance as it doesn't exist in the database
     };
+    
+    console.log("Creating cart with data:", cartData);
     
     const { data, error } = await retryOperation(async () => 
       supabase
@@ -161,7 +164,10 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
         .single()
     )
 
-    if (error) throw error
+    if (error) {
+      console.error("Supabase insert error:", error);
+      throw error;
+    }
     if (!data) throw new Error("Failed to create cart")
     return mapToCart(data)
   } catch (error: any) {
