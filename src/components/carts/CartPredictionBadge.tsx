@@ -24,7 +24,7 @@ export function CartPredictionBadge({ probability, daysUntilMaintenance }: CartP
   // Determine badge appearance based on risk level
   const badgeVariant = 
     riskLevel === "high" ? "destructive" :
-    riskLevel === "medium" ? "warning" : "outline";
+    riskLevel === "medium" ? "secondary" : "outline";
     
   const icon = 
     riskLevel === "high" ? <AlertTriangle className="h-3 w-3 mr-1" /> :
