@@ -8,11 +8,15 @@ import { handleCartApiError } from "@/api/utils/cart-error-handler"
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
+    // Use snake_case for the database field name
+    const lastMaintenance = cart.lastMaintenance || cart.last_maintenance || new Date().toISOString();
+    
     console.log("Updating cart with data:", {
       qr_code: cart.qr_code,
       store: cart.store,
       store_id: cart.storeId, // Use storeId for store_id
       status: cart.status,
+      last_maintenance: lastMaintenance, // Use snake_case
       issues: cart.issues,
     });
 
@@ -24,6 +28,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
           store: cart.store,
           store_id: cart.storeId, // Use storeId for store_id
           status: cart.status,
+          last_maintenance: lastMaintenance, // Use snake_case
           issues: cart.issues,
         })
         .eq('id', cart.id)

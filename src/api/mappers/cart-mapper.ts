@@ -12,7 +12,8 @@ export const mapToCart = (row: CartRow): Cart => ({
   storeId: row.store_id, // Map the database store_id to our UI's storeId
   store_id: row.store_id, // Include store_id directly
   status: row.status,
-  lastMaintenance: row.lastMaintenance || "",
+  lastMaintenance: row.last_maintenance || "", // Map from snake_case to camelCase
+  last_maintenance: row.last_maintenance || "", // Keep original field for direct DB operations
   issues: row.issues,
 })
 
@@ -22,6 +23,6 @@ export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id" | "crea
   store: cart.store,
   store_id: cart.storeId, // Map storeId to store_id
   status: cart.status,
-  lastMaintenance: cart.lastMaintenance || new Date().toISOString(), // Ensure this is never null
+  last_maintenance: cart.lastMaintenance || cart.last_maintenance || new Date().toISOString(), // Use either one, ensuring it's never null
   issues: cart.issues,
 })

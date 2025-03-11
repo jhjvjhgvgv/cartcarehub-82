@@ -43,6 +43,9 @@ export const useCartSubmit = () => {
               const cart = queryClient.getQueryData<Cart[]>(["carts"])?.find(c => c.id === id)
               if (!cart) return null
               
+              // Ensure we have lastMaintenance for each cart
+              const lastMaintenance = data.lastMaintenance || cart.lastMaintenance || new Date().toISOString();
+              
               return updateCart({
                 ...cart,
                 store: data.store,
@@ -50,7 +53,8 @@ export const useCartSubmit = () => {
                 store_id: store.id,
                 status: data.status,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-                lastMaintenance: data.lastMaintenance || cart.lastMaintenance || new Date().toISOString(),
+                lastMaintenance: lastMaintenance,
+                last_maintenance: lastMaintenance, // Include both versions for compatibility
               })
             })
 
@@ -58,6 +62,9 @@ export const useCartSubmit = () => {
             return
           }
 
+          // Ensure we have lastMaintenance for single cart update
+          const lastMaintenance = data.lastMaintenance || editingCart.lastMaintenance || new Date().toISOString();
+          
           await updateCart({
             ...editingCart,
             store: data.store,
@@ -65,7 +72,8 @@ export const useCartSubmit = () => {
             store_id: store.id,
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-            lastMaintenance: data.lastMaintenance || editingCart.lastMaintenance || new Date().toISOString(),
+            lastMaintenance: lastMaintenance,
+            last_maintenance: lastMaintenance, // Include both versions for compatibility
           })
           return
         }
@@ -86,6 +94,7 @@ export const useCartSubmit = () => {
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
           lastMaintenance: data.lastMaintenance || now,
+          last_maintenance: data.lastMaintenance || now, // Include both versions for compatibility
         })
       } catch (error) {
         throw error

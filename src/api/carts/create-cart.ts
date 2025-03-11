@@ -11,9 +11,9 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
     // Use mapper to ensure all required fields are present
     const cartData = mapToCartRow(cart);
     
-    // Ensure lastMaintenance is never null (required by database constraint)
-    if (cartData.lastMaintenance === null) {
-      cartData.lastMaintenance = new Date().toISOString();
+    // Ensure last_maintenance is never null (required by database constraint)
+    if (!cartData.last_maintenance) {
+      cartData.last_maintenance = new Date().toISOString();
     }
     
     console.log("Creating cart with data:", cartData);

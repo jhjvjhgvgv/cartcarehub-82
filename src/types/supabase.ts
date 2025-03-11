@@ -15,9 +15,9 @@ export interface Database {
           id: string
           qr_code: string
           store: string
-          store_id: string // Added this field to match the database schema
+          store_id: string
           status: "active" | "maintenance" | "retired"
-          lastMaintenance: string
+          last_maintenance: string | null // Changed from lastMaintenance to last_maintenance
           issues: string[]
           created_at: string | null
           updated_at: string | null
@@ -25,9 +25,9 @@ export interface Database {
         Insert: {
           qr_code: string
           store: string
-          store_id: string // Added this field to match the database schema
+          store_id: string
           status: "active" | "maintenance" | "retired"
-          lastMaintenance: string
+          last_maintenance?: string | null // Changed from lastMaintenance to last_maintenance
           issues: string[]
           id?: string
           created_at?: string | null
@@ -36,9 +36,9 @@ export interface Database {
         Update: {
           qr_code?: string
           store?: string
-          store_id?: string // Added this field to match the database schema
+          store_id?: string
           status?: "active" | "maintenance" | "retired"
-          lastMaintenance?: string
+          last_maintenance?: string | null // Changed from lastMaintenance to last_maintenance
           issues?: string[]
           id?: string
           created_at?: string | null
