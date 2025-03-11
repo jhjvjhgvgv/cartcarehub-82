@@ -103,12 +103,12 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
       supabase
         .from('carts')
         .update({
-          rfidTag: cart.rfidTag,
+          qr_code: cart.qr_code, // Updated from rfidTag to qr_code
           store: cart.store,
           storeId: cart.storeId,
           status: cart.status,
           issues: cart.issues
-          // Removed lastMaintenance field as it doesn't exist in the database schema
+          // lastMaintenance is not in the database schema, so removed
         })
         .eq('id', cart.id)
         .select()
@@ -130,8 +130,14 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
 // Create a new cart in Supabase
 export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
   try {
-    // Remove lastMaintenance from cart data before sending to Supabase
-    const { lastMaintenance, ...cartData } = cart;
+    // Only include fields that exist in the database
+    const cartData = {
+      qr_code: cart.qr_code, // Updated from rfidTag to qr_code
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      issues: cart.issues
+    };
     
     const { data, error } = await retryOperation(async () => 
       supabase

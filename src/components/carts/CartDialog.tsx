@@ -107,7 +107,7 @@ export function CartDialog({
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
                 initialData={{
-                  rfidTag: "",
+                  qr_code: "", // Updated from rfidTag to qr_code
                   store: managedStores[0]?.name || "",
                   status: "active",
                   issues: "",

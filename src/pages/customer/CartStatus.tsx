@@ -1,3 +1,4 @@
+
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,7 @@ import { Cart } from "@/types/cart";
 const mockCarts: Cart[] = [
   {
     id: "CART-001",
-    rfidTag: "QR-123456789",
+    qr_code: "QR-123456789", // Updated from rfidTag to qr_code
     status: "active",
     store: "SuperMart Downtown",
     storeId: "store1",
@@ -22,7 +23,7 @@ const mockCarts: Cart[] = [
   },
   {
     id: "CART-002",
-    rfidTag: "QR-987654321",
+    qr_code: "QR-987654321", // Updated from rfidTag to qr_code
     status: "maintenance",
     store: "SuperMart Downtown",
     storeId: "store1",
@@ -48,7 +49,7 @@ const CartStatus = () => {
   };
 
   const handleQRCodeDetected = (qrCode: string) => {
-    const cart = carts.find(c => c.rfidTag === qrCode);
+    const cart = carts.find(c => c.qr_code === qrCode); // Updated from rfidTag to qr_code
     if (cart) {
       toast({
         title: "Cart Found",
@@ -132,7 +133,7 @@ const CartStatus = () => {
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">QR Code</p>
-                        <p className="text-sm text-muted-foreground">{cart.rfidTag}</p>
+                        <p className="text-sm text-muted-foreground">{cart.qr_code}</p>
                       </div>
                     </div>
                     {cart.issues.length > 0 && (

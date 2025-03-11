@@ -18,8 +18,8 @@ interface BulkCartEditProps {
 export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelete }: BulkCartEditProps) {
   // Get the original cart if only one is selected
   const singleCart = cartIds.length === 1 ? editingCart?.originalCarts?.find(cart => cart.id === cartIds[0]) : null
-  const rfidDisplay = singleCart?.rfidTag || "Multiple QR Codes"
-  const rfidPlaceholder = singleCart?.rfidTag || "Multiple QR Codes - Will Be Preserved"
+  const rfidDisplay = singleCart?.qr_code || "Multiple QR Codes" // Updated from rfidTag to qr_code
+  const rfidPlaceholder = singleCart?.qr_code || "Multiple QR Codes - Will Be Preserved" // Updated from rfidTag to qr_code
 
   return (
     <Tabs defaultValue="individual" className="w-full">
@@ -37,7 +37,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <h4 className="text-sm font-medium">Cart ID: {cartId}</h4>
-                      <p className="text-sm text-muted-foreground">RFID: {originalCart?.rfidTag}</p>
+                      <p className="text-sm text-muted-foreground">RFID: {originalCart?.qr_code}</p>
                     </div>
                     <Button
                       variant="ghost"
@@ -50,7 +50,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                   </div>
                   <CartForm
                     initialData={{
-                      rfidTag: originalCart?.rfidTag || "",
+                      qr_code: originalCart?.qr_code || "", // Updated from rfidTag to qr_code
                       store: originalCart?.store || "",
                       status: originalCart?.status || "active",
                       issues: originalCart?.issues ? originalCart.issues.join("\n") : "",
@@ -58,7 +58,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                     onSubmit={(data) => onSubmit({ ...data, id: cartId })}
                     onCancel={onCancel}
                     disableRfidTag={true}
-                    rfidPlaceholder={originalCart?.rfidTag}
+                    rfidPlaceholder={originalCart?.qr_code} // Updated from rfidTag to qr_code
                   />
                 </div>
               )
@@ -69,7 +69,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
       <TabsContent value="bulk">
         <CartForm
           initialData={{
-            rfidTag: rfidDisplay,
+            qr_code: rfidDisplay, // Updated from rfidTag to qr_code
             store: editingCart?.store || "",
             status: editingCart?.status || "active",
             issues: editingCart?.issues ? editingCart.issues.join("\n") : "",

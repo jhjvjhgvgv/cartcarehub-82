@@ -27,7 +27,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
       </div>
       <CartForm
         initialData={{
-          rfidTag: cart.rfidTag || "",
+          qr_code: cart.qr_code || "", // Updated from rfidTag to qr_code
           store: cart.store || "",
           status: cart.status || "active",
           issues: cart.issues ? cart.issues.join("\n") : "",
@@ -35,7 +35,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
         onSubmit={onSubmit}
         onCancel={onCancel}
         disableRfidTag={false}
-        rfidPlaceholder={cart.rfidTag}
+        rfidPlaceholder={cart.qr_code} // Updated from rfidTag to qr_code
       />
     </div>
   )
