@@ -7,7 +7,7 @@ export const useCartDelete = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const { mutate: handleDeleteCart } = useMutation({
+  const { mutate: handleDeleteCart, isPending: isDeleting } = useMutation({
     mutationFn: deleteCart,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["carts"] })
@@ -25,5 +25,5 @@ export const useCartDelete = () => {
     },
   })
 
-  return { handleDeleteCart }
+  return { handleDeleteCart, isDeleting }
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -47,8 +46,17 @@ const Carts = () => {
   }
 
   const handleSubmitDialog = (data: any) => {
-    handleSubmit({ data, editingCart, managedStores })
-    // Dialog will be closed by the onSuccess callback
+    handleSubmit({ 
+      data, 
+      editingCart, 
+      managedStores 
+    })
+    // The dialog will be closed in the CartDialog component
+  }
+
+  const handleDeleteDialogCart = (cartId: string) => {
+    handleDeleteCart(cartId)
+    // The dialog will be closed in the CartDialog component
   }
 
   const getErrorMessage = (error: any) => {
@@ -169,7 +177,7 @@ const Carts = () => {
           isOpen={isAddDialogOpen || !!editingCart}
           onOpenChange={handleDialogClose}
           onSubmit={handleSubmitDialog}
-          onDelete={handleDeleteCart}
+          onDelete={handleDeleteDialogCart}
           editingCart={editingCart}
           managedStores={managedStores}
           isSubmitting={isSubmitting}

@@ -61,6 +61,11 @@ export function CartDialog({
       }
       
       onSubmit({...data, managedStores})
+      
+      // Close the dialog on successful submit
+      if (!isSubmitting) {
+        onOpenChange(false)
+      }
     } catch (error) {
       console.error('Error in dialog submit:', error)
       toast({
@@ -69,6 +74,12 @@ export function CartDialog({
         variant: "destructive",
       })
     }
+  }
+
+  const handleDelete = (cartId: string) => {
+    onDelete(cartId)
+    // Close the dialog after deletion
+    onOpenChange(false)
   }
 
   return (
@@ -95,7 +106,7 @@ export function CartDialog({
                 cartIds={cartIds}
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
-                onDelete={onDelete}
+                onDelete={handleDelete}
                 disabled={isSubmitting}
               />
             ) : editingCart ? (
@@ -103,7 +114,7 @@ export function CartDialog({
                 cart={editingCart}
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
-                onDelete={onDelete}
+                onDelete={handleDelete}
                 disabled={isSubmitting}
               />
             ) : (

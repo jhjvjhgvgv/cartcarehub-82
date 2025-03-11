@@ -14,13 +14,17 @@ interface SingleCartEditProps {
 }
 
 export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete, disabled = false }: SingleCartEditProps) {
+  const handleDelete = () => {
+    onDelete(cart.id)
+  }
+
   return (
     <div>
       <div className="flex justify-end mb-4">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onDelete(cart.id)}
+          onClick={handleDelete}
           className="h-8 w-8 p-0 hover:bg-red-50"
           disabled={disabled}
         >
