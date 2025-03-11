@@ -130,7 +130,6 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
           storeId: cart.storeId,
           status: cart.status,
           issues: cart.issues,
-          lastMaintenance: cart.lastMaintenance
         })
         .eq('id', cart.id)
         .select()
@@ -154,7 +153,6 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
       storeId: cart.storeId,
       status: cart.status,
       issues: cart.issues,
-      lastMaintenance: cart.lastMaintenance
     };
     
     console.log("Creating cart with data:", cartData);
