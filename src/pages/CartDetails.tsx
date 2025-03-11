@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
@@ -93,12 +92,23 @@ export default function CartDetails() {
   }
 
   const handleDelete = (cartId: string) => {
+    // Don't navigate here - let the hook handle navigation
     handleDeleteCart(cartId)
-    navigate('/carts')
-    toast({
-      title: "Success",
-      description: "Cart has been deleted successfully.",
-    })
+    // Don't show toast here - will be handled after navigation
+  }
+
+  // If we're deleting, show a loading state to prevent UI freeze
+  if (isDeleting) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Deleting cart...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   if (isLoading) {

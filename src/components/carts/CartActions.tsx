@@ -16,8 +16,10 @@ interface CartActionsProps {
 
 export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
   const location = useLocation()
+  const navigate = useNavigate()
   const isDetailsPage = location.pathname.includes(`/carts/${cart.id}`)
 
   const handleMaintenanceClick = () => {
@@ -39,6 +41,26 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
     e.stopPropagation()
     onEdit(cart)
   }
+  
+  const handleDeleteConfirm = () => {
+    setIsDeleting(true)
+    
+    // Close the dialog immediately to prevent UI freeze
+    setShowDeleteDialog(false)
+    
+    // Slight delay to allow dialog to close
+    setTimeout(() => {
+      onDelete(cart.id)
+      
+      // Don't show toast here if we're on details page - navigation will happen
+      if (!isDetailsPage) {
+        toast({
+          title: "Success",
+          description: "Cart has been removed from the system.",
+        })
+      }
+    }, 100)
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -48,6 +70,7 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
           size="sm"
           onClick={handleMaintenanceClick}
           className="hover:bg-yellow-100 hover:text-yellow-900"
+          disabled={isDeleting}
         >
           <WrenchIcon className="h-4 w-4" />
         </Button>
@@ -55,7 +78,7 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" disabled={isDeleting}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -86,13 +109,11 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                onDelete(cart.id)
-                setShowDeleteDialog(false)
-              }}
+              onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
