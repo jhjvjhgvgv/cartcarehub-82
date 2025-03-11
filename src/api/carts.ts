@@ -10,7 +10,7 @@ type CartUpdate = Tables['carts']['Update']
 
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
-const REQUEST_TIMEOUT = 8000 // 8 seconds
+const REQUEST_TIMEOUT = 10000 // 10 seconds
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -36,23 +36,25 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
 
 const retryOperation = async <T>(
   operation: () => Promise<T>,
-  retries = MAX_RETRIES
+  retries = MAX_RETRIES,
+  delay = RETRY_DELAY
 ): Promise<T> => {
   try {
     return await withTimeout(operation(), REQUEST_TIMEOUT)
   } catch (error: any) {
-    console.log("Operation failed:", error.message)
+    console.error("Operation failed:", error.message)
     
     if (retries > 0 && (
       error.message?.includes('Failed to fetch') || 
       error.message?.includes('timed out') ||
       error.message?.includes('network') ||
+      error.code === 'ECONNREFUSED' ||
       error.status === 503 || // Service Unavailable
       error.status === 504 // Gateway Timeout
     )) {
       console.log(`Retrying operation. Attempts remaining: ${retries-1}`)
-      await wait(RETRY_DELAY)
-      return retryOperation(operation, retries - 1)
+      await wait(delay)
+      return retryOperation(operation, retries - 1, delay * 1.5) // Exponential backoff
     }
     throw error
   }

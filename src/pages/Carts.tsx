@@ -13,6 +13,7 @@ import { filterCarts, prepareMultipleCartEdit } from "@/utils/cartUtils"
 import { AlertCircle, Loader2, WifiOff, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const Carts = () => {
   const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart } = useCarts()
@@ -88,13 +89,43 @@ const Carts = () => {
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
           <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
           <div className="mt-6">
-            <Alert variant="destructive" className="bg-destructive/10">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription className="mt-2">
-                {getErrorMessage(error)}
-              </AlertDescription>
-            </Alert>
+            <Card className="border-destructive/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                  <CardTitle>Connection Error</CardTitle>
+                </div>
+                <CardDescription>
+                  We're having trouble connecting to the server
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
+                  <AlertDescription className="mt-2">
+                    {getErrorMessage(error)}
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={retryFetchCarts} 
+                  disabled={isRetrying}
+                  className="flex items-center gap-2"
+                >
+                  {isRetrying ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Reconnecting...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4" />
+                      Retry Connection
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         </div>
       </DashboardLayout>
@@ -106,8 +137,9 @@ const Carts = () => {
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
         {isLoading ? (
-          <div className="flex items-center justify-center p-8">
+          <div className="flex flex-col items-center justify-center p-8 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground text-sm">Loading carts data...</p>
           </div>
         ) : (
           <>

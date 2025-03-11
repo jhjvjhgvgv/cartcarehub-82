@@ -25,12 +25,12 @@ export const useCarts = () => {
     try {
       await refetch()
       toast({
-        title: "Success",
+        title: "Connection Restored",
         description: "Successfully reconnected to the server.",
       })
     } catch (err) {
       toast({
-        title: "Error",
+        title: "Connection Failed",
         description: "Failed to reconnect. Please try again later.",
         variant: "destructive",
       })
