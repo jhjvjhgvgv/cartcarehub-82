@@ -99,22 +99,16 @@ export const fetchCarts = async (): Promise<CartRow[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<CartRow> => {
   try {
-    // Ensure cart has lastMaintenance field, or set default if missing
-    const cartWithMaintenance = {
-      ...cart,
-      lastMaintenance: cart.lastMaintenance || new Date().toISOString().split('T')[0]
-    };
-
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
         .update({
-          rfidTag: cartWithMaintenance.rfidTag,
-          store: cartWithMaintenance.store,
-          storeId: cartWithMaintenance.storeId,
-          status: cartWithMaintenance.status,
-          lastMaintenance: cartWithMaintenance.lastMaintenance,
-          issues: cartWithMaintenance.issues
+          rfidTag: cart.rfidTag,
+          store: cart.store,
+          storeId: cart.storeId,
+          status: cart.status,
+          issues: cart.issues
+          // Removed lastMaintenance field as it doesn't exist in the database schema
         })
         .eq('id', cart.id)
         .select()
@@ -134,12 +128,15 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
 }
 
 // Create a new cart in Supabase
-export const createCart = async (cart: Omit<CartRow, "id" | "created_at" | "updated_at">): Promise<CartRow> => {
+export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
   try {
+    // Remove lastMaintenance from cart data before sending to Supabase
+    const { lastMaintenance, ...cartData } = cart;
+    
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
-        .insert([cart])
+        .insert([cartData])
         .select()
         .single()
     )

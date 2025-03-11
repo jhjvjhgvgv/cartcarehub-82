@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -50,12 +51,9 @@ export const useCarts = () => {
             const cart = carts.find(c => c.id === update.id)
             if (!cart) return null
             
-            // Remove lastMaintenance field before updating
-            const { lastMaintenance, ...updateData } = update
-            
             return updateCart({
               ...cart,
-              ...updateData,
+              ...update,
               issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
             })
           })
@@ -71,9 +69,6 @@ export const useCarts = () => {
           throw new Error(`Selected store "${data.store}" is not in your managed stores list`)
         }
 
-        // Set a default lastMaintenance value if none exists
-        const currentDate = new Date().toISOString().split('T')[0]
-
         if (editingCart) {
           if (editingCart.id.includes(',')) {
             // Handle multiple cart edit
@@ -81,9 +76,6 @@ export const useCarts = () => {
             const updatePromises = cartIds.map(id => {
               const cart = carts.find(c => c.id === id)
               if (!cart) return null
-              
-              // Remove lastMaintenance field before updating
-              const { lastMaintenance, ...updateData } = data
               
               return updateCart({
                 ...cart,
@@ -105,7 +97,6 @@ export const useCarts = () => {
             storeId: store.id,
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-            lastMaintenance: data.lastMaintenance || currentDate, // Ensure lastMaintenance is provided
           })
           return
         }
@@ -116,14 +107,13 @@ export const useCarts = () => {
           throw new Error("A cart with this QR code already exists")
         }
 
-        // Create new cart with required lastMaintenance field
+        // Create new cart without lastMaintenance field
         await createCart({
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-          lastMaintenance: data.lastMaintenance || currentDate, // Ensure lastMaintenance is always set
         })
       } catch (error) {
         throw error

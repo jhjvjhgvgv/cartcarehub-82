@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -110,7 +111,6 @@ export function CartDialog({
                   store: managedStores[0]?.name || "",
                   status: "active",
                   issues: "",
-                  lastMaintenance: new Date().toISOString().split('T')[0],
                 }}
               />
             )}

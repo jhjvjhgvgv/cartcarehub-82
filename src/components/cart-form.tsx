@@ -7,7 +7,6 @@ import { Form } from "@/components/ui/form"
 import { RfidField } from "./cart-form/RfidField"
 import { StoreField } from "./cart-form/StoreField"
 import { StatusField } from "./cart-form/StatusField"
-import { MaintenanceField } from "./cart-form/MaintenanceField"
 import { IssuesField } from "./cart-form/IssuesField"
 import { cartFormSchema, CartFormValues } from "./cart-form/types"
 import { Card } from "./ui/card"
@@ -41,7 +40,6 @@ export function CartForm({
       rfidTag: "",
       store: "",
       status: "active",
-      lastMaintenance: new Date().toISOString().split("T")[0],
       issues: "",
     },
   })
@@ -105,7 +103,6 @@ export function CartForm({
           />
           <StoreField form={form} />
           <StatusField form={form} />
-          <MaintenanceField form={form} />
           <IssuesField form={form} />
         </Card>
 

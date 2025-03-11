@@ -1,3 +1,4 @@
+
 import React from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -52,7 +53,6 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                       rfidTag: originalCart?.rfidTag || "",
                       store: originalCart?.store || "",
                       status: originalCart?.status || "active",
-                      lastMaintenance: originalCart?.lastMaintenance || "",
                       issues: originalCart?.issues ? originalCart.issues.join("\n") : "",
                     }}
                     onSubmit={(data) => onSubmit({ ...data, id: cartId })}
@@ -72,7 +72,6 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
             rfidTag: rfidDisplay,
             store: editingCart?.store || "",
             status: editingCart?.status || "active",
-            lastMaintenance: editingCart?.lastMaintenance || "",
             issues: editingCart?.issues ? editingCart.issues.join("\n") : "",
           }}
           onSubmit={onSubmit}
