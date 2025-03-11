@@ -66,7 +66,7 @@ const retryOperation = async <T>(
 // Convert from database row to application Cart
 const mapToCart = (row: CartRow): Cart => ({
   id: row.id,
-  qr_code: row.rfidTag, // Map rfidTag from DB to qr_code for our app
+  qr_code: row.qr_code, // Updated: use qr_code directly instead of rfidTag
   store: row.store,
   storeId: row.storeId,
   status: row.status,
@@ -121,11 +121,19 @@ export const fetchCarts = async (): Promise<Cart[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
+    console.log("Updating cart with data:", {
+      qr_code: cart.qr_code,
+      store: cart.store,
+      storeId: cart.storeId,
+      status: cart.status,
+      issues: cart.issues,
+    });
+
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
         .update({
-          rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
+          qr_code: cart.qr_code, // Updated: use qr_code directly
           store: cart.store,
           storeId: cart.storeId,
           status: cart.status,
@@ -148,7 +156,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
 export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
     const cartData = {
-      rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
+      qr_code: cart.qr_code, // Updated: use qr_code directly
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
