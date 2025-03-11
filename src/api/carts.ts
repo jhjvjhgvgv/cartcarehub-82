@@ -1,4 +1,3 @@
-
 import { Cart } from "@/types/cart"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/types/supabase"
@@ -66,9 +65,9 @@ const retryOperation = async <T>(
 // Convert from database row to application Cart
 const mapToCart = (row: CartRow): Cart => ({
   id: row.id,
-  qr_code: row.qr_code, // Updated: use qr_code directly instead of rfidTag
+  qr_code: row.qr_code,
   store: row.store,
-  storeId: row.storeId,
+  storeId: row.store, // Map store to storeId as a fallback since storeId doesn't exist in DB
   status: row.status,
   lastMaintenance: row.lastMaintenance || "",
   issues: row.issues,
@@ -124,7 +123,6 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
     console.log("Updating cart with data:", {
       qr_code: cart.qr_code,
       store: cart.store,
-      storeId: cart.storeId,
       status: cart.status,
       issues: cart.issues,
     });
@@ -133,9 +131,8 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
       supabase
         .from('carts')
         .update({
-          qr_code: cart.qr_code, // Updated: use qr_code directly
-          store: cart.store,
-          storeId: cart.storeId,
+          qr_code: cart.qr_code,
+          store: cart.store, // Only use store, not storeId
           status: cart.status,
           issues: cart.issues,
         })
@@ -156,9 +153,8 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
 export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
     const cartData = {
-      qr_code: cart.qr_code, // Updated: use qr_code directly
-      store: cart.store,
-      storeId: cart.storeId,
+      qr_code: cart.qr_code,
+      store: cart.store, // Only use store, not storeId
       status: cart.status,
       issues: cart.issues,
     };

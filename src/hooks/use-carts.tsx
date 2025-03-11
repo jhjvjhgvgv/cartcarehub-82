@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -11,7 +10,6 @@ export const useCarts = () => {
   const queryClient = useQueryClient()
   const [isRetrying, setIsRetrying] = useState(false)
 
-  // Query for fetching carts with enhanced error handling
   const { data: carts = [], isLoading, error, refetch } = useQuery({
     queryKey: ["carts"],
     queryFn: fetchCarts,
@@ -19,7 +17,6 @@ export const useCarts = () => {
     retryDelay: 1000,
   })
 
-  // Function to manually retry fetching carts
   const retryFetchCarts = async () => {
     setIsRetrying(true)
     try {
@@ -39,14 +36,12 @@ export const useCarts = () => {
     }
   }
 
-  // Mutation for creating/updating carts
   const { mutate: handleSubmit } = useMutation({
     mutationFn: async (params: CartMutationParams) => {
       const { data, editingCart, managedStores } = params
 
       try {
         if (Array.isArray(data)) {
-          // Handle bulk updates
           const updatePromises = data.map(update => {
             const cart = carts.find(c => c.id === update.id)
             if (!cart) return null
@@ -62,7 +57,6 @@ export const useCarts = () => {
           return
         }
 
-        // Ensure proper store validation
         const store = managedStores.find(s => s.name === data.store)
         if (!store) {
           console.error("Store validation failed. Selected store:", data.store, "Available stores:", managedStores)
@@ -71,7 +65,6 @@ export const useCarts = () => {
 
         if (editingCart) {
           if (editingCart.id.includes(',')) {
-            // Handle multiple cart edit
             const cartIds = editingCart.id.split(',')
             const updatePromises = cartIds.map(id => {
               const cart = carts.find(c => c.id === id)
@@ -83,7 +76,6 @@ export const useCarts = () => {
                 storeId: store.id,
                 status: data.status,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-                // lastMaintenance field is not needed as it doesn't exist in the database
               })
             })
 
@@ -91,32 +83,28 @@ export const useCarts = () => {
             return
           }
 
-          // Handle single cart update
           await updateCart({
             ...editingCart,
             store: data.store,
             storeId: store.id,
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-            // lastMaintenance field is not needed as it doesn't exist in the database
           })
           return
         }
 
-        // Handle adding new cart
         const existingCart = carts.find(cart => cart.qr_code === data.qr_code)
         if (existingCart) {
           throw new Error("A cart with this QR code already exists")
         }
 
-        // Create new cart without the lastMaintenance field
         await createCart({
           qr_code: data.qr_code,
           store: data.store,
           storeId: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-          lastMaintenance: "", // Keep this as it's part of the Cart type, but it won't be sent to the database
+          lastMaintenance: "",
         })
       } catch (error) {
         throw error
@@ -138,7 +126,6 @@ export const useCarts = () => {
     },
   })
 
-  // Mutation for deleting carts
   const { mutate: handleDeleteCart } = useMutation({
     mutationFn: deleteCart,
     onSuccess: () => {

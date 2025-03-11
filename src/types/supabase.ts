@@ -13,9 +13,9 @@ export interface Database {
       carts: {
         Row: {
           id: string
-          qr_code: string  // Updated: Changed from rfidTag to qr_code
+          qr_code: string
           store: string
-          storeId: string
+          // Removed storeId as it appears to not exist in the database
           status: "active" | "maintenance" | "retired"
           lastMaintenance: string
           issues: string[]
@@ -23,9 +23,9 @@ export interface Database {
           updated_at: string | null
         }
         Insert: {
-          qr_code: string  // Updated: Changed from rfidTag to qr_code
+          qr_code: string
           store: string
-          storeId: string
+          // Removed storeId as it appears to not exist in the database
           status: "active" | "maintenance" | "retired"
           lastMaintenance: string
           issues: string[]
@@ -34,9 +34,9 @@ export interface Database {
           updated_at?: string | null
         }
         Update: {
-          qr_code?: string  // Updated: Changed from rfidTag to qr_code
+          qr_code?: string
           store?: string
-          storeId?: string
+          // Removed storeId as it appears to not exist in the database
           status?: "active" | "maintenance" | "retired"
           lastMaintenance?: string
           issues?: string[]

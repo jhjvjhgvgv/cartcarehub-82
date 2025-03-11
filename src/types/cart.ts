@@ -1,11 +1,11 @@
 
 export interface Cart {
   id: string
-  qr_code: string // Change from rfidTag to qr_code to match database column
+  qr_code: string
   store: string
-  storeId: string
+  storeId: string // We'll keep this for backward compatibility with the UI
   status: "active" | "maintenance" | "retired"
-  lastMaintenance?: string // Keep this optional
+  lastMaintenance?: string
   issues: string[]
-  originalCarts?: Cart[] // Keep this optional property for multiple cart editing
+  originalCarts?: Cart[]
 }
