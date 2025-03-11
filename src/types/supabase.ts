@@ -13,7 +13,7 @@ export interface Database {
       carts: {
         Row: {
           id: string
-          rfidTag: string
+          rfidTag: string  // Keep this as rfidTag to match the actual database column
           store: string
           storeId: string
           status: "active" | "maintenance" | "retired"
@@ -23,7 +23,7 @@ export interface Database {
           updated_at: string | null
         }
         Insert: {
-          rfidTag: string
+          rfidTag: string  // Keep this as rfidTag to match the actual database column
           store: string
           storeId: string
           status: "active" | "maintenance" | "retired"
@@ -34,7 +34,7 @@ export interface Database {
           updated_at?: string | null
         }
         Update: {
-          rfidTag?: string
+          rfidTag?: string  // Keep this as rfidTag to match the actual database column
           store?: string
           storeId?: string
           status?: "active" | "maintenance" | "retired"

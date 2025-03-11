@@ -76,7 +76,12 @@ export const fetchCarts = async (): Promise<CartRow[]> => {
     }
     
     console.log(`Successfully fetched ${data?.length || 0} carts`)
-    return data ?? []
+    
+    // Map the data to match our Cart type
+    return data?.map(item => ({
+      ...item,
+      qr_code: item.rfidTag // Map rfidTag from DB to qr_code for our app
+    })) ?? []
   } catch (error: any) {
     console.error('Error fetching carts:', error)
     
@@ -103,7 +108,7 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
       supabase
         .from('carts')
         .update({
-          qr_code: cart.qr_code, // Updated from rfidTag to qr_code
+          rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
           store: cart.store,
           storeId: cart.storeId,
           status: cart.status,
@@ -117,7 +122,10 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
 
     if (error) throw error
     if (!data) throw new Error("Failed to update cart")
-    return data
+    return {
+      ...data,
+      qr_code: data.rfidTag // Map rfidTag from DB to qr_code for our app
+    }
   } catch (error: any) {
     console.error('Error updating cart:', error)
     if (error.message?.includes('Failed to fetch') || error.message?.includes('timed out')) {
@@ -132,7 +140,7 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
   try {
     // Only include fields that exist in the database
     const cartData = {
-      qr_code: cart.qr_code, // Updated from rfidTag to qr_code
+      rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
@@ -149,7 +157,10 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
 
     if (error) throw error
     if (!data) throw new Error("Failed to create cart")
-    return data
+    return {
+      ...data,
+      qr_code: data.rfidTag // Map rfidTag from DB to qr_code for our app
+    }
   } catch (error: any) {
     console.error('Error creating cart:', error)
     if (error.message?.includes('Failed to fetch') || error.message?.includes('timed out')) {

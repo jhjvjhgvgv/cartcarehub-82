@@ -26,6 +26,7 @@ const Carts = () => {
     store: "",
   })
 
+  // Use the filtered carts which have qr_code from the Cart type
   const filteredCarts = filterCarts(carts, filters)
   const activeCarts = filteredCarts.filter((cart) => cart.status === "active").length
   const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "maintenance").length
