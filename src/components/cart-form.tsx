@@ -10,7 +10,7 @@ import { StatusField } from "./cart-form/StatusField"
 import { IssuesField } from "./cart-form/IssuesField"
 import { cartFormSchema, CartFormValues } from "./cart-form/types"
 import { Card } from "./ui/card"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Loader2 } from "lucide-react"
 import { Cart } from "@/types/cart"
 
 interface CartFormProps {
@@ -22,6 +22,7 @@ interface CartFormProps {
   rfidPlaceholder?: string
   carts?: Cart[]
   onDelete?: (cartId: string) => void
+  disabled?: boolean
 }
 
 export function CartForm({ 
@@ -33,6 +34,7 @@ export function CartForm({
   rfidPlaceholder = "Enter QR code",
   carts = [],
   onDelete = () => {},
+  disabled = false,
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
@@ -95,15 +97,15 @@ export function CartForm({
         <Card className="p-4 space-y-4">
           <RfidField 
             form={form} 
-            disabled={disableRfidTag}
+            disabled={disableRfidTag || disabled}
             placeholder={rfidPlaceholder}
             carts={carts}
             onSubmit={onSubmit}
             onDelete={onDelete}
           />
-          <StoreField form={form} />
-          <StatusField form={form} />
-          <IssuesField form={form} />
+          <StoreField form={form} disabled={disabled} />
+          <StatusField form={form} disabled={disabled} />
+          <IssuesField form={form} disabled={disabled} />
         </Card>
 
         <div className="flex justify-end gap-4">
@@ -112,10 +114,20 @@ export function CartForm({
             variant="outline" 
             onClick={onCancel}
             className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+            disabled={disabled}
           >
             Cancel
           </Button>
-          <Button type="submit">Save Changes</Button>
+          <Button type="submit" disabled={disabled}>
+            {disabled ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
+          </Button>
         </div>
       </form>
     </Form>

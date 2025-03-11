@@ -10,9 +10,10 @@ interface SingleCartEditProps {
   onSubmit: (data: any) => void
   onCancel: () => void
   onDelete: (cartId: string) => void
+  disabled?: boolean
 }
 
-export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCartEditProps) {
+export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete, disabled = false }: SingleCartEditProps) {
   return (
     <div>
       <div className="flex justify-end mb-4">
@@ -21,6 +22,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
           size="sm"
           onClick={() => onDelete(cart.id)}
           className="h-8 w-8 p-0 hover:bg-red-50"
+          disabled={disabled}
         >
           <Trash2Icon className="h-4 w-4 text-red-500" />
         </Button>
@@ -36,6 +38,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
         onCancel={onCancel}
         disableRfidTag={false}
         rfidPlaceholder={cart.qr_code} // Updated from rfidTag to qr_code
+        disabled={disabled}
       />
     </div>
   )

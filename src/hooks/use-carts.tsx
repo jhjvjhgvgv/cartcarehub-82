@@ -6,7 +6,7 @@ import { useFetchCarts, useCartSubmit, useCartDelete } from "./cart-hooks"
 export const useCarts = () => {
   // Use the individual hooks
   const { carts, isLoading, error, isRetrying, retryFetchCarts } = useFetchCarts()
-  const { handleSubmit } = useCartSubmit()
+  const { handleSubmit, isPending: isSubmitting } = useCartSubmit()
   const { handleDeleteCart } = useCartDelete()
 
   // Return a unified API that matches the original hook
@@ -18,5 +18,6 @@ export const useCarts = () => {
     retryFetchCarts,
     handleSubmit,
     handleDeleteCart,
+    isSubmitting,
   }
 }

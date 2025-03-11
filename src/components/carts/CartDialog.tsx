@@ -14,6 +14,7 @@ interface CartDialogProps {
   onDelete: (cartId: string) => void
   editingCart: Cart | null
   managedStores: Array<{ id: string; name: string }>
+  isSubmitting?: boolean
 }
 
 export function CartDialog({
@@ -23,6 +24,7 @@ export function CartDialog({
   onDelete,
   editingCart,
   managedStores,
+  isSubmitting = false,
 }: CartDialogProps) {
   const { toast } = useToast()
   const isMultipleEdit = editingCart?.id?.includes(",")
@@ -70,7 +72,7 @@ export function CartDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={isSubmitting ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <div className="max-h-[80vh] overflow-y-auto px-1">
           <DialogTitle>
@@ -94,6 +96,7 @@ export function CartDialog({
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
                 onDelete={onDelete}
+                disabled={isSubmitting}
               />
             ) : editingCart ? (
               <SingleCartEdit
@@ -101,6 +104,7 @@ export function CartDialog({
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
                 onDelete={onDelete}
+                disabled={isSubmitting}
               />
             ) : (
               <CartForm
@@ -112,6 +116,7 @@ export function CartDialog({
                   status: "active",
                   issues: "",
                 }}
+                disabled={isSubmitting}
               />
             )}
           </div>

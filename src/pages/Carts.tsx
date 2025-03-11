@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { CartStats } from "@/components/carts/CartStats"
@@ -16,7 +17,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const Carts = () => {
   console.log("Available managed stores:", managedStores)
-  const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart } = useCarts()
+  const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart, isSubmitting } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -36,6 +37,9 @@ const Carts = () => {
   }
 
   const handleDialogClose = (open: boolean) => {
+    // Don't allow closing the dialog while submitting
+    if (isSubmitting && !open) return;
+    
     setIsAddDialogOpen(open)
     if (!open) {
       setEditingCart(null)
@@ -44,7 +48,7 @@ const Carts = () => {
 
   const handleSubmitDialog = (data: any) => {
     handleSubmit({ data, editingCart, managedStores })
-    handleDialogClose(false)
+    // Dialog will be closed by the onSuccess callback
   }
 
   const getErrorMessage = (error: any) => {
@@ -168,6 +172,7 @@ const Carts = () => {
           onDelete={handleDeleteCart}
           editingCart={editingCart}
           managedStores={managedStores}
+          isSubmitting={isSubmitting}
         />
       </div>
     </DashboardLayout>

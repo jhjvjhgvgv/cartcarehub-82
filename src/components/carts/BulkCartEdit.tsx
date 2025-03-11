@@ -13,9 +13,17 @@ interface BulkCartEditProps {
   onSubmit: (data: any) => void
   onCancel: () => void
   onDelete: (cartId: string) => void
+  disabled?: boolean
 }
 
-export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelete }: BulkCartEditProps) {
+export function BulkCartEdit({ 
+  editingCart, 
+  cartIds, 
+  onSubmit, 
+  onCancel, 
+  onDelete,
+  disabled = false
+}: BulkCartEditProps) {
   // Get the original cart if only one is selected
   const singleCart = cartIds.length === 1 ? editingCart?.originalCarts?.find(cart => cart.id === cartIds[0]) : null
   const rfidDisplay = singleCart?.qr_code || "Multiple QR Codes" // Updated from rfidTag to qr_code
@@ -44,6 +52,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                       size="sm"
                       onClick={() => onDelete(cartId)}
                       className="h-8 w-8 p-0 hover:bg-red-50"
+                      disabled={disabled}
                     >
                       <Trash2Icon className="h-4 w-4 text-red-500" />
                     </Button>
@@ -59,6 +68,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
                     onCancel={onCancel}
                     disableRfidTag={true}
                     rfidPlaceholder={originalCart?.qr_code} // Updated from rfidTag to qr_code
+                    disabled={disabled}
                   />
                 </div>
               )
@@ -79,6 +89,7 @@ export function BulkCartEdit({ editingCart, cartIds, onSubmit, onCancel, onDelet
           disableRfidTag={true}
           isBulkEdit={true}
           rfidPlaceholder={rfidPlaceholder}
+          disabled={disabled}
         />
       </TabsContent>
     </Tabs>

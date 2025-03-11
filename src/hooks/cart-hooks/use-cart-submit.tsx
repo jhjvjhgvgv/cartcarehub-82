@@ -9,7 +9,7 @@ export const useCartSubmit = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  const { mutate: handleSubmit } = useMutation({
+  const { mutate: handleSubmit, isPending } = useMutation({
     mutationFn: async (params: CartMutationParams) => {
       const { data, editingCart, managedStores } = params
 
@@ -27,7 +27,7 @@ export const useCartSubmit = () => {
           })
 
           await Promise.all(updatePromises.filter(Boolean))
-          return
+          return { success: true, message: "Carts have been updated successfully." }
         }
 
         const store = managedStores.find(s => s.name === data.store)
@@ -59,7 +59,7 @@ export const useCartSubmit = () => {
             })
 
             await Promise.all(updatePromises.filter(Boolean))
-            return
+            return { success: true, message: "Multiple carts have been updated successfully." }
           }
 
           // Ensure we have lastMaintenance for single cart update
@@ -75,7 +75,7 @@ export const useCartSubmit = () => {
             lastMaintenance: lastMaintenance,
             last_maintenance: lastMaintenance, // Include both versions for compatibility
           })
-          return
+          return { success: true, message: "Cart has been updated successfully." }
         }
 
         const existingCart = queryClient.getQueryData<Cart[]>(["carts"])?.find(cart => cart.qr_code === data.qr_code)
@@ -96,15 +96,16 @@ export const useCartSubmit = () => {
           lastMaintenance: data.lastMaintenance || now,
           last_maintenance: data.lastMaintenance || now, // Include both versions for compatibility
         })
+        return { success: true, message: "New cart has been created successfully." }
       } catch (error) {
         throw error
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["carts"] })
       toast({
         title: "Success",
-        description: "Cart has been updated successfully.",
+        description: result.message,
       })
     },
     onError: (error: Error) => {
@@ -116,5 +117,5 @@ export const useCartSubmit = () => {
     },
   })
 
-  return { handleSubmit }
+  return { handleSubmit, isPending }
 }
