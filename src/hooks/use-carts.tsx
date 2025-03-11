@@ -118,13 +118,14 @@ export const useCarts = () => {
         // Remove lastMaintenance field before creating cart
         const { lastMaintenance, ...createData } = data
         
-        // Create new cart without lastMaintenance field
+        // Create new cart with a default lastMaintenance field value
         await createCart({
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+          lastMaintenance: new Date().toISOString().split('T')[0] // Add default date for lastMaintenance
         })
       } catch (error) {
         throw error

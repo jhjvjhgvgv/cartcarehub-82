@@ -99,16 +99,22 @@ export const fetchCarts = async (): Promise<CartRow[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<CartRow> => {
   try {
+    // Ensure cart has lastMaintenance field, or set default if missing
+    const cartWithMaintenance = {
+      ...cart,
+      lastMaintenance: cart.lastMaintenance || new Date().toISOString().split('T')[0]
+    };
+
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
         .update({
-          rfidTag: cart.rfidTag,
-          store: cart.store,
-          storeId: cart.storeId,
-          status: cart.status,
-          lastMaintenance: cart.lastMaintenance,
-          issues: cart.issues
+          rfidTag: cartWithMaintenance.rfidTag,
+          store: cartWithMaintenance.store,
+          storeId: cartWithMaintenance.storeId,
+          status: cartWithMaintenance.status,
+          lastMaintenance: cartWithMaintenance.lastMaintenance,
+          issues: cartWithMaintenance.issues
         })
         .eq('id', cart.id)
         .select()
