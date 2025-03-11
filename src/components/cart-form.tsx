@@ -37,7 +37,7 @@ export function CartForm({
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
     defaultValues: initialData || {
-      rfidTag: "",
+      qr_code: "",
       store: "",
       status: "active",
       issues: "",
@@ -67,8 +67,8 @@ export function CartForm({
       }
     })
 
-    if (isBulkEdit || (disableRfidTag && initialData?.rfidTag)) {
-      delete modifiedValues.rfidTag
+    if (isBulkEdit || (disableRfidTag && initialData?.qr_code)) {
+      delete modifiedValues.qr_code
     }
 
     onSubmit({

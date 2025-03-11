@@ -18,7 +18,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   const { carts, handleSubmit, handleDeleteCart } = useCarts()
 
   const handleQRCodeDetected = (qrCode: string) => {
-    const existingCart = carts.find(cart => cart.rfidTag === qrCode)
+    const existingCart = carts.find(cart => cart.qr_code === qrCode)
     
     if (existingCart) {
       toast({

@@ -21,7 +21,7 @@ export const prepareMultipleCartEdit = (selectedCarts: Cart[]): Cart => {
   const store = managedStores.find(s => s.name === commonValues.store)
   return {
     id: selectedCarts.map(cart => cart.id).join(","),
-    rfidTag: "Multiple Carts",
+    qr_code: "Multiple Carts",
     storeId: store?.id || "",
     ...commonValues,
     originalCarts: selectedCarts,
@@ -34,7 +34,7 @@ export const filterCarts = (
 ) => {
   return carts.filter((cart) => {
     const isInManagedStore = managedStores.some(store => store.id === cart.storeId)
-    const matchRfidTag = cart.rfidTag.toLowerCase().includes(filters.rfidTag.toLowerCase())
+    const matchRfidTag = cart.qr_code.toLowerCase().includes(filters.rfidTag.toLowerCase())
     const matchStatus = !filters.status || cart.status === filters.status
     const matchStore = !filters.store || cart.store === filters.store
     return isInManagedStore && matchRfidTag && matchStatus && matchStore

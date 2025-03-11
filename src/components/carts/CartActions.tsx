@@ -30,7 +30,7 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
     
     toast({
       title: "Cart Status Updated",
-      description: `Cart ${cart.rfidTag} has been marked for maintenance.`,
+      description: `Cart ${cart.qr_code} has been marked for maintenance.`,
     })
   }
 

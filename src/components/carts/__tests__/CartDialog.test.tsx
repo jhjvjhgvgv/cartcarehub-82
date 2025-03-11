@@ -41,7 +41,7 @@ describe('CartDialog', () => {
   it('shows edit cart dialog when editing cart is provided', () => {
     const editingCart: Cart = {
       id: 'CART-001',
-      rfidTag: 'QR-123',
+      qr_code: 'QR-123',
       store: 'SuperMart Downtown',
       storeId: 'store1',
       status: 'active',
@@ -58,7 +58,7 @@ describe('CartDialog', () => {
   it('shows multiple cart edit dialog when editing multiple carts', () => {
     const editingCart: Cart = {
       id: 'CART-001,CART-002',
-      rfidTag: 'Multiple Carts',
+      qr_code: 'Multiple Carts',
       store: 'SuperMart Downtown',
       storeId: 'store1',
       status: 'active',

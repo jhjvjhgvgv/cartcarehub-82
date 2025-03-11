@@ -27,7 +27,7 @@ export function RfidField({
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="rfidTag"
+        name="qr_code"
         render={({ field }) => (
           <FormItem>
             <FormLabel>QR Code</FormLabel>
@@ -47,7 +47,7 @@ export function RfidField({
       {!disabled && (
         <QRScanner
           onQRCodeDetected={(qrCode) => {
-            form.setValue("rfidTag", qrCode)
+            form.setValue("qr_code", qrCode)
           }}
           carts={carts}
           onSubmit={onSubmit}

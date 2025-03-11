@@ -1,3 +1,4 @@
+
 import React from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
@@ -13,7 +14,7 @@ const getCartDetails = (cartId: string): Cart => {
   const mockCarts: Cart[] = [
     {
       id: "CART-001",
-      rfidTag: "QR-123456789",
+      qr_code: "QR-123456789",
       store: "SuperMart Downtown",
       storeId: "store1",
       status: "active",
@@ -22,7 +23,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-002",
-      rfidTag: "QR-987654321",
+      qr_code: "QR-987654321",
       store: "SuperMart Downtown",
       storeId: "store1",
       status: "maintenance",
@@ -31,7 +32,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-003",
-      rfidTag: "QR-456789123",
+      qr_code: "QR-456789123",
       store: "FreshMart Heights",
       storeId: "store2",
       status: "active",
@@ -40,7 +41,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-004",
-      rfidTag: "QR-789123456",
+      qr_code: "QR-789123456",
       store: "FreshMart Heights",
       storeId: "store2",
       status: "retired",
@@ -49,7 +50,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-005",
-      rfidTag: "QR-321654987",
+      qr_code: "QR-321654987",
       store: "Value Grocery West",
       storeId: "store3",
       status: "active",
@@ -58,7 +59,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-006",
-      rfidTag: "QR-654987321",
+      qr_code: "QR-654987321",
       store: "Value Grocery West",
       storeId: "store3",
       status: "maintenance",
@@ -67,7 +68,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-007",
-      rfidTag: "QR-147258369",
+      qr_code: "QR-147258369",
       store: "SuperMart Downtown",
       storeId: "store1",
       status: "active",
@@ -76,7 +77,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-008",
-      rfidTag: "QR-258369147",
+      qr_code: "QR-258369147",
       store: "FreshMart Heights",
       storeId: "store2",
       status: "active",
@@ -85,7 +86,7 @@ const getCartDetails = (cartId: string): Cart => {
     },
     {
       id: "CART-009",
-      rfidTag: "QR-369147258",
+      qr_code: "QR-369147258",
       store: "Value Grocery West",
       storeId: "store3",
       status: "active",
@@ -151,7 +152,7 @@ export default function CartDetails() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">QR Code</p>
-                  <p className="text-lg">{cart.rfidTag}</p>
+                  <p className="text-lg">{cart.qr_code}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Store</p>

@@ -1,3 +1,4 @@
+
 import { useParams, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
@@ -81,7 +82,7 @@ const Store = () => {
             {editingCart && (
               <CartForm
                 initialData={{
-                  rfidTag: editingCart.cartNumber,
+                  qr_code: editingCart.cartNumber,
                   store: storeData.name,
                   status: editingCart.status,
                   lastMaintenance: editingCart.lastMaintenance,

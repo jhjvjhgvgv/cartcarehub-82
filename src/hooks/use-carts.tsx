@@ -102,14 +102,14 @@ export const useCarts = () => {
         }
 
         // Handle adding new cart
-        const existingCart = carts.find(cart => cart.qr_code === data.qr_code) // Updated from rfidTag to qr_code
+        const existingCart = carts.find(cart => cart.qr_code === data.qr_code)
         if (existingCart) {
           throw new Error("A cart with this QR code already exists")
         }
 
         // Create new cart
         await createCart({
-          qr_code: data.qr_code, // Updated from rfidTag to qr_code
+          qr_code: data.qr_code,
           store: data.store,
           storeId: store.id,
           status: data.status,

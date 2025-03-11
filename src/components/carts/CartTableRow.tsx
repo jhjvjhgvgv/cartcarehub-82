@@ -1,3 +1,4 @@
+
 import { TableCell, TableRow } from "@/components/ui/table"
 import { Cart } from "@/types/cart"
 import { CartStatusBadge } from "./CartStatusBadge"
@@ -44,7 +45,7 @@ export function CartTableRow({
       </TableCell>
       <TableCell className="py-4 px-4">
         <div className="grid gap-1">
-          <div className="font-medium">{cart.rfidTag}</div>
+          <div className="font-medium">{cart.qr_code}</div>
           <div className="sm:hidden text-sm text-muted-foreground">{cart.store}</div>
           <div className="sm:hidden text-sm text-muted-foreground">Last Maintenance: {cart.lastMaintenance}</div>
         </div>
