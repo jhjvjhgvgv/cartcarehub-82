@@ -31,7 +31,7 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
           store: cart.store || "",
           status: cart.status || "active",
           issues: cart.issues ? cart.issues.join("\n") : "",
-          // Removed lastMaintenance field
+          lastMaintenance: cart.lastMaintenance || new Date().toISOString().split('T')[0], // Include lastMaintenance
         }}
         onSubmit={onSubmit}
         onCancel={onCancel}

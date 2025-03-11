@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -36,7 +35,6 @@ export function CartDialog({
     console.log('Dialog handleSubmit called with:', data)
     console.log('Using managedStores:', managedStores)
     
-    // Validate that data contains required fields before proceeding
     if (!data.store) {
       console.error("Missing store selection in form data:", data)
       toast({
@@ -59,10 +57,7 @@ export function CartDialog({
         return
       }
       
-      // Remove lastMaintenance from data since it doesn't exist in the database schema
-      const { lastMaintenance, ...dataWithoutMaintenance } = data
-      
-      onSubmit({...dataWithoutMaintenance, managedStores})
+      onSubmit({...data, managedStores})
     } catch (error) {
       console.error('Error in dialog submit:', error)
       toast({
@@ -112,10 +107,10 @@ export function CartDialog({
                 onCancel={() => onOpenChange(false)}
                 initialData={{
                   rfidTag: "",
-                  store: managedStores[0]?.name || "", // Pre-select the first store by default
+                  store: managedStores[0]?.name || "",
                   status: "active",
                   issues: "",
-                  // Removing lastMaintenance field from the form
+                  lastMaintenance: new Date().toISOString().split('T')[0],
                 }}
               />
             )}
