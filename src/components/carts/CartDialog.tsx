@@ -36,6 +36,17 @@ export function CartDialog({
     console.log('Dialog handleSubmit called with:', data)
     console.log('Using managedStores:', managedStores)
     
+    // Validate that data contains required fields before proceeding
+    if (!data.store) {
+      console.error("Missing store selection in form data:", data)
+      toast({
+        title: "Error",
+        description: "Please select a store from the dropdown.",
+        variant: "destructive",
+      })
+      return
+    }
+    
     try {
       const store = managedStores.find((s) => s.name === data.store)
       if (!store) {
@@ -96,6 +107,13 @@ export function CartDialog({
               <CartForm
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
+                initialData={{
+                  rfidTag: "",
+                  store: managedStores[0]?.name || "", // Pre-select the first store by default
+                  status: "active",
+                  lastMaintenance: new Date().toISOString().split("T")[0],
+                  issues: "",
+                }}
               />
             )}
           </div>
