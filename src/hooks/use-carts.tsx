@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -49,9 +50,13 @@ export const useCarts = () => {
           const updatePromises = data.map(update => {
             const cart = carts.find(c => c.id === update.id)
             if (!cart) return null
+            
+            // Remove lastMaintenance field before updating
+            const { lastMaintenance, ...updateData } = update
+            
             return updateCart({
               ...cart,
-              ...update,
+              ...updateData,
               issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
             })
           })
@@ -74,12 +79,15 @@ export const useCarts = () => {
             const updatePromises = cartIds.map(id => {
               const cart = carts.find(c => c.id === id)
               if (!cart) return null
+              
+              // Remove lastMaintenance field before updating
+              const { lastMaintenance, ...updateData } = data
+              
               return updateCart({
                 ...cart,
                 store: data.store,
                 storeId: store.id,
                 status: data.status,
-                lastMaintenance: data.lastMaintenance,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
               })
             })
@@ -88,13 +96,14 @@ export const useCarts = () => {
             return
           }
 
-          // Handle single cart update
+          // Handle single cart update, removing lastMaintenance field
+          const { lastMaintenance, ...updateData } = data
+          
           await updateCart({
             ...editingCart,
             store: data.store,
             storeId: store.id,
             status: data.status,
-            lastMaintenance: data.lastMaintenance,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
           })
           return
@@ -106,13 +115,15 @@ export const useCarts = () => {
           throw new Error("A cart with this QR code already exists")
         }
 
-        // Create new cart
+        // Remove lastMaintenance field before creating cart
+        const { lastMaintenance, ...createData } = data
+        
+        // Create new cart without lastMaintenance field
         await createCart({
           rfidTag: data.rfidTag,
           store: data.store,
           storeId: store.id,
           status: data.status,
-          lastMaintenance: data.lastMaintenance || new Date().toISOString().split('T')[0],
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
         })
       } catch (error) {

@@ -59,7 +59,10 @@ export function CartDialog({
         return
       }
       
-      onSubmit({...data, managedStores})
+      // Remove lastMaintenance from data since it doesn't exist in the database schema
+      const { lastMaintenance, ...dataWithoutMaintenance } = data
+      
+      onSubmit({...dataWithoutMaintenance, managedStores})
     } catch (error) {
       console.error('Error in dialog submit:', error)
       toast({
@@ -111,8 +114,8 @@ export function CartDialog({
                   rfidTag: "",
                   store: managedStores[0]?.name || "", // Pre-select the first store by default
                   status: "active",
-                  lastMaintenance: new Date().toISOString().split("T")[0],
                   issues: "",
+                  // Removing lastMaintenance field from the form
                 }}
               />
             )}

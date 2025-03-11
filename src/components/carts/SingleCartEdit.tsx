@@ -1,3 +1,4 @@
+
 import React from "react"
 import { CartForm } from "@/components/cart-form"
 import { Button } from "@/components/ui/button"
@@ -29,8 +30,8 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete }: SingleCar
           rfidTag: cart.rfidTag || "",
           store: cart.store || "",
           status: cart.status || "active",
-          lastMaintenance: cart.lastMaintenance || "",
           issues: cart.issues ? cart.issues.join("\n") : "",
+          // Removed lastMaintenance field
         }}
         onSubmit={onSubmit}
         onCancel={onCancel}
