@@ -10,11 +10,12 @@ import { Cart } from "@/types/cart"
 import { CartFilters as CartFiltersType } from "@/components/cart-filters"
 import { managedStores } from "@/constants/stores"
 import { filterCarts, prepareMultipleCartEdit } from "@/utils/cartUtils"
-import { AlertCircle, Loader2 } from "lucide-react"
+import { AlertCircle, Loader2, WifiOff, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 
 const Carts = () => {
-  const { carts, isLoading, error, handleSubmit, handleDeleteCart } = useCarts()
+  const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
   const [filters, setFilters] = useState<CartFiltersType>({
@@ -44,17 +45,57 @@ const Carts = () => {
     handleDialogClose(false)
   }
 
+  const getErrorMessage = (error: any) => {
+    if (error instanceof Error) {
+      if (error.message.includes('Unable to connect')) {
+        return (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-2">
+              <WifiOff className="h-5 w-5 text-destructive mt-0.5" />
+              <div>
+                <p className="font-medium">Connection Error</p>
+                <p>{error.message}</p>
+              </div>
+            </div>
+            <Button 
+              onClick={retryFetchCarts} 
+              disabled={isRetrying}
+              className="flex items-center gap-2 w-fit"
+            >
+              {isRetrying ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Reconnecting...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Connection
+                </>
+              )}
+            </Button>
+          </div>
+        )
+      }
+      return error.message
+    }
+    return "Failed to load carts. Please try again later."
+  }
+
   if (error) {
     return (
       <DashboardLayout>
-        <div className="p-4">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error ? error.message : "Failed to load carts"}
-            </AlertDescription>
-          </Alert>
+        <div className="p-4 md:p-6 max-w-7xl mx-auto">
+          <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
+          <div className="mt-6">
+            <Alert variant="destructive" className="bg-destructive/10">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription className="mt-2">
+                {getErrorMessage(error)}
+              </AlertDescription>
+            </Alert>
+          </div>
         </div>
       </DashboardLayout>
     )

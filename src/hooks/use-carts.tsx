@@ -4,16 +4,40 @@ import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { fetchCarts, updateCart, createCart, deleteCart } from "@/api/carts"
 import { CartMutationParams } from "@/types/cart-mutations"
+import { useState } from "react"
 
 export const useCarts = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const [isRetrying, setIsRetrying] = useState(false)
 
-  // Query for fetching carts
-  const { data: carts = [], isLoading, error } = useQuery({
+  // Query for fetching carts with enhanced error handling
+  const { data: carts = [], isLoading, error, refetch } = useQuery({
     queryKey: ["carts"],
     queryFn: fetchCarts,
+    retry: 2,
+    retryDelay: 1000,
   })
+
+  // Function to manually retry fetching carts
+  const retryFetchCarts = async () => {
+    setIsRetrying(true)
+    try {
+      await refetch()
+      toast({
+        title: "Success",
+        description: "Successfully reconnected to the server.",
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to reconnect. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsRetrying(false)
+    }
+  }
 
   // Mutation for creating/updating carts
   const { mutate: handleSubmit } = useMutation({
@@ -133,6 +157,8 @@ export const useCarts = () => {
     carts,
     isLoading,
     error,
+    isRetrying,
+    retryFetchCarts,
     handleSubmit,
     handleDeleteCart,
   }
