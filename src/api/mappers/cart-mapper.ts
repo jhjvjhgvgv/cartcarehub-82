@@ -17,7 +17,7 @@ export const mapToCart = (row: CartRow): Cart => ({
 })
 
 // Convert from Cart to database insert/update object
-export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id"> => ({
+export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id" | "created_at" | "updated_at"> => ({
   qr_code: cart.qr_code,
   store: cart.store,
   store_id: cart.storeId, // Map storeId to store_id
