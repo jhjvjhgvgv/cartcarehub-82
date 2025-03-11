@@ -114,6 +114,7 @@ export const useCarts = () => {
           storeId: store.id,
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
+          lastMaintenance: data.lastMaintenance || "",
         })
       } catch (error) {
         throw error

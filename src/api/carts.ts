@@ -60,8 +60,19 @@ const retryOperation = async <T>(
   }
 }
 
+// Convert from database row to application Cart
+const mapToCart = (row: CartRow): Cart => ({
+  id: row.id,
+  qr_code: row.rfidTag, // Map rfidTag from DB to qr_code for our app
+  store: row.store,
+  storeId: row.storeId,
+  status: row.status,
+  lastMaintenance: row.lastMaintenance,
+  issues: row.issues,
+})
+
 // Fetch carts from Supabase
-export const fetchCarts = async (): Promise<CartRow[]> => {
+export const fetchCarts = async (): Promise<Cart[]> => {
   try {
     console.log("Attempting to fetch carts...")
     const { data, error } = await retryOperation(async () => 
@@ -78,10 +89,7 @@ export const fetchCarts = async (): Promise<CartRow[]> => {
     console.log(`Successfully fetched ${data?.length || 0} carts`)
     
     // Map the data to match our Cart type
-    return data?.map(item => ({
-      ...item,
-      qr_code: item.rfidTag // Map rfidTag from DB to qr_code for our app
-    })) ?? []
+    return data?.map(mapToCart) ?? []
   } catch (error: any) {
     console.error('Error fetching carts:', error)
     
@@ -102,7 +110,7 @@ export const fetchCarts = async (): Promise<CartRow[]> => {
 }
 
 // Update a cart in Supabase
-export const updateCart = async (cart: Cart): Promise<CartRow> => {
+export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
     const { data, error } = await retryOperation(async () => 
       supabase
@@ -112,8 +120,8 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
           store: cart.store,
           storeId: cart.storeId,
           status: cart.status,
-          issues: cart.issues
-          // lastMaintenance is not in the database schema, so removed
+          issues: cart.issues,
+          lastMaintenance: cart.lastMaintenance
         })
         .eq('id', cart.id)
         .select()
@@ -122,10 +130,7 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
 
     if (error) throw error
     if (!data) throw new Error("Failed to update cart")
-    return {
-      ...data,
-      qr_code: data.rfidTag // Map rfidTag from DB to qr_code for our app
-    }
+    return mapToCart(data)
   } catch (error: any) {
     console.error('Error updating cart:', error)
     if (error.message?.includes('Failed to fetch') || error.message?.includes('timed out')) {
@@ -136,7 +141,7 @@ export const updateCart = async (cart: Cart): Promise<CartRow> => {
 }
 
 // Create a new cart in Supabase
-export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
+export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
     // Only include fields that exist in the database
     const cartData = {
@@ -144,7 +149,8 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
       store: cart.store,
       storeId: cart.storeId,
       status: cart.status,
-      issues: cart.issues
+      issues: cart.issues,
+      lastMaintenance: cart.lastMaintenance
     };
     
     const { data, error } = await retryOperation(async () => 
@@ -157,10 +163,7 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<CartRow> => {
 
     if (error) throw error
     if (!data) throw new Error("Failed to create cart")
-    return {
-      ...data,
-      qr_code: data.rfidTag // Map rfidTag from DB to qr_code for our app
-    }
+    return mapToCart(data)
   } catch (error: any) {
     console.error('Error creating cart:', error)
     if (error.message?.includes('Failed to fetch') || error.message?.includes('timed out')) {
