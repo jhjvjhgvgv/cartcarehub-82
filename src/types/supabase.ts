@@ -15,7 +15,7 @@ export interface Database {
           id: string
           qr_code: string
           store: string
-          // Removed storeId as it appears to not exist in the database
+          store_id: string // Added this field to match the database schema
           status: "active" | "maintenance" | "retired"
           lastMaintenance: string
           issues: string[]
@@ -25,7 +25,7 @@ export interface Database {
         Insert: {
           qr_code: string
           store: string
-          // Removed storeId as it appears to not exist in the database
+          store_id: string // Added this field to match the database schema
           status: "active" | "maintenance" | "retired"
           lastMaintenance: string
           issues: string[]
@@ -36,7 +36,7 @@ export interface Database {
         Update: {
           qr_code?: string
           store?: string
-          // Removed storeId as it appears to not exist in the database
+          store_id?: string // Added this field to match the database schema
           status?: "active" | "maintenance" | "retired"
           lastMaintenance?: string
           issues?: string[]

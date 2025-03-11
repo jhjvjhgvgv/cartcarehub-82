@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
@@ -74,6 +75,7 @@ export const useCarts = () => {
                 ...cart,
                 store: data.store,
                 storeId: store.id,
+                store_id: store.id, // Add store_id
                 status: data.status,
                 issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
               })
@@ -87,6 +89,7 @@ export const useCarts = () => {
             ...editingCart,
             store: data.store,
             storeId: store.id,
+            store_id: store.id, // Add store_id
             status: data.status,
             issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
           })
@@ -102,6 +105,7 @@ export const useCarts = () => {
           qr_code: data.qr_code,
           store: data.store,
           storeId: store.id,
+          store_id: store.id, // Add store_id
           status: data.status,
           issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
           lastMaintenance: "",

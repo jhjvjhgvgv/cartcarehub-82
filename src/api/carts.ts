@@ -1,3 +1,4 @@
+
 import { Cart } from "@/types/cart"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/types/supabase"
@@ -67,7 +68,8 @@ const mapToCart = (row: CartRow): Cart => ({
   id: row.id,
   qr_code: row.qr_code,
   store: row.store,
-  storeId: row.store, // Map store to storeId as a fallback since storeId doesn't exist in DB
+  storeId: row.store_id, // Map the database store_id to our UI's storeId
+  store_id: row.store_id, // Include store_id directly
   status: row.status,
   lastMaintenance: row.lastMaintenance || "",
   issues: row.issues,
@@ -123,6 +125,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
     console.log("Updating cart with data:", {
       qr_code: cart.qr_code,
       store: cart.store,
+      store_id: cart.storeId, // Use storeId for store_id
       status: cart.status,
       issues: cart.issues,
     });
@@ -132,7 +135,8 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
         .from('carts')
         .update({
           qr_code: cart.qr_code,
-          store: cart.store, // Only use store, not storeId
+          store: cart.store,
+          store_id: cart.storeId, // Use storeId for store_id
           status: cart.status,
           issues: cart.issues,
         })
@@ -154,7 +158,8 @@ export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
     const cartData = {
       qr_code: cart.qr_code,
-      store: cart.store, // Only use store, not storeId
+      store: cart.store,
+      store_id: cart.storeId, // Use storeId for store_id
       status: cart.status,
       issues: cart.issues,
     };
