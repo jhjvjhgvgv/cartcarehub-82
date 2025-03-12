@@ -1,19 +1,27 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { StoreConnection } from "@/components/settings/types";
 
-// This would typically interact with Supabase directly
-// For now, we'll simulate it with local storage
 export const ConnectionService = {
   // Request a connection between a store and maintenance provider
-  async requestConnection(storeId: string, maintenanceEmail: string): Promise<boolean> {
+  async requestConnection(storeId: string, maintenanceId: string): Promise<boolean> {
     try {
       // In a real implementation, this would create a record in Supabase
       const connections = this.getStoredConnections();
       
+      // Check if connection already exists
+      const existingConnection = connections.find(
+        conn => conn.storeId === storeId && conn.maintenanceId === maintenanceId
+      );
+      
+      if (existingConnection) {
+        return false; // Connection already exists
+      }
+      
       const newConnection: StoreConnection = {
         id: crypto.randomUUID(),
         storeId,
-        maintenanceId: maintenanceEmail, // Using email as ID for simplicity
+        maintenanceId,
         status: "pending",
         requestedAt: new Date().toISOString(),
       };
@@ -74,33 +82,6 @@ export const ConnectionService = {
   async getMaintenanceRequests(maintenanceId: string): Promise<StoreConnection[]> {
     const connections = this.getStoredConnections();
     return connections.filter(conn => conn.maintenanceId === maintenanceId);
-  },
-  
-  // Create a test connection for demonstration purposes
-  async createTestConnection(): Promise<boolean> {
-    try {
-      const connections = this.getStoredConnections();
-      
-      const testStoreId = "test-store-" + Date.now();
-      const testMaintenanceId = "test-maintenance-" + Date.now();
-      
-      const newConnection: StoreConnection = {
-        id: crypto.randomUUID(),
-        storeId: testStoreId,
-        maintenanceId: testMaintenanceId,
-        status: "active",
-        requestedAt: new Date().toISOString(),
-        connectedAt: new Date().toISOString(),
-      };
-      
-      connections.push(newConnection);
-      localStorage.setItem('storeConnections', JSON.stringify(connections));
-      
-      return true;
-    } catch (error) {
-      console.error("Failed to create test connection:", error);
-      return false;
-    }
   },
   
   // Helper to get stored connections
