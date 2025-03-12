@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useState } from "react"
-import { Plus, Mail, CheckCircle } from "lucide-react"
+import { Plus, Mail, CheckCircle, AlertTriangle } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import { Invitation } from "./types"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,6 +22,8 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<string | null>(null)
   const { toast } = useToast()
 
   const pendingInvitations = invitations.filter(inv => inv.status === "pending" || inv.status === "sent")
@@ -35,6 +38,10 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       })
       return
     }
+
+    // Clear any previous errors
+    setErrorMessage(null)
+    setErrorDetails(null)
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -64,7 +71,14 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       });
       
       if (!response.data?.success) {
-        throw new Error(response.data?.error || "Failed to send invitation");
+        // Check if it's a development mode error
+        if (response.data?.details) {
+          setErrorMessage(response.data?.error || "Failed to send invitation");
+          setErrorDetails(response.data?.details);
+          throw new Error(response.data?.error || "Failed to send invitation");
+        } else {
+          throw new Error(response.data?.error || "Failed to send invitation");
+        }
       }
 
       // Save the invitation in our local state
@@ -85,14 +99,24 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       });
     } catch (error: any) {
       console.error("Error sending invitation:", error);
-      toast({
-        title: "Error sending invitation",
-        description: error.message || "There was a problem sending the invitation. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Only show toast for general errors, not development mode errors handled separately
+      if (!errorMessage) {
+        toast({
+          title: "Error sending invitation",
+          description: error.message || "There was a problem sending the invitation. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSending(false);
     }
+  }
+
+  const closeErrorAndDialog = () => {
+    setErrorMessage(null);
+    setErrorDetails(null);
+    setIsDialogOpen(false);
   }
 
   return (
@@ -114,6 +138,28 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {errorMessage && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {errorMessage}
+                  {errorDetails && (
+                    <div className="mt-2 text-sm">
+                      <p>{errorDetails}</p>
+                      <a 
+                        href="https://resend.com/domains" 
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline mt-1 inline-block"
+                      >
+                        Verify Domain on Resend
+                      </a>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="flex items-center gap-4">
               <Input
                 type="email"
@@ -136,6 +182,16 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
               </Button>
             </div>
           </div>
+          
+          {errorDetails && (
+            <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+              <p className="font-medium mb-1">Development Mode</p>
+              <p>
+                For testing, use your own email address registered with Resend.
+                For production, <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline">verify a domain</a> in Resend.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

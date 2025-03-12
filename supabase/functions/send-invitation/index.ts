@@ -24,13 +24,22 @@ const handler = async (req: Request): Promise<Response> => {
   }
   
   try {
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
+    const resend = new Resend(resendApiKey);
     const { email, type, invitedBy }: InvitationRequest = await req.json();
     
     console.log(`Sending invitation to ${email} as ${type} from ${invitedBy.name}`);
     
     const inviterType = invitedBy.type === "maintenance" ? "Maintenance Provider" : "Store";
     const inviteeType = type === "maintenance" ? "Maintenance Provider" : "Store";
+    
+    // Get actual domain instead of localhost for production environments
+    const domain = req.headers.get("origin") || "https://carttracker.app";
+    const inviteUrl = `${domain}/invite?id=${invitedBy.id}&type=${type}`;
     
     const { data, error } = await resend.emails.send({
       from: "Cart Tracker <onboarding@resend.dev>",
@@ -43,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p>${invitedBy.name} (${inviterType}) has invited you to join their Cart Tracker network as a ${inviteeType}.</p>
           <p>To accept this invitation, please click the button below:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/invite?id=${invitedBy.id}&type=${type}" style="background-color: #0070f3; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Accept Invitation</a>
+            <a href="${inviteUrl}" style="background-color: #0070f3; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Accept Invitation</a>
           </div>
           <p>If you don't recognize this invitation, you can safely ignore this email.</p>
           <p>Best regards,<br>The Cart Tracker Team</p>
@@ -53,6 +62,22 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (error) {
       console.error("Error sending email:", error);
+      
+      // Check for common Resend errors and provide better error messages
+      if (error.message && error.message.includes("You can only send testing emails to your own email address")) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Development mode: To send emails to other addresses, please verify a domain in Resend.",
+            details: "In development, you can only send to your own email address. Visit https://resend.com/domains to verify a domain."
+          }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ success: false, error: error.message }),
         {
