@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Clock, Store } from "lucide-react"
 import { managedStores } from "@/constants/stores"
+import { useNavigate } from "react-router-dom"
 
 interface ConnectedStoresListProps {
   isMaintenance: boolean
@@ -10,6 +11,12 @@ interface ConnectedStoresListProps {
 }
 
 export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStoresListProps) {
+  const navigate = useNavigate()
+
+  const handleViewDetails = (storeId: string, storeName: string) => {
+    navigate(`/store/${storeId}`, { state: { storeName } })
+  }
+
   return (
     <div>
       <h3 className="text-sm font-medium mb-3">Connected {isMaintenance ? "Stores" : "Maintenance Providers"}</h3>
@@ -46,7 +53,11 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleViewDetails(store.id, store.name)}
+                    >
                       View Details
                     </Button>
                   </TableCell>
