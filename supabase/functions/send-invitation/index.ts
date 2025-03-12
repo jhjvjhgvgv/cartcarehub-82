@@ -18,28 +18,70 @@ interface InvitationRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("Processing invitation request");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
   
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
+      const error = "RESEND_API_KEY is not configured";
+      console.error(error);
+      return new Response(
+        JSON.stringify({ success: false, error }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    const resend = new Resend(resendApiKey);
-    const { email, type, invitedBy }: InvitationRequest = await req.json();
+    // Parse and validate request
+    let requestData: InvitationRequest;
+    try {
+      requestData = await req.json();
+      console.log("Request data received:", JSON.stringify(requestData, null, 2));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid request format" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    const { email, type, invitedBy } = requestData;
+    
+    // Validate required fields
+    if (!email || !type || !invitedBy?.id || !invitedBy?.name || !invitedBy?.type) {
+      const error = "Missing required fields";
+      console.error(error, { email, type, invitedBy });
+      return new Response(
+        JSON.stringify({ success: false, error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
     
     console.log(`Sending invitation to ${email} as ${type} from ${invitedBy.name}`);
     
+    const resend = new Resend(resendApiKey);
     const inviterType = invitedBy.type === "maintenance" ? "Maintenance Provider" : "Store";
     const inviteeType = type === "maintenance" ? "Maintenance Provider" : "Store";
     
     // Get actual domain instead of localhost for production environments
     const domain = req.headers.get("origin") || "https://carttracker.app";
     const inviteUrl = `${domain}/invite?id=${invitedBy.id}&type=${type}`;
+    
+    console.log(`Invitation URL: ${inviteUrl}`);
     
     const { data, error } = await resend.emails.send({
       from: "Cart Tracker <onboarding@resend.dev>",
@@ -65,6 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Check for common Resend errors and provide better error messages
       if (error.message && error.message.includes("You can only send testing emails to your own email address")) {
+        console.warn("Development mode restriction detected");
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -73,6 +116,19 @@ const handler = async (req: Request): Promise<Response> => {
           }),
           {
             status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      if (error.message && error.message.includes("rate limit")) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Rate limit exceeded. Please try again later."
+          }),
+          {
+            status: 429,
             headers: { "Content-Type": "application/json", ...corsHeaders },
           }
         );
@@ -97,9 +153,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error) {
-    console.error("Error in send-invitation function:", error);
+    console.error("Unhandled error in send-invitation function:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "An unexpected error occurred",
+        stack: error instanceof Error ? error.stack : undefined
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
