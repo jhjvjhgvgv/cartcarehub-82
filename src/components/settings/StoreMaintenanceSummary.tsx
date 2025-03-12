@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConnectionService } from "@/services/ConnectionService";
 import { StoreManagerSummary, ManagedStore, StoreMaintenanceConnection } from "./types";
-import { Store, UserAccount } from "@/services/connection/types";
+import { UserAccount } from "@/services/connection/types";
 import { Building, Users, LinkIcon, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
