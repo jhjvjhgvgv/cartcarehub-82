@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useState } from "react"
-import { Plus, Mail, CheckCircle, Clock, X, RefreshCw } from "lucide-react"
+import { Plus, Mail, CheckCircle, Clock, X, RefreshCw, Store } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -171,92 +171,101 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
           {/* Connected Stores/Maintenance list */}
           <div>
             <h3 className="text-sm font-medium mb-3">Connected {isMaintenance ? "Stores" : "Maintenance Providers"}</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Connected Since</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isMaintenance ? 
-                  managedStores.map((store) => (
-                    <TableRow key={store.id}>
-                      <TableCell className="font-medium">{store.name}</TableCell>
-                      <TableCell>
-                        <span className="flex items-center">
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                          Active
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                          {new Date().toLocaleDateString()}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          View Details
-                        </Button>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Connected Since</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isMaintenance ? 
+                    managedStores.map((store) => (
+                      <TableRow key={store.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Store className="h-4 w-4 text-muted-foreground" />
+                            {store.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex items-center">
+                            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                            Active
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                            {formatDate(store.connectedSince)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm">
+                            View Details
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )) : 
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No maintenance providers connected yet.
                       </TableCell>
                     </TableRow>
-                  )) : 
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No maintenance providers connected yet.
-                    </TableCell>
-                  </TableRow>
-                }
-              </TableBody>
-            </Table>
+                  }
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Pending Invitations list */}
           {pendingInvitations.length > 0 && (
             <div>
               <h3 className="text-sm font-medium mb-3">Pending Invitations</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Sent</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pendingInvitations
-                    .filter(inv => inv.type === (isMaintenance ? "store" : "maintenance"))
-                    .map((invitation, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{invitation.email}</TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Pending
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(invitation.sentAt)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => resendInvitation(invitation.email)}
-                            className="inline-flex items-center"
-                          >
-                            <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                            Resend
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingInvitations
+                      .filter(inv => inv.type === (isMaintenance ? "store" : "maintenance"))
+                      .map((invitation, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{invitation.email}</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Pending
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(invitation.sentAt)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => resendInvitation(invitation.email)}
+                              className="inline-flex items-center"
+                            >
+                              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                              Resend
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </div>
