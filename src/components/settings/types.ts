@@ -42,3 +42,11 @@ export interface InvitationConfirmationProps {
   setIsOpen: (isOpen: boolean) => void
   email?: string
 }
+
+export interface ManagedStore {
+  id: string
+  name: string
+  address?: string
+  status: "active" | "inactive" | "pending"
+  createdAt: string
+}

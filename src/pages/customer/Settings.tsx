@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { StoreConnectionsManager } from "@/components/settings/StoreConnectionsManager";
+import { StoreManager } from "@/components/settings/StoreManager";
 
 const CustomerSettings = () => {
   const { toast } = useToast();
@@ -53,6 +54,12 @@ const CustomerSettings = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Store Manager Component */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium">Store Management</h3>
+          <StoreManager />
+        </div>
 
         <Card>
           <CardHeader>
