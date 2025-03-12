@@ -1,9 +1,13 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Clock, Store } from "lucide-react"
+import { CheckCircle, Clock, Store, Pencil } from "lucide-react"
 import { managedStores } from "@/constants/stores"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { StoreForm } from "./StoreForm"
+import { useToast } from "@/components/ui/use-toast"
 
 interface ConnectedStoresListProps {
   isMaintenance: boolean
@@ -12,9 +16,35 @@ interface ConnectedStoresListProps {
 
 export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStoresListProps) {
   const navigate = useNavigate()
+  const { toast } = useToast()
+  const [editingStore, setEditingStore] = useState<{
+    id: string;
+    name: string;
+    status: "active" | "inactive" | "pending";
+    connectedSince: string;
+  } | null>(null)
 
   const handleViewDetails = (storeId: string, storeName: string) => {
     navigate(`/store/${storeId}`, { state: { storeName } })
+  }
+
+  const handleEditStore = (store: typeof managedStores[0]) => {
+    setEditingStore({
+      id: store.id,
+      name: store.name,
+      status: "active", // Default to active since our mock data doesn't have this field
+      connectedSince: store.connectedSince
+    })
+  }
+
+  const handleSaveStore = (data: any) => {
+    // In a real app, you would update the store in the database
+    // For this demo, we'll just show a toast notification
+    toast({
+      title: "Store updated",
+      description: `Successfully updated ${data.name}`
+    })
+    setEditingStore(null)
   }
 
   return (
@@ -53,13 +83,23 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleViewDetails(store.id, store.name)}
-                    >
-                      View Details
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditStore(store)}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewDetails(store.id, store.name)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )) : 
@@ -72,6 +112,21 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={editingStore !== null} onOpenChange={(open) => !open && setEditingStore(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Store</DialogTitle>
+          </DialogHeader>
+          {editingStore && (
+            <StoreForm
+              initialData={editingStore}
+              onSubmit={handleSaveStore}
+              onCancel={() => setEditingStore(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -9,3 +9,10 @@ export type Invitation = {
 export interface StoreMaintenanceManagerProps {
   isMaintenance: boolean
 }
+
+export interface Store {
+  id: string
+  name: string
+  status: "active" | "inactive" | "pending"
+  connectedSince: string
+}
