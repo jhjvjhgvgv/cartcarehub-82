@@ -39,10 +39,6 @@ const MaintenanceSettings = () => {
               <Label htmlFor="phone">Contact Number</Label>
               <Input id="phone" type="tel" placeholder="Your contact number" defaultValue="(555) 123-4567" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Service Address</Label>
-              <Input id="address" placeholder="Your service address" defaultValue="123 Repair Street, Fix City" />
-            </div>
             <Button type="submit">Save Changes</Button>
           </form>
         </CardContent>
