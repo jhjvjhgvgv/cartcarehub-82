@@ -2,7 +2,41 @@
 import { supabase } from "@/integrations/supabase/client";
 import { StoreConnection } from "@/components/settings/types";
 
+// Sample data for stores and maintenance providers
+// In a real implementation, this would come from Supabase
+const storeAccounts = [
+  { id: "store_123", name: "SuperMart Downtown" },
+  { id: "store_456", name: "FreshMart Heights" },
+  { id: "store_789", name: "Value Grocery West" },
+];
+
+const maintenanceAccounts = [
+  { id: "maint_123", name: "Cart Repair Pros" },
+  { id: "maint_456", name: "Maintenance Experts" },
+  { id: "maint_789", name: "Fix-It Solutions" },
+];
+
 export const ConnectionService = {
+  // Get all stores
+  getStores() {
+    return storeAccounts;
+  },
+  
+  // Get all maintenance providers
+  getMaintenanceProviders() {
+    return maintenanceAccounts;
+  },
+  
+  // Get store by ID
+  getStoreById(id: string) {
+    return storeAccounts.find(store => store.id === id);
+  },
+  
+  // Get maintenance provider by ID
+  getMaintenanceById(id: string) {
+    return maintenanceAccounts.find(provider => provider.id === id);
+  },
+
   // Request a connection between a store and maintenance provider
   async requestConnection(storeId: string, maintenanceId: string): Promise<boolean> {
     try {

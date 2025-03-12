@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { InvitationForm } from "./InvitationForm"
 import { ConnectedStoresList } from "./ConnectedStoresList"
 import { PendingInvitationsList } from "./PendingInvitationsList"
@@ -13,13 +13,26 @@ import { Plus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManagerProps) {
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [isConnecting, setIsConnecting] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [connectionId, setConnectionId] = useState("")
+  const [availableOptions, setAvailableOptions] = useState<{id: string, name: string}[]>([])
   const { toast } = useToast()
+
+  useEffect(() => {
+    // Load available connection options when dialog opens
+    if (isDialogOpen) {
+      if (isMaintenance) {
+        setAvailableOptions(ConnectionService.getStores());
+      } else {
+        setAvailableOptions(ConnectionService.getMaintenanceProviders());
+      }
+    }
+  }, [isDialogOpen, isMaintenance]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -30,7 +43,7 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
     if (!connectionId.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a valid ID",
+        description: "Please select a valid ID",
         variant: "destructive",
       })
       return
@@ -44,13 +57,13 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
         // Maintenance provider connecting to a store
         success = await ConnectionService.requestConnection(
           connectionId, // Store ID
-          "current-maintenance-email@example.com" // Current maintenance provider ID
+          "maint_123" // Current maintenance provider ID (hardcoded for demo)
         )
       } else {
         // Store connecting to a maintenance provider
         success = await ConnectionService.requestConnection(
-          "store123", // Current store ID
-          connectionId // Maintenance provider email/ID
+          "store_123", // Current store ID (hardcoded for demo)
+          connectionId // Maintenance provider ID
         )
       }
       
@@ -63,7 +76,7 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
       } else {
         toast({
           title: "Error",
-          description: "Failed to create connection request",
+          description: "Failed to create connection request or connection already exists",
           variant: "destructive",
         })
       }
@@ -97,6 +110,17 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
+          {/* Current Account ID */}
+          <div className="p-4 border rounded-md bg-muted/50">
+            <p className="text-sm font-medium mb-1">Your {isMaintenance ? "Maintenance Provider" : "Store"} ID:</p>
+            <code className="text-sm bg-background px-2 py-1 rounded border">
+              {isMaintenance ? "maint_123" : "store_123"}
+            </code>
+            <p className="text-xs text-muted-foreground mt-2">
+              Share this ID with {isMaintenance ? "stores" : "maintenance providers"} who want to connect with you.
+            </p>
+          </div>
+          
           {/* Connection Status Card */}
           <ConnectionStatus isMaintenance={isMaintenance} />
           
@@ -126,20 +150,26 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
           <DialogHeader>
             <DialogTitle>Connect to {isMaintenance ? "Store" : "Maintenance Provider"}</DialogTitle>
             <DialogDescription>
-              Enter the ID of the {isMaintenance ? "store" : "maintenance provider"} you want to connect with.
+              Select the {isMaintenance ? "store" : "maintenance provider"} you want to connect with.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="connection-id">
-                {isMaintenance ? "Store ID" : "Maintenance Provider ID"}
+                {isMaintenance ? "Store" : "Maintenance Provider"}
               </Label>
-              <Input
-                id="connection-id"
-                placeholder={isMaintenance ? "Enter store ID" : "Enter maintenance provider ID"}
-                value={connectionId}
-                onChange={(e) => setConnectionId(e.target.value)}
-              />
+              <Select onValueChange={setConnectionId} value={connectionId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select a ${isMaintenance ? "store" : "maintenance provider"}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableOptions.map(option => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name} ({option.id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button 
               onClick={handleCreateConnection} 

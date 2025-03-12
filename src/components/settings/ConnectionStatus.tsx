@@ -23,11 +23,11 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
         
         if (isMaintenance) {
           // In a real app, this would use the current user's ID
-          const maintenanceId = "current-maintenance-email@example.com";
+          const maintenanceId = "maint_123"; // Hardcoded for demo
           results = await ConnectionService.getMaintenanceRequests(maintenanceId);
         } else {
           // In a real app, this would use the current store's ID
-          const storeId = "store123";
+          const storeId = "store_123"; // Hardcoded for demo
           results = await ConnectionService.getStoreConnections(storeId);
         }
         
@@ -72,6 +72,31 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     setRefreshKey(prevKey => prevKey + 1);
   };
 
+  // Helper to get name from ID
+  const getNameFromId = (id: string, isStore: boolean) => {
+    if (isStore) {
+      const store = ConnectionService.getStoreById(id);
+      return store ? store.name : id;
+    } else {
+      const provider = ConnectionService.getMaintenanceById(id);
+      return provider ? provider.name : id;
+    }
+  };
+
+  const handleAcceptConnection = async (connectionId: string) => {
+    const success = await ConnectionService.acceptConnection(connectionId);
+    if (success) {
+      setRefreshKey(prev => prev + 1);
+    }
+  };
+
+  const handleRejectConnection = async (connectionId: string) => {
+    const success = await ConnectionService.rejectConnection(connectionId);
+    if (success) {
+      setRefreshKey(prev => prev + 1);
+    }
+  };
+
   if (loading) {
     return <div>Loading connection status...</div>;
   }
@@ -110,7 +135,9 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
                   {getStatusIcon(connection.status)}
                   <div>
                     <p className="font-medium">
-                      {isMaintenance ? `Store ID: ${connection.storeId}` : `Maintenance: ${connection.maintenanceId}`}
+                      {isMaintenance 
+                        ? `${getNameFromId(connection.storeId, true)} (${connection.storeId})` 
+                        : `${getNameFromId(connection.maintenanceId, false)} (${connection.maintenanceId})`}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {getStatusText(connection.status)}
@@ -118,6 +145,30 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
                     </p>
                   </div>
                 </div>
+                
+                {connection.status === "pending" && (
+                  <div className="flex gap-2">
+                    {!isMaintenance && (
+                      <>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleAcceptConnection(connection.id)}
+                        >
+                          Accept
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-destructive" 
+                          onClick={() => handleRejectConnection(connection.id)}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
                 
                 {connection.status === "active" && (
                   <Button size="sm" variant="outline">
