@@ -9,6 +9,7 @@ import CartDetails from "@/pages/CartDetails"
 import Customers from "@/pages/Customers"
 import Settings from "@/pages/Settings"
 import Store from "@/pages/Store"
+import Invite from "@/pages/Invite"
 import ForgotPassword from "@/pages/ForgotPassword"
 import { Toaster } from "@/components/ui/toaster"
 import CustomerDashboard from "@/pages/customer/Dashboard"
@@ -52,6 +53,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/invite" element={<Invite />} />
           
           {/* Maintenance Routes - No longer protected */}
           <Route path="/dashboard" element={<Dashboard />} />

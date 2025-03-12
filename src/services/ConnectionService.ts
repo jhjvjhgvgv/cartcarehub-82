@@ -129,6 +129,13 @@ export const ConnectionService = {
       );
       
       if (existingConnection) {
+        // If the connection exists but was rejected, allow recreating it
+        if (existingConnection.status === "rejected") {
+          existingConnection.status = "pending";
+          existingConnection.requestedAt = new Date().toISOString();
+          localStorage.setItem('storeConnections', JSON.stringify(connections));
+          return true;
+        }
         return false; // Connection already exists
       }
       
