@@ -25,3 +25,20 @@ export interface StoreConnection {
   requestedAt: string
   connectedAt?: string
 }
+
+export interface InvitationFormProps {
+  isMaintenance: boolean
+  invitations: Invitation[]
+  setInvitations: React.Dispatch<React.SetStateAction<Invitation[]>>
+}
+
+export interface InvitationErrorProps {
+  errorMessage: string | null
+  errorDetails: string | null
+}
+
+export interface InvitationConfirmationProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  email?: string
+}

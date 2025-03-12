@@ -12,7 +12,11 @@ export interface MaintenanceAccount {
   type?: "maintenance";
 }
 
-export interface UserAccount extends StoreAccount, MaintenanceAccount {
+// Instead of extending both interfaces with conflicting types,
+// create a union type for UserAccount
+export interface UserAccount {
+  id: string;
+  name: string;
   type: "store" | "maintenance";
 }
 
