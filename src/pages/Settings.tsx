@@ -6,12 +6,11 @@ import MaintenanceSettings from "@/components/settings/MaintenanceSettings"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
-
-// For demo purposes - in real app this would come from auth state
-const isMaintenance = true // Set to true to test maintenance view
+import { ConnectionService } from "@/services/ConnectionService"
 
 export default function Settings() {
   const navigate = useNavigate()
+  const isMaintenance = ConnectionService.isMaintenanceUser()
   
   const handleBack = () => {
     navigate(-1) // Go back to previous page

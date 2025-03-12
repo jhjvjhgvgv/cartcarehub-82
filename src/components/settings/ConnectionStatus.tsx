@@ -14,6 +14,7 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
   const [connections, setConnections] = useState<StoreConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const currentUser = ConnectionService.getCurrentUser();
 
   useEffect(() => {
     const fetchConnections = async () => {
@@ -22,13 +23,9 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
         let results: StoreConnection[] = [];
         
         if (isMaintenance) {
-          // In a real app, this would use the current user's ID
-          const maintenanceId = "maint_123"; // Hardcoded for demo
-          results = await ConnectionService.getMaintenanceRequests(maintenanceId);
+          results = await ConnectionService.getMaintenanceRequests(currentUser.id);
         } else {
-          // In a real app, this would use the current store's ID
-          const storeId = "store_123"; // Hardcoded for demo
-          results = await ConnectionService.getStoreConnections(storeId);
+          results = await ConnectionService.getStoreConnections(currentUser.id);
         }
         
         setConnections(results);
@@ -40,7 +37,7 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     };
     
     fetchConnections();
-  }, [isMaintenance, refreshKey]);
+  }, [isMaintenance, refreshKey, currentUser.id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

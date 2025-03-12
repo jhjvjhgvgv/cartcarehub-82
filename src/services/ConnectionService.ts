@@ -2,21 +2,101 @@
 import { supabase } from "@/integrations/supabase/client";
 import { StoreConnection } from "@/components/settings/types";
 
-// Sample data for stores and maintenance providers
-// In a real implementation, this would come from Supabase
-const storeAccounts = [
-  { id: "store_123", name: "SuperMart Downtown" },
-  { id: "store_456", name: "FreshMart Heights" },
-  { id: "store_789", name: "Value Grocery West" },
-];
+// Helper function to generate a unique ID with prefix
+const generateUniqueId = (prefix: string): string => {
+  const randomPart = Math.random().toString(36).substring(2, 8);
+  return `${prefix}_${randomPart}`;
+};
 
-const maintenanceAccounts = [
-  { id: "maint_123", name: "Cart Repair Pros" },
-  { id: "maint_456", name: "Maintenance Experts" },
-  { id: "maint_789", name: "Fix-It Solutions" },
-];
+// Get stored accounts or initialize with samples if none exist
+const getStoredAccounts = (key: string, samples: any[]) => {
+  const stored = localStorage.getItem(key);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  
+  // Initialize with sample data if no stored data exists
+  localStorage.setItem(key, JSON.stringify(samples));
+  return samples;
+};
+
+// Initialize store accounts
+const initializeStoreAccounts = () => {
+  const sampleStores = [
+    { id: generateUniqueId("store"), name: "SuperMart Downtown" },
+    { id: generateUniqueId("store"), name: "FreshMart Heights" },
+    { id: generateUniqueId("store"), name: "Value Grocery West" },
+  ];
+  return getStoredAccounts('storeAccounts', sampleStores);
+};
+
+// Initialize maintenance accounts
+const initializeMaintenanceAccounts = () => {
+  const sampleMaintenance = [
+    { id: generateUniqueId("maint"), name: "Cart Repair Pros" },
+    { id: generateUniqueId("maint"), name: "Maintenance Experts" },
+    { id: generateUniqueId("maint"), name: "Fix-It Solutions" },
+  ];
+  return getStoredAccounts('maintenanceAccounts', sampleMaintenance);
+};
+
+// Initialize the accounts
+const storeAccounts = initializeStoreAccounts();
+const maintenanceAccounts = initializeMaintenanceAccounts();
+
+// Create a user account if it doesn't exist yet
+const createUserAccountIfNeeded = () => {
+  // Check if current user account exists in localStorage
+  const currentUser = localStorage.getItem('currentUser');
+  
+  if (!currentUser) {
+    // Determine randomly if user should be store or maintenance (50/50 chance)
+    const isMaintenance = Math.random() > 0.5;
+    
+    let account;
+    if (isMaintenance) {
+      // Assign a random maintenance account
+      account = maintenanceAccounts[Math.floor(Math.random() * maintenanceAccounts.length)];
+      account.type = "maintenance";
+    } else {
+      // Assign a random store account
+      account = storeAccounts[Math.floor(Math.random() * storeAccounts.length)];
+      account.type = "store";
+    }
+    
+    // Save current user to localStorage
+    localStorage.setItem('currentUser', JSON.stringify(account));
+    
+    return account;
+  }
+  
+  return JSON.parse(currentUser);
+};
+
+// Initialize current user
+const currentUser = createUserAccountIfNeeded();
 
 export const ConnectionService = {
+  // Get current user
+  getCurrentUser() {
+    return currentUser;
+  },
+  
+  // Get user role (store or maintenance)
+  getUserRole() {
+    return currentUser.type;
+  },
+  
+  // Get current user ID
+  getCurrentUserId() {
+    return currentUser.id;
+  },
+  
+  // Check if current user is a maintenance provider
+  isMaintenanceUser() {
+    return currentUser.type === "maintenance";
+  },
+  
   // Get all stores
   getStores() {
     return storeAccounts;

@@ -11,8 +11,6 @@ import { useToast } from "@/hooks/use-toast"
 import { ConnectionService } from "@/services/ConnectionService"
 import { Plus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManagerProps) {
@@ -22,6 +20,7 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
   const [connectionId, setConnectionId] = useState("")
   const [availableOptions, setAvailableOptions] = useState<{id: string, name: string}[]>([])
   const { toast } = useToast()
+  const currentUser = ConnectionService.getCurrentUser();
 
   useEffect(() => {
     // Load available connection options when dialog opens
@@ -57,12 +56,12 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
         // Maintenance provider connecting to a store
         success = await ConnectionService.requestConnection(
           connectionId, // Store ID
-          "maint_123" // Current maintenance provider ID (hardcoded for demo)
+          currentUser.id // Current maintenance provider ID
         )
       } else {
         // Store connecting to a maintenance provider
         success = await ConnectionService.requestConnection(
-          "store_123", // Current store ID (hardcoded for demo)
+          currentUser.id, // Current store ID
           connectionId // Maintenance provider ID
         )
       }
@@ -114,7 +113,7 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
           <div className="p-4 border rounded-md bg-muted/50">
             <p className="text-sm font-medium mb-1">Your {isMaintenance ? "Maintenance Provider" : "Store"} ID:</p>
             <code className="text-sm bg-background px-2 py-1 rounded border">
-              {isMaintenance ? "maint_123" : "store_123"}
+              {currentUser.id}
             </code>
             <p className="text-xs text-muted-foreground mt-2">
               Share this ID with {isMaintenance ? "stores" : "maintenance providers"} who want to connect with you.
@@ -155,9 +154,6 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="connection-id">
-                {isMaintenance ? "Store" : "Maintenance Provider"}
-              </Label>
               <Select onValueChange={setConnectionId} value={connectionId}>
                 <SelectTrigger>
                   <SelectValue placeholder={`Select a ${isMaintenance ? "store" : "maintenance provider"}`} />
