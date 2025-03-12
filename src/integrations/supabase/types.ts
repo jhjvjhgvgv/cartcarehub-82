@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      carts: {
+        Row: {
+          created_at: string
+          id: string
+          issues: string[]
+          last_maintenance: string
+          qr_code: string
+          status: string
+          store: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issues?: string[]
+          last_maintenance: string
+          qr_code: string
+          status: string
+          store: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issues?: string[]
+          last_maintenance?: string
+          qr_code?: string
+          status?: string
+          store?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      maintenance_providers: {
+        Row: {
+          company_name: string
+          contact_email: string
+          contact_phone: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          contact_email: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -30,6 +96,44 @@ export type Database = {
         }
         Relationships: []
       }
+      store_provider_connections: {
+        Row: {
+          created_at: string
+          id: string
+          initiated_by: string
+          provider_id: string
+          status: Database["public"]["Enums"]["invitation_status"] | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initiated_by: string
+          provider_id: string
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initiated_by?: string
+          provider_id?: string
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_provider_connections_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -38,7 +142,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      invitation_status: "pending" | "accepted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
