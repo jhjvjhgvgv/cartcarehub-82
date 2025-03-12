@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ConnectionService } from "@/services/ConnectionService";
+import { ConnectionService } from "@/services/connection"; // Updated import path
 
 export default function Invite() {
   const [searchParams] = useSearchParams();
