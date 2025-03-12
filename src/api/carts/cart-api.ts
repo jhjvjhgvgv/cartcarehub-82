@@ -1,14 +1,9 @@
 
 import { Cart } from "@/types/cart"
 import { supabase } from "@/integrations/supabase/client"
-import { Database } from "@/types/supabase"
+import { mapToCart, mapToCartRow } from "../mappers/cart-mapper"
 import { retryOperation } from "../utils/retry-utils"
-import { mapToCart } from "../mappers/cart-mapper"
 import { handleCartApiError } from "../utils/error-handler"
-
-type Tables = Database['public']['Tables']
-type CartInsert = Tables['carts']['Insert']
-type CartUpdate = Tables['carts']['Update']
 
 // Fetch carts from Supabase
 export const fetchCarts = async (): Promise<Cart[]> => {
@@ -37,18 +32,15 @@ export const fetchCarts = async (): Promise<Cart[]> => {
 // Update a cart in Supabase
 export const updateCart = async (cart: Cart): Promise<Cart> => {
   try {
-    // Remove the lastMaintenance field if it doesn't exist in the database
+    // Convert Cart to database row format
+    const cartData = mapToCartRow(cart);
+    
+    console.log("Updating cart with data:", cartData);
+    
     const { data, error } = await retryOperation(async () => 
       supabase
         .from('carts')
-        .update({
-          rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
-          store: cart.store,
-          storeId: cart.storeId,
-          status: cart.status,
-          issues: cart.issues,
-          // lastMaintenance field removed as it doesn't exist in the database
-        })
+        .update(cartData)
         .eq('id', cart.id)
         .select()
         .single()
@@ -65,15 +57,8 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
 // Create a new cart in Supabase
 export const createCart = async (cart: Omit<Cart, "id">): Promise<Cart> => {
   try {
-    // Only include fields that exist in the database
-    const cartData = {
-      rfidTag: cart.qr_code, // Use rfidTag as the column name in Supabase
-      store: cart.store,
-      storeId: cart.storeId,
-      status: cart.status,
-      issues: cart.issues,
-      // Removed lastMaintenance as it doesn't exist in the database
-    };
+    // Convert Cart to database row format
+    const cartData = mapToCartRow(cart);
     
     console.log("Creating cart with data:", cartData);
     

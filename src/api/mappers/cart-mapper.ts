@@ -22,7 +22,7 @@ export const mapToCart = (row: CartRow): Cart => ({
 export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id" | "created_at" | "updated_at"> => ({
   qr_code: cart.qr_code,
   store: cart.store,
-  store_id: cart.storeId, // Map storeId to store_id
+  store_id: cart.storeId || cart.store_id, // Use either storeId or store_id
   status: cart.status,
   last_maintenance: cart.lastMaintenance || cart.last_maintenance || new Date().toISOString(), // Use either one, ensuring it's never null
   issues: cart.issues,
