@@ -2,9 +2,10 @@
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { StoreMaintenanceManager } from "@/components/settings/StoreMaintenanceManager"
 import CustomerSettings from "./customer/Settings"
+import MaintenanceSettings from "@/components/settings/MaintenanceSettings"
 
 // For demo purposes - in real app this would come from auth state
-const isMaintenance = false // Toggle this to test different views
+const isMaintenance = true // Set to true to test maintenance view
 
 export default function Settings() {
   return (
@@ -19,7 +20,10 @@ export default function Settings() {
         {/* Primary Settings Card */}
         <div className="space-y-6">
           <h3 className="text-lg font-medium">Account Settings</h3>
-          <CustomerSettings />
+          {isMaintenance 
+            ? <MaintenanceSettings />
+            : <CustomerSettings />
+          }
         </div>
         
         {/* Store/Maintenance Management */}
