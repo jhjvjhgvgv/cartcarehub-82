@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { StoreConnectionsManager } from "@/components/settings/StoreConnectionsManager";
 import { StoreManager } from "@/components/settings/StoreManager";
+import { StoreMaintenanceSummary } from "@/components/settings/StoreMaintenanceSummary";
 
 const CustomerSettings = () => {
   const { toast } = useToast();
@@ -29,6 +30,9 @@ const CustomerSettings = () => {
             Manage your account preferences and notifications.
           </p>
         </div>
+
+        {/* Store-Maintenance Summary Dashboard */}
+        <StoreMaintenanceSummary />
 
         <Card>
           <CardHeader>

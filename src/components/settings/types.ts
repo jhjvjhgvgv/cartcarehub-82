@@ -49,4 +49,19 @@ export interface ManagedStore {
   address?: string
   status: "active" | "inactive" | "pending"
   createdAt: string
+  managerId?: string // Store manager ID who owns this store
+}
+
+export interface StoreMaintenanceConnection {
+  storeId: string
+  maintenanceId: string
+  status: "active" | "pending" | "rejected"
+  connectedAt?: string
+}
+
+export interface StoreManagerSummary {
+  totalStores: number
+  activeStores: number
+  totalMaintenanceProviders: number
+  pendingConnections: number
 }

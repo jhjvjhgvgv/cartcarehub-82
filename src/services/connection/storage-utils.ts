@@ -48,8 +48,9 @@ export const createUserAccountIfNeeded = (
   const currentUser = localStorage.getItem('currentUser');
   
   if (!currentUser) {
-    // Determine randomly if user should be store or maintenance (50/50 chance)
-    const isMaintenance = Math.random() > 0.5;
+    // For this implementation, we'll make the user a store account by default
+    // to show the store manager functionality
+    const isMaintenance = false; // Set to false to ensure store manager role
     
     let account;
     if (isMaintenance) {
@@ -64,6 +65,42 @@ export const createUserAccountIfNeeded = (
     
     // Save current user to localStorage
     localStorage.setItem('currentUser', JSON.stringify(account));
+    
+    // Initialize store-manager relationship
+    if (!isMaintenance) {
+      // Create some sample store connections for this store manager
+      const connections = getStoredConnections();
+      if (connections.length === 0) {
+        // Create sample connections between stores and maintenance providers
+        const newConnections: StoreConnection[] = [];
+        
+        // Connect the first store with the first maintenance provider
+        if (storeAccounts.length > 0 && maintenanceAccounts.length > 0) {
+          newConnections.push({
+            id: generateUniqueId("conn"),
+            storeId: storeAccounts[0].id,
+            maintenanceId: maintenanceAccounts[0].id,
+            status: "active",
+            requestedAt: new Date().toISOString(),
+            connectedAt: new Date().toISOString()
+          });
+        }
+        
+        // Connect the second store with the second maintenance provider (if they exist)
+        if (storeAccounts.length > 1 && maintenanceAccounts.length > 1) {
+          newConnections.push({
+            id: generateUniqueId("conn"),
+            storeId: storeAccounts[1].id,
+            maintenanceId: maintenanceAccounts[1].id,
+            status: "pending",
+            requestedAt: new Date().toISOString()
+          });
+        }
+        
+        // Save connections
+        localStorage.setItem('storeConnections', JSON.stringify(newConnections));
+      }
+    }
     
     return account as UserAccount;
   }
