@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -6,6 +7,8 @@ import { Plus, Mail, CheckCircle } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Invitation } from "./types"
+import { supabase } from "@/integrations/supabase/client"
+import { ConnectionService } from "@/services/ConnectionService"
 
 interface InvitationFormProps {
   isMaintenance: boolean
@@ -21,6 +24,7 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
   const { toast } = useToast()
 
   const pendingInvitations = invitations.filter(inv => inv.status === "pending" || inv.status === "sent")
+  const currentUser = ConnectionService.getCurrentUser();
 
   const sendInvitation = async (type: "store" | "maintenance") => {
     if (!inviteEmail) {
@@ -46,28 +50,48 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
     setIsSending(true)
 
     try {
-      // Simulate API call to send invitation
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Call our edge function to send the invitation email
+      const response = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: inviteEmail,
+          type: type,
+          invitedBy: {
+            id: currentUser.id,
+            name: currentUser.name,
+            type: isMaintenance ? "maintenance" : "store"
+          }
+        }
+      });
+      
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to send invitation");
+      }
 
-      // In a real app, this would make an API call to send the invitation
+      // Save the invitation in our local state
       setInvitations([...invitations, {
         email: inviteEmail,
         type,
         status: "sent",
         sentAt: new Date().toISOString()
-      }])
+      }]);
 
-      setInviteEmail("")
-      setIsDialogOpen(false)
-      setIsConfirmationOpen(true)
-    } catch (error) {
+      setInviteEmail("");
+      setIsDialogOpen(false);
+      setIsConfirmationOpen(true);
+      
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${inviteEmail}.`,
+      });
+    } catch (error: any) {
+      console.error("Error sending invitation:", error);
       toast({
         title: "Error sending invitation",
-        description: "There was a problem sending the invitation. Please try again.",
+        description: error.message || "There was a problem sending the invitation. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSending(false)
+      setIsSending(false);
     }
   }
 
