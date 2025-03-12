@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { StoreConnection } from "@/components/settings/types";
 
@@ -75,6 +74,33 @@ export const ConnectionService = {
   async getMaintenanceRequests(maintenanceId: string): Promise<StoreConnection[]> {
     const connections = this.getStoredConnections();
     return connections.filter(conn => conn.maintenanceId === maintenanceId);
+  },
+  
+  // Create a test connection for demonstration purposes
+  async createTestConnection(): Promise<boolean> {
+    try {
+      const connections = this.getStoredConnections();
+      
+      const testStoreId = "test-store-" + Date.now();
+      const testMaintenanceId = "test-maintenance-" + Date.now();
+      
+      const newConnection: StoreConnection = {
+        id: crypto.randomUUID(),
+        storeId: testStoreId,
+        maintenanceId: testMaintenanceId,
+        status: "active",
+        requestedAt: new Date().toISOString(),
+        connectedAt: new Date().toISOString(),
+      };
+      
+      connections.push(newConnection);
+      localStorage.setItem('storeConnections', JSON.stringify(connections));
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to create test connection:", error);
+      return false;
+    }
   },
   
   // Helper to get stored connections

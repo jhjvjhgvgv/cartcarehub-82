@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, Link2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Link2, RefreshCw, XCircle } from "lucide-react";
 import { ConnectionService } from "@/services/ConnectionService";
 import { StoreConnection } from "./types";
 
@@ -13,10 +13,12 @@ interface ConnectionStatusProps {
 export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
   const [connections, setConnections] = useState<StoreConnection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchConnections = async () => {
       try {
+        setLoading(true);
         let results: StoreConnection[] = [];
         
         if (isMaintenance) {
@@ -38,7 +40,7 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     };
     
     fetchConnections();
-  }, [isMaintenance]);
+  }, [isMaintenance, refreshKey]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -66,17 +68,30 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     }
   };
 
+  const handleRefresh = () => {
+    setRefreshKey(prevKey => prevKey + 1);
+  };
+
   if (loading) {
     return <div>Loading connection status...</div>;
   }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Link2 className="h-5 w-5" />
           Connection Status
         </CardTitle>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="h-8 w-8 p-0"
+        >
+          <RefreshCw className="h-4 w-4" />
+          <span className="sr-only">Refresh</span>
+        </Button>
       </CardHeader>
       <CardContent>
         {connections.length === 0 ? (
