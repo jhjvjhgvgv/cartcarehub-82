@@ -1,3 +1,4 @@
+
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { StoreConnectionsManager } from "@/components/settings/StoreConnectionsManager";
 
 const CustomerSettings = () => {
   const { toast } = useToast();
@@ -77,6 +79,12 @@ const CustomerSettings = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Maintenance Connection Manager */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium">Maintenance Providers</h3>
+          <StoreConnectionsManager />
+        </div>
       </div>
     </CustomerLayout>
   );

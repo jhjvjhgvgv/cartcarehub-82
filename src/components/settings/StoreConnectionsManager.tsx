@@ -1,0 +1,75 @@
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Invitation } from "./types";
+import { ConnectionService } from "@/services/ConnectionService";
+import { ConnectionDialog } from "./ConnectionDialog";
+import { AccountIdentifier } from "./AccountIdentifier";
+import { ConnectionStatus } from "./ConnectionStatus";
+import { PendingInvitationsList } from "./PendingInvitationsList";
+import { ConnectedStoresList } from "./ConnectedStoresList";
+
+export function StoreConnectionsManager() {
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const currentUser = ConnectionService.getCurrentUser();
+  const isMaintenance = false; // This is for store accounts
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>
+          Maintenance Providers
+        </CardTitle>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setIsDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Connect to Maintenance Provider
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-6">
+          {/* Current Account ID */}
+          <AccountIdentifier 
+            currentUser={currentUser}
+            isMaintenance={isMaintenance}
+          />
+          
+          {/* Connection Status Card */}
+          <ConnectionStatus isMaintenance={isMaintenance} />
+          
+          <ConnectedStoresList 
+            isMaintenance={isMaintenance} 
+            formatDate={formatDate} 
+          />
+
+          <PendingInvitationsList 
+            invitations={invitations} 
+            setInvitations={setInvitations} 
+            isMaintenance={isMaintenance} 
+            formatDate={formatDate} 
+          />
+        </div>
+      </CardContent>
+
+      {/* Connection Dialog */}
+      <ConnectionDialog 
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        isMaintenance={isMaintenance}
+        currentUserId={currentUser.id}
+      />
+    </Card>
+  );
+}
