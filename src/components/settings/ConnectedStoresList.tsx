@@ -1,13 +1,14 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Clock, Store, Pencil } from "lucide-react"
+import { CheckCircle, Clock, Store, Pencil, Link } from "lucide-react"
 import { managedStores } from "@/constants/stores"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { StoreForm } from "./StoreForm"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+import { ConnectionRequestsDialog } from "./ConnectionRequestsDialog"
 
 interface ConnectedStoresListProps {
   isMaintenance: boolean
@@ -49,7 +50,12 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
 
   return (
     <div>
-      <h3 className="text-sm font-medium mb-3">Connected {isMaintenance ? "Stores" : "Maintenance Providers"}</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm font-medium">Connected {isMaintenance ? "Stores" : "Maintenance Providers"}</h3>
+        {isMaintenance && (
+          <ConnectionRequestsDialog isMaintenance={true} />
+        )}
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -104,8 +110,16 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                 </TableRow>
               )) : 
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No maintenance providers connected yet.
+                <TableCell colSpan={4} className="text-center py-4">
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-muted-foreground">No maintenance providers connected yet.</p>
+                    <ConnectionRequestsDialog isMaintenance={false} store={{
+                      id: "store123", // This would be the current store's ID
+                      name: "Your Store",
+                      status: "active",
+                      connectedSince: new Date().toISOString()
+                    }} />
+                  </div>
                 </TableCell>
               </TableRow>
             }

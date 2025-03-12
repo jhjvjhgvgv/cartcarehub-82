@@ -1,10 +1,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
-import { CheckCircle } from "lucide-react"
 import { InvitationForm } from "./InvitationForm"
 import { ConnectedStoresList } from "./ConnectedStoresList"
 import { PendingInvitationsList } from "./PendingInvitationsList"
+import { ConnectionStatus } from "./ConnectionStatus"
 import { Invitation, StoreMaintenanceManagerProps } from "./types"
 
 export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManagerProps) {
@@ -24,6 +24,9 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
+          {/* Connection Status Card */}
+          <ConnectionStatus isMaintenance={isMaintenance} />
+          
           <InvitationForm 
             isMaintenance={isMaintenance} 
             invitations={invitations} 

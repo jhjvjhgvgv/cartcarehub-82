@@ -16,3 +16,12 @@ export interface Store {
   status: "active" | "inactive" | "pending"
   connectedSince: string
 }
+
+export interface StoreConnection {
+  id: string
+  storeId: string
+  maintenanceId: string
+  status: "pending" | "active" | "rejected"
+  requestedAt: string
+  connectedAt?: string
+}
