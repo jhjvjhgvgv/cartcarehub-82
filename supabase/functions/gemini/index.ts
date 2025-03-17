@@ -3,8 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
-// Fixed model name to use gemini-pro which is the correct name for the v1beta API
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+// Using the correct model name for the v1beta API - "gemini-1.5-flash" is one of the latest models
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
