@@ -3,7 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+// Updated API URL to use the correct endpoint based on Google's documentation
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,6 +57,7 @@ serve(async (req) => {
     const fullPrompt = `${systemPrompt}\n\n${prompt}`
 
     console.log(`Making request to Gemini API with type: ${type}`)
+    console.log(`Using API URL: ${API_URL}`)
     
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
