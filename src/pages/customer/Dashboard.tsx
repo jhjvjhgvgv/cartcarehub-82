@@ -2,11 +2,49 @@
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { ShoppingCart, AlertTriangle, CheckCircle, XCircle, Calendar, Tool, FileCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { EmergencyRepairDialog } from "@/components/customers/EmergencyRepairDialog";
 import { InspectionRequestDialog } from "@/components/customers/InspectionRequestDialog";
+import { AICartAssistant } from "@/components/customer/AICartAssistant";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+
+// Sample recent activity data
+const recentActivities = [
+  {
+    id: 1,
+    type: "maintenance",
+    date: "2025-03-15",
+    description: "Regular maintenance completed",
+    icon: Tool,
+    status: "completed",
+  },
+  {
+    id: 2,
+    type: "inspection",
+    date: "2025-03-10",
+    description: "Cart #1042 inspection",
+    icon: FileCheck,
+    status: "completed",
+  },
+  {
+    id: 3,
+    type: "issue",
+    date: "2025-03-08",
+    description: "Reported wheel issue on Cart #1039",
+    icon: AlertTriangle,
+    status: "pending",
+  },
+  {
+    id: 4,
+    type: "maintenance",
+    date: "2025-03-01",
+    description: "Emergency repair request",
+    icon: Tool,
+    status: "completed",
+  },
+];
 
 const CustomerDashboard = () => {
   // This would typically come from an API
@@ -19,6 +57,24 @@ const CustomerDashboard = () => {
 
   const activePercentage = Math.round((cartStats.activeCarts / cartStats.totalCarts) * 100);
   const inactivePercentage = Math.round((cartStats.inactiveCarts / cartStats.totalCarts) * 100);
+
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "text-green-600";
+      case "pending":
+        return "text-amber-600";
+      case "cancelled":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
 
   return (
     <CustomerLayout>
@@ -101,12 +157,49 @@ const CustomerDashboard = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Recent Activity
+                <Button variant="outline" size="sm" className="text-xs">
+                  View All
+                </Button>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">No recent activity to display.</p>
+              {recentActivities.length > 0 ? (
+                <Table>
+                  <TableBody>
+                    {recentActivities.map((activity) => (
+                      <TableRow key={activity.id} className="hover:bg-muted/30">
+                        <TableCell className="py-2">
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-muted p-2 flex-shrink-0">
+                              <activity.icon className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{activity.description}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                <p className="text-xs text-muted-foreground">{formatDate(activity.date)}</p>
+                                <span className={`text-xs ${getStatusColor(activity.status)} ml-2 font-medium capitalize`}>
+                                  {activity.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent activity to display.</p>
+              )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-1">
+          <AICartAssistant />
         </div>
       </div>
     </CustomerLayout>
