@@ -21,8 +21,11 @@ serve(async (req) => {
     if (!GEMINI_API_KEY) {
       console.error("GEMINI_API_KEY environment variable is not set")
       return new Response(
-        JSON.stringify({ error: "API key configuration error. Please check server configuration." }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: "AI service is currently unavailable. Please try again later or contact support.",
+          details: "API key is not configured" 
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -30,7 +33,7 @@ serve(async (req) => {
     
     if (!prompt) {
       return new Response(
-        JSON.stringify({ error: "Prompt is required" }),
+        JSON.stringify({ error: "Please provide a question or description" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -53,7 +56,6 @@ serve(async (req) => {
     const fullPrompt = `${systemPrompt}\n\n${prompt}`
 
     console.log(`Making request to Gemini API with type: ${type}`)
-    console.log(`Using API key: ${GEMINI_API_KEY ? "Found (not showing for security)" : "Not found"}`)
     
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
@@ -79,8 +81,23 @@ serve(async (req) => {
     
     if (!response.ok) {
       console.error("Gemini API error:", data)
+      
+      let userFriendlyError = "Failed to get AI response. Please try again later."
+      
+      // Handle specific API key errors
+      if (data.error?.message?.includes("API key not valid")) {
+        console.error("Invalid API key detected")
+        return new Response(
+          JSON.stringify({ 
+            error: "AI service is temporarily unavailable. Our team has been notified.",
+            details: "API key validation error" 
+          }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
       return new Response(
-        JSON.stringify({ error: "Failed to generate response", details: data }),
+        JSON.stringify({ error: userFriendlyError, details: data.error }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -94,7 +111,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in Gemini function:", error)
     return new Response(
-      JSON.stringify({ error: "An unexpected error occurred", details: error.message }),
+      JSON.stringify({ 
+        error: "An unexpected error occurred with the AI service. Please try again later.",
+        details: error.message 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

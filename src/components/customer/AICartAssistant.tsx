@@ -2,8 +2,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Sparkles, Loader2, Send } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Sparkles, Loader2, Send, AlertTriangle } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useGemini } from "@/hooks/use-gemini"
 
@@ -16,8 +15,13 @@ export function AICartAssistant() {
     if (!question.trim() || isLoading) return
 
     clearResult()
-    await generateResponse(question, "customer")
-    setQuestion("")
+    try {
+      await generateResponse(question, "customer")
+      setQuestion("")
+    } catch (err) {
+      console.error("Error submitting question:", err)
+      // Error is already handled by the useGemini hook
+    }
   }
 
   return (
@@ -35,7 +39,13 @@ export function AICartAssistant() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-            <p className="text-red-700 text-sm">{error}</p>
+            <div className="flex gap-2 items-start">
+              <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-700 text-sm font-medium">Unable to get AI response</p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
