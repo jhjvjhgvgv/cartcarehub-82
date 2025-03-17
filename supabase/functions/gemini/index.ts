@@ -3,8 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
-// Updated API URL to use the correct endpoint based on Google's documentation
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent"
+// Fixed model name to use gemini-pro which is the correct name for the v1beta API
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,6 +58,7 @@ serve(async (req) => {
 
     console.log(`Making request to Gemini API with type: ${type}`)
     console.log(`Using API URL: ${API_URL}`)
+    console.log(`Prompt: ${fullPrompt.substring(0, 100)}...`)
     
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
@@ -79,10 +80,9 @@ serve(async (req) => {
       }),
     })
 
-    const data = await response.json()
-    
     if (!response.ok) {
-      console.error("Gemini API error:", data)
+      const data = await response.json()
+      console.error("Gemini API error:", JSON.stringify(data))
       
       let userFriendlyError = "Failed to get AI response. Please try again later."
       
@@ -104,6 +104,7 @@ serve(async (req) => {
       )
     }
 
+    const data = await response.json()
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated."
     
     return new Response(
