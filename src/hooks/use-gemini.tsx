@@ -14,24 +14,24 @@ export function useGemini() {
     setError(null)
     
     try {
-      const { data, error } = await supabase.functions.invoke("gemini", {
+      const { data, error: invokeError } = await supabase.functions.invoke("gemini", {
         body: { prompt, type }
       })
       
-      if (error) {
-        console.error("Supabase function error:", error)
-        setError(error.message || "Failed to generate response")
+      if (invokeError) {
+        console.error("Supabase function error:", invokeError)
+        setError(invokeError.message || "Failed to generate response")
         return null
       }
       
-      if (data.error) {
+      if (data?.error) {
         console.error("Gemini API error:", data.error)
         setError(data.error)
         return null
       }
       
-      setResult(data.result)
-      return data.result
+      setResult(data?.result || "No response received")
+      return data?.result
     } catch (err: any) {
       console.error("Error calling Gemini API:", err)
       setError(err.message || "An unexpected error occurred")

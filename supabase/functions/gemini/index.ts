@@ -17,6 +17,15 @@ serve(async (req) => {
   }
 
   try {
+    // Check if API key is available
+    if (!GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY environment variable is not set")
+      return new Response(
+        JSON.stringify({ error: "API key configuration error. Please check server configuration." }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { prompt, type } = await req.json()
     
     if (!prompt) {
@@ -44,6 +53,7 @@ serve(async (req) => {
     const fullPrompt = `${systemPrompt}\n\n${prompt}`
 
     console.log(`Making request to Gemini API with type: ${type}`)
+    console.log(`Using API key: ${GEMINI_API_KEY ? "Found (not showing for security)" : "Not found"}`)
     
     const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
