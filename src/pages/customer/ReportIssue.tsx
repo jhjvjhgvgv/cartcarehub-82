@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { AICartAssistant } from "@/components/customer/AICartAssistant";
 
 const ReportIssue = () => {
   const { toast } = useToast();
@@ -32,37 +34,41 @@ const ReportIssue = () => {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Issue Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="cartId">Cart ID</Label>
-                <Input
-                  id="cartId"
-                  placeholder="Enter cart ID (e.g., A12345)"
-                  value={cartId}
-                  onChange={(e) => setCartId(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Please describe the issue you're experiencing..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  className="min-h-[150px]"
-                />
-              </div>
-              <Button type="submit">Submit Report</Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Issue Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cartId">Cart ID</Label>
+                  <Input
+                    id="cartId"
+                    placeholder="Enter cart ID (e.g., A12345)"
+                    value={cartId}
+                    onChange={(e) => setCartId(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Please describe the issue you're experiencing..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    className="min-h-[150px]"
+                  />
+                </div>
+                <Button type="submit">Submit Report</Button>
+              </form>
+            </CardContent>
+          </Card>
+          
+          <AICartAssistant />
+        </div>
       </div>
     </CustomerLayout>
   );

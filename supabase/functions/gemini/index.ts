@@ -1,0 +1,91 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts"
+
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const { prompt, type } = await req.json()
+    
+    if (!prompt) {
+      return new Response(
+        JSON.stringify({ error: "Prompt is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Different prompts based on request type
+    let systemPrompt = ""
+    
+    if (type === "maintenance") {
+      systemPrompt = `You are an expert shopping cart maintenance assistant. 
+      Analyze the following cart data and provide specific maintenance recommendations. 
+      Focus on prioritizing issues and suggesting preventative actions.`
+    } else if (type === "customer") {
+      systemPrompt = `You are a helpful customer support assistant for shopping carts.
+      Help customers with their cart-related questions and issues in a friendly, informative way.
+      Keep responses concise and practical.`
+    } else {
+      systemPrompt = `You are an AI assistant specialized in shopping cart management and maintenance.`
+    }
+
+    const fullPrompt = `${systemPrompt}\n\n${prompt}`
+
+    console.log(`Making request to Gemini API with type: ${type}`)
+    
+    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: fullPrompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1024,
+        }
+      }),
+    })
+
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error("Gemini API error:", data)
+      return new Response(
+        JSON.stringify({ error: "Failed to generate response", details: data }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated."
+    
+    return new Response(
+      JSON.stringify({ result: content }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  } catch (error) {
+    console.error("Error in Gemini function:", error)
+    return new Response(
+      JSON.stringify({ error: "An unexpected error occurred", details: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+})
