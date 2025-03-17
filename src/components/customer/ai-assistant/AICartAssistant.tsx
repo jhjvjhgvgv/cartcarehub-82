@@ -29,8 +29,8 @@ export function AICartAssistant() {
     clearError();
     
     toast({
-      title: "Retrying request",
-      description: "Attempting to connect to the assistant again...",
+      title: "Reconnecting to assistant",
+      description: "Getting the retail expertise you need...",
     });
     
     try {
@@ -43,16 +43,16 @@ export function AICartAssistant() {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border-t-4 border-t-primary-600">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Sparkles className="h-5 w-5 text-blue-500" />
+          <Sparkles className="h-5 w-5 text-primary-500" />
           Cart Care Assistant
         </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-4">
-          Have questions about cart management, maintenance schedules, or best practices? Ask our AI assistant!
+          Your personal cart management expert. Ask about maintenance schedules, inventory tracking, or best practices!
         </p>
 
         <ResponseDisplay 
