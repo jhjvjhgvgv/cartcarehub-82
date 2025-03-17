@@ -15,11 +15,16 @@ export const useCartDelete = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["carts"] })
       
-      // Only navigate if we're on a cart details page
+      // Only navigate if we're on a cart details page, and navigate to the carts list
       const currentPath = location.pathname
-      if (currentPath.startsWith('/carts/')) {
+      if (currentPath.startsWith('/carts/') && currentPath.length > 7) {
         navigate('/carts', { replace: true })
       }
+
+      toast({
+        title: "Success",
+        description: "Cart has been deleted successfully.",
+      })
     },
     onError: (error: Error) => {
       toast({

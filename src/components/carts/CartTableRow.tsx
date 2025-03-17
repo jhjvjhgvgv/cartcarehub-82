@@ -28,9 +28,15 @@ export function CartTableRow({
     const target = event.target as HTMLElement
     const isButton = target.tagName === 'BUTTON' || target.closest('button')
     const isCheckbox = target.tagName === 'INPUT' || target.closest('[role="checkbox"]')
-    if (!isButton && !isCheckbox) {
+    const isDropdownMenu = target.closest('[role="menu"]') || target.closest('[data-radix-popper-content-wrapper]')
+    
+    if (!isButton && !isCheckbox && !isDropdownMenu) {
       onClick(cart.id, event)
     }
+  }
+
+  const handleCheckboxChange = (checked: boolean) => {
+    onSelect(cart.id, checked)
   }
 
   return (
@@ -41,7 +47,8 @@ export function CartTableRow({
       <TableCell className="w-[50px]">
         <Checkbox
           checked={isSelected}
-          onCheckedChange={(checked) => onSelect(cart.id, checked as boolean)}
+          onCheckedChange={(checked) => handleCheckboxChange(checked as boolean)}
+          onClick={(e) => e.stopPropagation()}
         />
       </TableCell>
       <TableCell className="py-4 px-4">

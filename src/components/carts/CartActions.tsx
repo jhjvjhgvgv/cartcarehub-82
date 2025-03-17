@@ -38,6 +38,12 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
     }, 100)
   }
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setShowDeleteDialog(true)
+  }
+
   return (
     <div className="flex items-center gap-2">
       <MaintenanceAction 
@@ -48,17 +54,17 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" disabled={isDeleting}>
+          <Button variant="ghost" size="sm" disabled={isDeleting} onClick={(e) => e.stopPropagation()}>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
           <DropdownMenuItem onClick={handleEditClick}>
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => setShowDeleteDialog(true)}
+            onClick={handleDeleteClick}
             className="text-red-600"
           >
             <Trash2Icon className="mr-2 h-4 w-4" />
