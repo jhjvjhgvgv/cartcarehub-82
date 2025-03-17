@@ -32,10 +32,8 @@ export function CartActions({ cart, onEdit, onDelete }: CartActionsProps) {
     // Close the dialog immediately to prevent UI freeze
     setShowDeleteDialog(false)
     
-    // Slight delay to allow dialog to close
-    setTimeout(() => {
-      onDelete(cart.id)
-    }, 100)
+    // Call the delete function without delay
+    onDelete(cart.id)
   }
 
   const handleDeleteClick = (e: React.MouseEvent) => {

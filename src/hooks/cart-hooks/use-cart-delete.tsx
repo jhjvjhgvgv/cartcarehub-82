@@ -13,6 +13,7 @@ export const useCartDelete = () => {
   const { mutate: handleDeleteCart, isPending: isDeleting } = useMutation({
     mutationFn: deleteCart,
     onSuccess: () => {
+      // Invalidate and refetch carts query to update UI
       queryClient.invalidateQueries({ queryKey: ["carts"] })
       
       // Only navigate if we're on a cart details page, and navigate to the carts list
