@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Printer, Download } from "lucide-react";
 import { Cart } from "@/types/cart";
-import QRCode from 'qrcode.react';
+import * as QRCodeReact from 'qrcode.react';
 import { generateCartQRCodeURL } from '@/utils/qr-generator';
 
 interface CartQRCodeProps {
@@ -79,13 +79,12 @@ export const CartQRCode: React.FC<CartQRCodeProps> = ({ cart, showCartInfo = tru
       <CardContent ref={qrCardRef}>
         <div className="flex flex-col items-center">
           <div className="qr-canvas mb-4">
-            <QRCode
+            <QRCodeReact.QRCodeSVG
               id="cart-qr-code"
               value={qrCodeValue}
               size={200}
               level="H"
               includeMargin
-              renderAs="canvas"
             />
           </div>
           {showCartInfo && (
