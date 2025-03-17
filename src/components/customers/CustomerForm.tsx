@@ -1,18 +1,23 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Building2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-interface CustomerFormData {
-  name: string;
-  contact: string;
-  email: string;
-  phone: string;
-  location: string;
-}
+const customerSchema = z.object({
+  name: z.string().min(2, { message: "Company name must be at least 2 characters" }),
+  contact: z.string().min(2, { message: "Contact person name is required" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  phone: z.string().min(6, { message: "Please enter a valid phone number" }),
+  location: z.string().min(3, { message: "Location is required" }),
+});
+
+export type CustomerFormData = z.infer<typeof customerSchema>;
 
 interface CustomerFormProps {
   initialData?: CustomerFormData;
@@ -22,7 +27,10 @@ interface CustomerFormProps {
 
 export const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
     defaultValues: initialData || {
       name: "",
       contact: "",
@@ -32,13 +40,25 @@ export const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormPr
     },
   });
 
-  const handleSubmit = (data: CustomerFormData) => {
-    onSubmit(data);
-    form.reset();
-    toast({
-      title: initialData ? "Customer Updated" : "Customer Added",
-      description: `Successfully ${initialData ? "updated" : "added"} ${data.name}`,
-    });
+  const handleSubmit = async (data: CustomerFormData) => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(data);
+      form.reset();
+      toast({
+        title: initialData ? "Customer Updated" : "Customer Added",
+        description: `Successfully ${initialData ? "updated" : "added"} ${data.name}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error processing your request",
+        variant: "destructive",
+      });
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -114,11 +134,13 @@ export const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormPr
         />
         <div className="flex justify-end gap-2">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Cancel
             </Button>
           )}
-          <Button type="submit">{initialData ? "Update Customer" : "Add Customer"}</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : initialData ? "Update Customer" : "Add Customer"}
+          </Button>
         </div>
       </form>
     </Form>
