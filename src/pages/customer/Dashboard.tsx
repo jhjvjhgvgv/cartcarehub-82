@@ -1,8 +1,7 @@
-
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, AlertTriangle, CheckCircle, XCircle, Calendar, Tool, FileCheck } from "lucide-react";
+import { ShoppingCart, AlertTriangle, CheckCircle, XCircle, Calendar, Wrench, FileCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { EmergencyRepairDialog } from "@/components/customers/EmergencyRepairDialog";
@@ -17,7 +16,7 @@ const recentActivities = [
     type: "maintenance",
     date: "2025-03-15",
     description: "Regular maintenance completed",
-    icon: Tool,
+    icon: Wrench,
     status: "completed",
   },
   {
@@ -41,7 +40,7 @@ const recentActivities = [
     type: "maintenance",
     date: "2025-03-01",
     description: "Emergency repair request",
-    icon: Tool,
+    icon: Wrench,
     status: "completed",
   },
 ];
