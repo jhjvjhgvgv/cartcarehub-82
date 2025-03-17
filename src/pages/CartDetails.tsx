@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import DashboardLayout from "@/components/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, QrCode } from "lucide-react"
 import { SingleCartEdit } from "@/components/carts/SingleCartEdit"
 import { useCartSubmit } from "@/hooks/cart-hooks/use-cart-submit"
 import { useCartDelete } from "@/hooks/cart-hooks/use-cart-delete"
@@ -13,11 +13,14 @@ import { CartDetailView } from "@/components/carts/CartDetailView"
 import { CartLoading } from "@/components/carts/CartLoading"
 import { CartError } from "@/components/carts/CartError"
 import { managedStores } from "@/constants/stores"
+import { CartQRCode } from "@/components/carts/CartQRCode"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 export default function CartDetails() {
   const { cartId } = useParams<{ cartId: string }>()
   const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)
+  const [isQRDialogOpen, setIsQRDialogOpen] = useState(false)
   const { handleSubmit, isPending: isSubmitting } = useCartSubmit()
   const { handleDeleteCart, isDeleting } = useCartDelete()
 
@@ -103,11 +106,23 @@ export default function CartDetails() {
               <h1 className="text-2xl font-bold text-gray-900">Cart Details</h1>
             </div>
             
-            {!isEditing && (
-              <Button onClick={handleEdit}>
-                Edit Cart
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {!isEditing && (
+                <>
+                  <Button 
+                    onClick={() => setIsQRDialogOpen(true)}
+                    variant="secondary"
+                    className="flex items-center gap-2"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    View QR Code
+                  </Button>
+                  <Button onClick={handleEdit}>
+                    Edit Cart
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           
           {isEditing ? (
@@ -130,6 +145,17 @@ export default function CartDetails() {
           )}
         </div>
       </div>
+
+      <Dialog open={isQRDialogOpen} onOpenChange={setIsQRDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cart QR Code</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <CartQRCode cart={cart} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }
