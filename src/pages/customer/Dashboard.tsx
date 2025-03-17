@@ -1,3 +1,4 @@
+
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ const CustomerDashboard = () => {
                 <Link to="/customer/cart-status">Check Cart Status</Link>
               </Button>
               <Button asChild variant="secondary" className="w-full">
-                <Link to="/customer/report">Report an Issue</Link>
+                <Link to="/customer/report-issue">Report an Issue</Link>
               </Button>
             </CardContent>
           </Card>
