@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Printer, Download } from "lucide-react";
 import { Cart } from "@/types/cart";
-import QRCode from 'qrcode.react';
+import { QRCode } from 'qrcode.react';
 import { generateCartQRCodeURL } from '@/utils/qr-generator';
 
 interface CartQRCodeProps {
