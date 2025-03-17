@@ -24,7 +24,7 @@ export function QuestionForm({ onSubmit, isLoading }: QuestionFormProps) {
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
         <Textarea
-          placeholder="Ask a question about shopping carts..."
+          placeholder="Ask about cart management, maintenance schedules, inventory, etc..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           className="min-h-[100px]"

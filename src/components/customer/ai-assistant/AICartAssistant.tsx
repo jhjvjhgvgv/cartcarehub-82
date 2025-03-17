@@ -52,7 +52,7 @@ export function AICartAssistant() {
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-4">
-          Have questions about shopping carts or need assistance? Ask our AI assistant!
+          Have questions about cart management, maintenance schedules, or best practices? Ask our AI assistant!
         </p>
 
         <ResponseDisplay 

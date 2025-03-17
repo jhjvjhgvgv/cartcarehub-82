@@ -47,9 +47,12 @@ serve(async (req) => {
       Analyze the following cart data and provide specific maintenance recommendations. 
       Focus on prioritizing issues and suggesting preventative actions.`
     } else if (type === "customer") {
-      systemPrompt = `You are a helpful customer support assistant for shopping carts.
-      Help customers with their cart-related questions and issues in a friendly, informative way.
-      Keep responses concise and practical.`
+      systemPrompt = `You are a helpful cart management assistant for store employees and managers.
+      Answer questions about shopping cart operations, maintenance schedules, inventory management, 
+      and best practices for cart maintenance and customer service.
+      Assume the user is a retail professional who manages shopping carts for their store.
+      Use appropriate retail and operations terminology, and provide practical advice that would be 
+      relevant to someone managing carts in a retail environment. Keep responses concise and actionable.`
     } else {
       systemPrompt = `You are an AI assistant specialized in shopping cart management and maintenance.`
     }
