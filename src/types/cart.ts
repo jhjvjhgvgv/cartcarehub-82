@@ -15,4 +15,8 @@ export interface Cart {
     daysUntilMaintenance: number
     lastCalculated: string
   }
+  maintenance_history?: Array<{
+    date: string;
+    description: string;
+  }>
 }

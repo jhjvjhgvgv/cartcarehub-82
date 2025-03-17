@@ -141,7 +141,7 @@ export default function CartDetails() {
               </CardContent>
             </Card>
           ) : (
-            <CartDetailView cart={cart} />
+            <CartDetailView cart={cart} onEdit={handleEdit} />
           )}
         </div>
       </div>
