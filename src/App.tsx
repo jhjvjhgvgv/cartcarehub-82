@@ -19,6 +19,7 @@ import CustomerSettings from "@/pages/customer/Settings"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingView } from "@/components/auth/LoadingView"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { InstallPWA } from "@/components/ui/install-pwa"
 
 // Create a client
 const queryClient = new QueryClient({
@@ -50,6 +51,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <div className="fixed top-4 right-4 z-50">
+          <InstallPWA />
+        </div>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
