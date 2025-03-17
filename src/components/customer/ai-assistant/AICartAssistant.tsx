@@ -47,7 +47,7 @@ export function AICartAssistant() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-primary-500" />
-          Cart Care Assistant
+          CartMate AI
         </CardTitle>
       </CardHeader>
       <CardContent>
