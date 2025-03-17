@@ -2,25 +2,45 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Sparkles, Loader2, Send, AlertTriangle } from "lucide-react"
+import { Sparkles, Loader2, Send, AlertTriangle, RefreshCw } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useGemini } from "@/hooks/use-gemini"
+import { useToast } from "@/components/ui/use-toast"
 
 export function AICartAssistant() {
-  const { generateResponse, isLoading, error, result, clearResult } = useGemini()
+  const { generateResponse, isLoading, error, result, clearResult, clearError } = useGemini()
   const [question, setQuestion] = useState("")
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!question.trim() || isLoading) return
 
     clearResult()
+    clearError()
+    
     try {
       await generateResponse(question, "customer")
       setQuestion("")
     } catch (err) {
       console.error("Error submitting question:", err)
       // Error is already handled by the useGemini hook
+    }
+  }
+
+  const handleRetry = async () => {
+    if (!question.trim() || isLoading) return
+    clearError()
+    
+    toast({
+      title: "Retrying request",
+      description: "Attempting to connect to the assistant again...",
+    })
+    
+    try {
+      await generateResponse(question, "customer")
+    } catch (err) {
+      console.error("Error retrying question:", err)
     }
   }
 
@@ -41,9 +61,19 @@ export function AICartAssistant() {
           <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
             <div className="flex gap-2 items-start">
               <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <p className="text-red-700 text-sm font-medium">Unable to get AI response</p>
                 <p className="text-red-600 text-sm">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRetry} 
+                  disabled={isLoading}
+                  className="mt-2 text-xs"
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Retry
+                </Button>
               </div>
             </div>
           </div>
