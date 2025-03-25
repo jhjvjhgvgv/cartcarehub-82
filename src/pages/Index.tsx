@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { Cart3DCanvas } from "@/components/3d/Cart3DCanvas";
+import { ShoppingCart } from "lucide-react";
 
 // Make sure to define this type the same way across all files
 type UserRole = "maintenance" | "store";
@@ -52,8 +53,8 @@ const Index = () => {
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="bg-white p-4 rounded-full shadow-lg mb-4 relative" style={{ width: '120px', height: '120px' }}>
-              {/* Replace static image with 3D cart */}
-              <Cart3DCanvas className="w-full h-full absolute inset-0" />
+              {/* Replace 3D cart with simple Lucide ShoppingCart icon */}
+              <ShoppingCart className="w-full h-full text-primary-600" />
             </div>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg animate-fade-in">
