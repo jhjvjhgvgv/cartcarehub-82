@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { LoadingView } from "@/components/auth/LoadingView"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { InstallPWA } from "@/components/ui/install-pwa"
+import { TestModeIndicator } from "@/components/ui/test-mode-indicator"
 
 // Create a client
 const queryClient = new QueryClient({
@@ -40,6 +41,9 @@ const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, al
   if (testMode === "true") {
     if (!allowedRole || allowedRole === testRole) {
       return <>{element}</>;
+    } else {
+      // If test mode is enabled but wrong role, redirect to appropriate dashboard
+      return <Navigate to={testRole === "maintenance" ? "/dashboard" : "/customer/dashboard"} replace />;
     }
   }
   
@@ -90,6 +94,7 @@ function App() {
           <Route path="/customer/report-issue" element={<ProtectedRoute element={<ReportIssue />} allowedRole="store" />} />
           <Route path="/customer/settings" element={<ProtectedRoute element={<CustomerSettings />} allowedRole="store" />} />
         </Routes>
+        <TestModeIndicator />
         <Toaster />
       </Router>
     </QueryClientProvider>
