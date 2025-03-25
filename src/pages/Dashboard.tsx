@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Building2, ShoppingCart, ChevronRight, BarChart, Percent, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -112,6 +113,11 @@ const Index = () => {
               </div>
             </div>
           </Card>
+        </div>
+        
+        {/* Analytics Chart */}
+        <div className="px-2">
+          <AnalyticsChart />
         </div>
 
         <Card className="flex-1 mx-2">
