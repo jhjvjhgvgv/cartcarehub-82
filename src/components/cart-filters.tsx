@@ -52,7 +52,7 @@ export function CartFilters({ onFilterChange, managedStores }: CartFiltersProps)
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-6">
       <div className="grid gap-6 md:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="rfidTag" className="text-sm font-medium">QR Code</Label>
