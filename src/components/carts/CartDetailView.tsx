@@ -6,6 +6,7 @@ import { Cart } from "@/types/cart";
 import { CartQRCode } from "./CartQRCode";
 import { CartPredictionBadge } from "./CartPredictionBadge";
 import { CartAIRecommendations } from "./CartAIRecommendations";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 interface CartDetailViewProps {
   cart: Cart;
@@ -75,27 +76,34 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
             </CardContent>
           </Card>
 
-          {/* Maintenance history if available */}
-          {cart.maintenance_history && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Maintenance History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {Array.isArray(cart.maintenance_history) ? (
-                    cart.maintenance_history.map((history, index) => (
-                      <li key={index} className="py-1">
-                        {history.date}: {history.description}
-                      </li>
-                    ))
-                  ) : (
-                    <li>No maintenance history available.</li>
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+          {/* Maintenance history */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Maintenance History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {cart.maintenance_history && cart.maintenance_history.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cart.maintenance_history.map((record, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{formatDate(record.date)}</TableCell>
+                        <TableCell>{record.description}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-muted-foreground">No maintenance history available.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right column */}

@@ -18,6 +18,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
       status: cart.status,
       last_maintenance: lastMaintenance, // Use snake_case
       issues: cart.issues,
+      maintenance_history: cart.maintenance_history,
     });
 
     const { data, error } = await retryOperation(async () => 
@@ -30,6 +31,7 @@ export const updateCart = async (cart: Cart): Promise<Cart> => {
           status: cart.status,
           last_maintenance: lastMaintenance, // Use snake_case
           issues: cart.issues,
+          maintenance_history: cart.maintenance_history || [],
         })
         .eq('id', cart.id)
         .select()

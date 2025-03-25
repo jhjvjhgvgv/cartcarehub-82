@@ -2,7 +2,7 @@
 import { Cart } from "@/types/cart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Battery, MapPin, AlertTriangle } from "lucide-react";
+import { ShoppingCart, Battery, MapPin, AlertTriangle, History } from "lucide-react";
 import { MaintenanceAction } from "@/components/carts/MaintenanceAction";
 import { ActivateAction } from "@/components/carts/ActivateAction";
 
@@ -22,6 +22,9 @@ export function CartCard({ cart, onStatusChange }: CartCardProps) {
         return <Badge variant="secondary">Retired</Badge>;
     }
   };
+
+  // Count maintenance events
+  const maintenanceCount = cart.maintenance_history?.length || 0;
 
   return (
     <Card className="flex flex-col">
@@ -54,6 +57,15 @@ export function CartCard({ cart, onStatusChange }: CartCardProps) {
               <p className="text-sm text-muted-foreground">{cart.qr_code}</p>
             </div>
           </div>
+          {maintenanceCount > 0 && (
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Maintenance History</p>
+                <p className="text-sm text-muted-foreground">{maintenanceCount} record{maintenanceCount !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+          )}
           {cart.issues.length > 0 && (
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />

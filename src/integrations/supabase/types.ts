@@ -15,6 +15,7 @@ export type Database = {
           id: string
           issues: string[]
           last_maintenance: string
+          maintenance_history: Json | null
           qr_code: string
           status: string
           store: string
@@ -26,6 +27,7 @@ export type Database = {
           id?: string
           issues?: string[]
           last_maintenance: string
+          maintenance_history?: Json | null
           qr_code: string
           status: string
           store: string
@@ -37,6 +39,7 @@ export type Database = {
           id?: string
           issues?: string[]
           last_maintenance?: string
+          maintenance_history?: Json | null
           qr_code?: string
           status?: string
           store?: string

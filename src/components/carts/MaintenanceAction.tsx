@@ -18,11 +18,25 @@ export function MaintenanceAction({
   const { toast } = useToast()
 
   const handleMaintenanceClick = () => {
-    // Update the cart's status to maintenance
+    // Create a new maintenance record
+    const today = new Date().toISOString().split('T')[0]
+    const newMaintenanceRecord = {
+      date: today,
+      description: "Cart marked for maintenance"
+    }
+    
+    // Update the cart's status to maintenance and add the maintenance record
     const updatedCart = {
       ...cart,
-      status: "maintenance" as const
+      status: "maintenance" as const,
+      lastMaintenance: today,
+      last_maintenance: today,
+      maintenance_history: [
+        ...(cart.maintenance_history || []),
+        newMaintenanceRecord
+      ]
     }
+    
     onEdit(updatedCart)
     
     toast({

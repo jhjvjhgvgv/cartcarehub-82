@@ -16,6 +16,7 @@ export const mapToCart = (row: CartRow): Cart => ({
   lastMaintenance: row.last_maintenance || "", // Map from snake_case to camelCase
   last_maintenance: row.last_maintenance || "", // Keep original field for direct DB operations
   issues: row.issues,
+  maintenance_history: row.maintenance_history as any || [],
 })
 
 // Convert from Cart to database insert/update object
@@ -26,6 +27,7 @@ export const mapToCartRow = (cart: Omit<Cart, "id">): Omit<CartRow, "id" | "crea
   status: cart.status,
   last_maintenance: cart.lastMaintenance || cart.last_maintenance || new Date().toISOString(), // Use either one, ensuring it's never null
   issues: cart.issues,
+  maintenance_history: cart.maintenance_history || [],
 })
 
 // Helper function to validate and convert string status to our enum type
