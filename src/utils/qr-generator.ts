@@ -25,8 +25,8 @@ export const isValidQRCode = (qrCode: string): boolean => {
  * Generates a URL for a cart QR code that links to the cart details
  */
 export const generateCartQRCodeURL = (cartId: string): string => {
-  // This will be the URL that the QR code will point to
+  // This will generate a URL that, when scanned, will open the cart details page
   // When someone scans the QR code, they will be taken to this URL
   const baseUrl = window.location.origin;
-  return `${baseUrl}/customer/cart/${cartId}`;
+  return `${baseUrl}/carts/${cartId}`;
 };

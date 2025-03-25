@@ -62,14 +62,16 @@ function App() {
           {/* Maintenance Routes - No longer protected */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/carts" element={<Carts />} />
+          {/* Make sure the cart details route matches the URL in the QR code */}
           <Route path="/carts/:cartId" element={<CartDetails />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/store/:id" element={<Store />} />
-
-          {/* Store Routes - No longer protected */}
+          
+          {/* Customer routes - Add customer cart route for QR scanning */}
           <Route path="/customer/dashboard" element={<CustomerDashboard />} />
           <Route path="/customer/cart-status" element={<CartStatus />} />
+          <Route path="/customer/cart/:cartId" element={<CartDetails />} />
           <Route path="/customer/report-issue" element={<ReportIssue />} />
           <Route path="/customer/settings" element={<CustomerSettings />} />
         </Routes>

@@ -28,13 +28,14 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
         description: `Found cart: ${existingCart.qr_code}`,
       })
       // Navigate to the cart details page
-      navigate(`/cart/${existingCart.id}`)
+      navigate(`/carts/${existingCart.id}`)
       setIsScanning(false)
     } else {
       toast({
         title: "Cart Not Found",
         description: "No cart found with this QR code. You can add it as a new cart.",
-        variant: "warning"
+        // Fixed the variant type error by using a valid variant
+        variant: "destructive"
       })
       // Close the scanner dialog
       setIsScanning(false)
