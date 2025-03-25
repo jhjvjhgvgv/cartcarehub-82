@@ -1,10 +1,11 @@
 
 import CustomerLayout from "@/components/CustomerLayout";
-import { ShoppingCart, AlertTriangle, Wrench, FileCheck } from "lucide-react";
+import { ShoppingCart, AlertTriangle, Wrench, FileCheck, BarChart } from "lucide-react";
 import { CartStatsCards } from "@/components/customer/dashboard/CartStatsCards";
 import { QuickActions } from "@/components/customer/dashboard/QuickActions";
 import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
 import { AICartAssistant } from "@/components/customer/AICartAssistant";
+import { KpiCard } from "@/components/customer/dashboard/KpiCard";
 
 // Sample recent activity data
 const recentActivities = [
@@ -53,7 +54,7 @@ const CustomerDashboard = () => {
 
   return (
     <CustomerLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
           <p className="text-muted-foreground">
@@ -61,9 +62,21 @@ const CustomerDashboard = () => {
           </p>
         </div>
 
+        {/* KPI Card */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <KpiCard
+            title="Cart Availability Rate"
+            value="92%"
+            icon={BarChart}
+            description="Average uptime across all carts"
+            trend={{ value: 3.2, isPositive: true }}
+            iconClassName="bg-primary-50 text-primary"
+          />
+        </div>
+
         <CartStatsCards cartStats={cartStats} />
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <QuickActions />
           <RecentActivity recentActivities={recentActivities} />
         </div>
