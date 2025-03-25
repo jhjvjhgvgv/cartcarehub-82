@@ -93,6 +93,12 @@ export default function CartDetails() {
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <div className="flex flex-col gap-4">
+          {/* Store name header */}
+          <div className="bg-primary-50 text-primary-900 py-2 px-4 rounded-lg text-center mb-2">
+            <p className="text-sm font-medium">Store</p>
+            <h2 className="text-xl font-bold">{cart.store}</h2>
+          </div>
+          
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Button
