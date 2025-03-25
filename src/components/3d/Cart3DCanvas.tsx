@@ -14,7 +14,7 @@ export const Cart3DCanvas = ({ className }: { className?: string }) => {
           height: '100%',
         }}
       >
-        <ShoppingCart3D />
+        <ShoppingCart3D autoRotate={false} />
       </Canvas>
     </div>
   );
