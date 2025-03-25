@@ -11,6 +11,7 @@ type UserRole = "maintenance" | "store" | "forgot-password";
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
 
   useEffect(() => {
     // Add a minimum delay to ensure loading screen is visible
@@ -27,13 +28,15 @@ const Index = () => {
   };
 
   const handlePortalClick = (role: UserRole) => {
-    if (role === 'maintenance') {
-      navigate('/dashboard');
-    } else if (role === 'store') {
-      navigate('/customer/dashboard');
-    } else if (role === 'forgot-password') {
+    if (role === 'forgot-password') {
       navigate('/forgot-password');
+    } else {
+      setSelectedPortal(role);
     }
+  };
+
+  const handleBack = () => {
+    setSelectedPortal(null);
   };
 
   if (isLoading) {
@@ -41,19 +44,32 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100">
-      <div className="w-full max-w-md px-4 py-6 sm:py-8 flex flex-col gap-8">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800">
+      <div className="w-full max-w-md px-6 py-8 flex flex-col gap-8">
         {/* Logo Section */}
         <div className="text-center space-y-3">
-          <h1 className="text-3xl sm:text-5xl font-bold text-primary-800 mb-2 drop-shadow-lg animate-fade-in">
+          <div className="flex justify-center">
+            <div className="bg-white p-4 rounded-full shadow-lg mb-4">
+              <img 
+                src="/lovable-uploads/c06befee-11a0-4a17-904a-78876c7f810a.png" 
+                alt="Cart Repair Pros Logo" 
+                className="w-16 h-16 object-contain"
+              />
+            </div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg animate-fade-in">
             Cart Repair Pros
           </h1>
-          <p className="text-sm sm:text-lg text-primary-600 animate-fade-in">
+          <p className="text-sm sm:text-base text-primary-100 animate-fade-in">
             Smart Cart Management System
           </p>
         </div>
 
-        <PortalSelection onPortalClick={handlePortalClick} />
+        {selectedPortal ? (
+          <AuthForm selectedRole={selectedPortal} onBack={handleBack} />
+        ) : (
+          <PortalSelection onPortalClick={handlePortalClick} />
+        )}
       </div>
     </div>
   );

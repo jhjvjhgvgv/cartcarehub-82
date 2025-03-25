@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 type UserRole = "maintenance" | "store";
 
@@ -27,6 +29,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -118,64 +121,103 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
     }
   };
 
+  const roleLabel = selectedRole === 'maintenance' ? 'Maintenance' : 'Store';
+
   return (
-    <Card className="w-full shadow-xl bg-white/95 backdrop-blur-sm border-primary-100">
-      <CardContent className="p-6 sm:p-8">
-        <h2 className="text-2xl font-bold text-center mb-6">
-          {isSignUp ? "Create Account" : "Sign In"}
+    <Card className="w-full bg-white rounded-2xl shadow-xl border-none overflow-hidden">
+      <div className="bg-primary-600 pt-8 pb-12 px-6 relative">
+        <button 
+          onClick={onBack}
+          className="absolute top-4 left-4 text-white hover:text-primary-100 transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold text-white text-center">
+          {isSignUp ? `Sign Up - ${roleLabel}` : `Welcome Back - ${roleLabel}`}
         </h2>
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div className="space-y-2">
+        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full" />
+      </div>
+      <CardContent className="p-6 pt-8">
+        <form onSubmit={handleAuth} className="space-y-5">
+          <div className="space-y-3">
+            <label htmlFor="email" className="text-sm font-medium text-gray-700 mb-1 block">
+              Email Address
+            </label>
             <Input
+              id="email"
               type="email"
-              placeholder="Email"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="rounded-xl h-12"
             />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+          </div>
+          
+          <div className="space-y-3">
+            <label htmlFor="password" className="text-sm font-medium text-gray-700 mb-1 block">
+              Password
+            </label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="rounded-xl h-12 pr-10"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {isSignUp && (
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-gray-500">
                 Password must be at least 6 characters long
               </p>
             )}
           </div>
-          <Button type="submit" className="w-full">
-            {isSignUp ? "Sign Up" : "Sign In"}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            onClick={onBack}
-          >
-            Back to Portals
-          </Button>
+
           {!isSignUp && (
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="link"
+                className="text-primary-600 hover:text-primary-800 p-0 h-auto text-sm"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot Password?
+              </Button>
+            </div>
+          )}
+
+          <Button 
+            type="submit" 
+            className="w-full h-12 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium"
+          >
+            {isSignUp ? "Sign Up" : "Log In"}
+          </Button>
+          
+          <div className="text-center mt-4 pt-2">
             <Button
               type="button"
-              variant="link"
-              className="w-full"
-              onClick={() => navigate("/forgot-password")}
+              variant="ghost"
+              className="w-full text-gray-600"
+              onClick={() => setIsSignUp(!isSignUp)}
             >
-              Forgot Password?
+              {isSignUp 
+                ? "Already have an account? Sign In" 
+                : "Need an account? Sign Up"}
             </Button>
-          )}
+          </div>
         </form>
       </CardContent>
     </Card>
