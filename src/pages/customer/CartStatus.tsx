@@ -1,4 +1,3 @@
-
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { MaintenanceAction } from "@/components/carts/MaintenanceAction";
+import { ActivateAction } from "@/components/carts/ActivateAction";
 
 const mockCarts: Cart[] = [
   {
@@ -146,6 +147,18 @@ const CartStatus = () => {
       title: "Success",
       description: "Cart has been removed.",
       variant: "destructive",
+    });
+  };
+
+  const handleStatusChange = (updatedCart: Cart) => {
+    setCarts(carts.map(cart => 
+      cart.id === updatedCart.id ? updatedCart : cart
+    ));
+    
+    // Show a toast notification
+    toast({
+      title: "Status Updated",
+      description: `Cart ${updatedCart.id} status changed to ${updatedCart.status}.`,
     });
   };
 
@@ -301,6 +314,20 @@ const CartStatus = () => {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Add status action buttons */}
+                      <div className="flex justify-end gap-2 mt-2">
+                        <MaintenanceAction 
+                          cart={cart} 
+                          onEdit={handleStatusChange} 
+                          disabled={false}
+                        />
+                        <ActivateAction 
+                          cart={cart} 
+                          onEdit={handleStatusChange} 
+                          disabled={false}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
