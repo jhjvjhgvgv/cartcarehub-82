@@ -16,40 +16,86 @@ export const ShoppingCart3D = ({ autoRotate = true }: { autoRotate?: boolean }) 
   
   return (
     <>
-      {/* Simple cart made from primitive shapes */}
-      <mesh ref={cartRef}>
+      {/* Shopping cart made to look like the reference image */}
+      <mesh ref={cartRef} position={[0, -0.2, 0]}>
+        {/* Cart basket/body - blue box */}
+        <mesh position={[0, 0.4, 0]}>
+          <boxGeometry args={[1.8, 0.9, 1.1]} />
+          <meshStandardMaterial color="#0EA5E9" />
+          
+          {/* Cart basket grid pattern - front */}
+          <mesh position={[0, 0, 0.56]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[1.7, 0.8, 0.05]} />
+            <meshStandardMaterial color="#1E88E5" />
+          </mesh>
+          
+          {/* Cart basket grid pattern - sides */}
+          <mesh position={[0.9, 0, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.05, 0.8, 1]} />
+            <meshStandardMaterial color="#1E88E5" />
+          </mesh>
+          <mesh position={[-0.9, 0, 0]} rotation={[0, 0, 0]}>
+            <boxGeometry args={[0.05, 0.8, 1]} />
+            <meshStandardMaterial color="#1E88E5" />
+          </mesh>
+        </mesh>
+        
         {/* Cart base */}
-        <boxGeometry args={[2, 0.2, 1.3]} />
-        <meshStandardMaterial color="#3B82F6" />
-        
-        {/* Cart basket */}
-        <mesh position={[0, 0.6, 0]}>
-          <boxGeometry args={[1.8, 1, 1.1]} />
-          <meshStandardMaterial color="#2563EB" wireframe />
+        <mesh position={[0, -0.1, 0]}>
+          <boxGeometry args={[1.8, 0.1, 1.3]} />
+          <meshStandardMaterial color="#1E3A8A" />
         </mesh>
         
-        {/* Wheels */}
-        <mesh position={[-0.7, -0.2, -0.5]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#1E3A8A" />
+        {/* Wheels - front */}
+        <mesh position={[-0.7, -0.3, 0.5]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} />
+          <meshStandardMaterial color="#666666" />
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 0.12, 16]} />
+            <meshStandardMaterial color="#333333" />
+          </mesh>
         </mesh>
-        <mesh position={[0.7, -0.2, -0.5]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#1E3A8A" />
+        <mesh position={[0.7, -0.3, 0.5]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} />
+          <meshStandardMaterial color="#666666" />
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 0.12, 16]} />
+            <meshStandardMaterial color="#333333" />
+          </mesh>
         </mesh>
-        <mesh position={[-0.7, -0.2, 0.5]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#1E3A8A" />
+        
+        {/* Wheels - back */}
+        <mesh position={[-0.7, -0.3, -0.5]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} />
+          <meshStandardMaterial color="#666666" />
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 0.12, 16]} />
+            <meshStandardMaterial color="#333333" />
+          </mesh>
         </mesh>
-        <mesh position={[0.7, -0.2, 0.5]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} rotation={[Math.PI / 2, 0, 0]} />
-          <meshStandardMaterial color="#1E3A8A" />
+        <mesh position={[0.7, -0.3, -0.5]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} />
+          <meshStandardMaterial color="#666666" />
+          <mesh position={[0, 0, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 0.12, 16]} />
+            <meshStandardMaterial color="#333333" />
+          </mesh>
         </mesh>
         
         {/* Handle */}
-        <mesh position={[0, 0.7, -0.7]}>
-          <cylinderGeometry args={[0.07, 0.07, 1.8, 16]} rotation={[0, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#1E40AF" />
+        <mesh position={[0, 0.8, -0.7]}>
+          <cylinderGeometry args={[0.07, 0.07, 1.8, 16]} />
+          <meshStandardMaterial color="#CCCCCC" />
+          
+          {/* Handle supports */}
+          <mesh position={[-0.8, 0, 0.35]} rotation={[0, 0, Math.PI / 2.5]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.8, 16]} />
+            <meshStandardMaterial color="#AAAAAA" />
+          </mesh>
+          <mesh position={[0.8, 0, 0.35]} rotation={[0, 0, -Math.PI / 2.5]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.8, 16]} />
+            <meshStandardMaterial color="#AAAAAA" />
+          </mesh>
         </mesh>
       </mesh>
       
