@@ -7,6 +7,7 @@ import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
 import { useCarts } from "@/hooks/use-carts"
 import { Cart } from "@/types/cart"
+import { useNavigate } from "react-router-dom"
 
 interface CartHeaderProps {
   onAddClick: () => void
@@ -16,6 +17,7 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   const [isScanning, setIsScanning] = useState(false)
   const { toast } = useToast()
   const { carts, handleSubmit, handleDeleteCart } = useCarts()
+  const navigate = useNavigate()
 
   const handleQRCodeDetected = (qrCode: string) => {
     const existingCart = carts.find(cart => cart.qr_code === qrCode)
@@ -23,9 +25,21 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
     if (existingCart) {
       toast({
         title: "Cart Found",
-        description: `Found cart: ${existingCart.id}`,
+        description: `Found cart: ${existingCart.qr_code}`,
       })
+      // Navigate to the cart details page
+      navigate(`/cart/${existingCart.id}`)
       setIsScanning(false)
+    } else {
+      toast({
+        title: "Cart Not Found",
+        description: "No cart found with this QR code. You can add it as a new cart.",
+        variant: "warning"
+      })
+      // Close the scanner dialog
+      setIsScanning(false)
+      // Open the add cart dialog with the scanned QR code pre-filled
+      onAddClick()
     }
   }
 

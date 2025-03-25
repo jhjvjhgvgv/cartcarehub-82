@@ -4,6 +4,7 @@ import { Cart } from "@/types/cart"
 import { QRScannerUI } from "../qr-scanner/QRScannerUI"
 import { useQRScanner } from "../qr-scanner/useQRScanner"
 import { useToast } from "@/hooks/use-toast"
+import { generateUniqueQRCode } from "@/utils/qr-generator"
 
 interface QRScannerProps {
   onQRCodeDetected: (qrCode: string) => void
@@ -24,7 +25,17 @@ export function QRScanner({
   const { isScanning, setIsScanning, handleTestScan } = useQRScanner({
     onQRCodeDetected: (qrCode: string) => {
       setScannedQRCode(qrCode)
-      onQRCodeDetected(qrCode)
+      
+      // Check if QR code is valid format before passing it on
+      if (qrCode.startsWith("CART-") || qrCode.startsWith("QR-")) {
+        onQRCodeDetected(qrCode)
+      } else {
+        toast({
+          title: "Invalid QR Code Format",
+          description: "The QR code doesn't match the expected format for carts.",
+          variant: "destructive"
+        })
+      }
     },
     carts,
     onSetExistingCart: () => {}

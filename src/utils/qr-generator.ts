@@ -12,6 +12,16 @@ export const generateUniqueQRCode = (): string => {
 };
 
 /**
+ * Validates a QR code to ensure it follows the expected format
+ * @param qrCode The QR code to validate
+ * @returns True if the QR code is valid, false otherwise
+ */
+export const isValidQRCode = (qrCode: string): boolean => {
+  // Accept both the CART-uuid-timestamp format and the legacy QR-number format
+  return /^CART-[a-z0-9]{8}-\d+$/.test(qrCode) || /^QR-\d+$/.test(qrCode);
+};
+
+/**
  * Generates a URL for a cart QR code that links to the cart details
  */
 export const generateCartQRCodeURL = (cartId: string): string => {

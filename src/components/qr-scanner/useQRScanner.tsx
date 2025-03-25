@@ -41,7 +41,17 @@ export function useQRScanner({
             scannerRef.current = null
           }
           setIsScanning(false)
-          onQRCodeDetected(decodedText)
+          
+          // Check if the QR code format is valid
+          if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
+            onQRCodeDetected(decodedText)
+          } else {
+            toast({
+              title: "Invalid QR Code",
+              description: "The scanned QR code doesn't match the expected format for a cart.",
+              variant: "destructive",
+            })
+          }
         } catch (error) {
           console.error("Error during QR scan:", error)
           toast({
@@ -85,7 +95,8 @@ export function useQRScanner({
   }, [isScanning, onQRCodeDetected, toast])
 
   const handleTestScan = () => {
-    const testCode = "QR-123456789"
+    // Generate a valid QR code for testing
+    const testCode = `CART-${Math.random().toString(36).substring(2, 10)}-${Date.now().toString().substring(8)}`
     onQRCodeDetected(testCode)
   }
 
