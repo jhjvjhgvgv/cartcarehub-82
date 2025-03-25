@@ -54,8 +54,9 @@ export function MaintenanceAction({
     <CartActionButton
       icon={<WrenchIcon className="h-4 w-4" />}
       onClick={handleMaintenanceClick}
-      className="hover:bg-yellow-100 hover:text-yellow-900"
+      className="hover:bg-yellow-100 hover:text-yellow-900 transition-colors duration-200"
       disabled={disabled}
+      tooltip="Mark for maintenance"
     />
   )
 }

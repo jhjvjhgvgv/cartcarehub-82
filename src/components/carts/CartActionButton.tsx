@@ -1,29 +1,55 @@
 
+import React from "react"
 import { Button } from "@/components/ui/button"
-import { ReactNode } from "react"
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip"
 
 interface CartActionButtonProps {
-  icon: ReactNode
-  onClick: (e: React.MouseEvent) => void
-  disabled?: boolean
+  icon: React.ReactNode
+  onClick: () => void
   className?: string
+  disabled?: boolean
+  tooltip?: string
 }
 
-export function CartActionButton({ 
-  icon, 
-  onClick, 
-  disabled = false, 
-  className = "" 
+export function CartActionButton({
+  icon,
+  onClick,
+  className = "",
+  disabled = false,
+  tooltip
 }: CartActionButtonProps) {
-  return (
+  const button = (
     <Button
       variant="ghost"
-      size="sm"
+      size="icon"
       onClick={onClick}
-      className={className}
+      className={`rounded-full h-8 w-8 p-0 ${className}`}
       disabled={disabled}
     >
       {icon}
+      <span className="sr-only">Cart action</span>
     </Button>
-  )
+  );
+
+  if (tooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {button}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return button;
 }
