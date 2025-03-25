@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table"
 import { Cart } from "@/types/cart"
@@ -61,17 +62,17 @@ export function CartList({ carts, onEditCart, onDeleteCart, onEditMultiple }: Ca
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">
+              <TableHead className="w-[60px] text-center">
                 <Checkbox
                   checked={selectedCarts.length === carts.length && carts.length > 0}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead className="py-4 px-4">QR Code</TableHead>
-              <TableHead className="hidden sm:table-cell py-4 px-4">Store</TableHead>
-              <TableHead className="py-4 px-4">Status</TableHead>
-              <TableHead className="hidden sm:table-cell py-4 px-4">Last Maintenance</TableHead>
-              <TableHead className="py-2 px-2 w-[100px]">Actions</TableHead>
+              <TableHead className="w-1/5">QR Code</TableHead>
+              <TableHead className="hidden sm:table-cell w-1/5">Store</TableHead>
+              <TableHead className="w-1/5">Status</TableHead>
+              <TableHead className="hidden sm:table-cell w-1/5">Last Maintenance</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -44,24 +44,24 @@ export function CartTableRow({
       onClick={handleRowClick}
       className="cursor-pointer hover:bg-muted/60"
     >
-      <TableCell className="w-[50px]">
+      <TableCell className="w-[60px] text-center">
         <Checkbox
           checked={isSelected}
           onCheckedChange={(checked) => handleCheckboxChange(checked as boolean)}
           onClick={(e) => e.stopPropagation()}
         />
       </TableCell>
-      <TableCell className="py-4 px-4">
+      <TableCell className="w-1/5">
         <div className="grid gap-1">
           <div className="font-medium">{cart.qr_code}</div>
           <div className="sm:hidden text-sm text-muted-foreground">{cart.store}</div>
           <div className="sm:hidden text-sm text-muted-foreground">Last Maintenance: {cart.lastMaintenance}</div>
         </div>
       </TableCell>
-      <TableCell className="hidden sm:table-cell py-4 px-4">
+      <TableCell className="hidden sm:table-cell w-1/5">
         <div>{cart.store}</div>
       </TableCell>
-      <TableCell className="py-4 px-4">
+      <TableCell className="w-1/5">
         <div className="flex flex-col gap-1">
           <CartStatusBadge status={cart.status} />
           {cart.maintenancePrediction && cart.status === "active" && (
@@ -72,10 +72,10 @@ export function CartTableRow({
           )}
         </div>
       </TableCell>
-      <TableCell className="hidden sm:table-cell py-4 px-4">
+      <TableCell className="hidden sm:table-cell w-1/5">
         <div>{cart.lastMaintenance}</div>
       </TableCell>
-      <TableCell className="py-2 px-2 w-[100px]">
+      <TableCell className="w-[100px] text-right">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
       </TableCell>
     </TableRow>

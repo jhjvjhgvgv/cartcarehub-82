@@ -67,17 +67,17 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[180px]">Cart Number</TableHead>
-            <TableHead className="w-[120px]">Status</TableHead>
-            <TableHead className="w-[180px]">Last Maintenance</TableHead>
-            <TableHead className="w-[80px] text-right">Actions</TableHead>
+            <TableHead className="w-1/4">Cart Number</TableHead>
+            <TableHead className="w-1/4">Status</TableHead>
+            <TableHead className="w-1/4">Last Maintenance</TableHead>
+            <TableHead className="w-1/4 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {carts.map((cart) => (
             <TableRow key={cart.id}>
-              <TableCell className="font-medium">{cart.cartNumber}</TableCell>
-              <TableCell>
+              <TableCell className="w-1/4 font-medium">{cart.cartNumber}</TableCell>
+              <TableCell className="w-1/4">
                 <span
                   className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                     cart.status === "active"
@@ -90,8 +90,8 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
                   {cart.status}
                 </span>
               </TableCell>
-              <TableCell>{cart.lastMaintenance}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="w-1/4">{cart.lastMaintenance}</TableCell>
+              <TableCell className="w-1/4 text-right">
                 <Button 
                   variant="ghost" 
                   size="sm" 
