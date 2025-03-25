@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Wrench, Key, ArrowRight } from "lucide-react";
 
-type UserRole = "maintenance" | "store" | "forgot-password";
+// Updated to match Index.tsx
+type UserRole = "maintenance" | "store";
+type PortalType = UserRole | "forgot-password";
 
 interface PortalSelectionProps {
-  onPortalClick: (role: UserRole) => void;
+  onPortalClick: (portal: PortalType) => void;
 }
 
 export const PortalSelection = ({ onPortalClick }: PortalSelectionProps) => {

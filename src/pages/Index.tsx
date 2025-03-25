@@ -6,7 +6,9 @@ import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
 
-type UserRole = "maintenance" | "store" | "forgot-password";
+// Make sure to define this type the same way across all files
+type UserRole = "maintenance" | "store";
+type PortalType = UserRole | "forgot-password";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -27,11 +29,11 @@ const Index = () => {
     // The loading state is already managed by the timer
   };
 
-  const handlePortalClick = (role: UserRole) => {
-    if (role === 'forgot-password') {
+  const handlePortalClick = (portal: PortalType) => {
+    if (portal === 'forgot-password') {
       navigate('/forgot-password');
     } else {
-      setSelectedPortal(role);
+      setSelectedPortal(portal);
     }
   };
 

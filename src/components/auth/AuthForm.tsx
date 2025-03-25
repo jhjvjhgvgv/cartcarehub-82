@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
+// Updated to match other files
 type UserRole = "maintenance" | "store";
 
 interface AuthFormProps {
