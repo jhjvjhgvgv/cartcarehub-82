@@ -91,19 +91,19 @@ export default function CartDetails() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
-        <div className="flex flex-col gap-4">
+      <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col gap-6">
           {/* Store name header */}
-          <div className="bg-primary-50 text-primary-900 py-2 px-4 rounded-lg text-center mb-2">
+          <div className="bg-primary-50 text-primary-900 py-3 px-5 rounded-lg text-center mb-3">
             <p className="text-sm font-medium">Store</p>
             <h2 className="text-xl font-bold">{cart.store}</h2>
           </div>
           
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={() => navigate('/carts')}
-                className="bg-primary-50 hover:bg-primary-100 text-primary-800 font-medium px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm hover:shadow focus:ring-2 focus:ring-primary-200 focus:outline-none"
+                className="bg-primary-50 hover:bg-primary-100 text-primary-800 font-medium px-5 py-2.5 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm hover:shadow focus:ring-2 focus:ring-primary-200 focus:outline-none"
                 variant="ghost"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -112,18 +112,21 @@ export default function CartDetails() {
               <h1 className="text-2xl font-bold text-gray-900">Cart Details</h1>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               {!isEditing && (
                 <>
                   <Button 
                     onClick={() => setIsQRDialogOpen(true)}
                     variant="secondary"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 px-4 py-2.5"
                   >
                     <QrCode className="h-4 w-4" />
                     View QR Code
                   </Button>
-                  <Button onClick={handleEdit}>
+                  <Button 
+                    onClick={handleEdit}
+                    className="px-4 py-2.5"
+                  >
                     Edit Cart
                   </Button>
                 </>
@@ -132,7 +135,7 @@ export default function CartDetails() {
           </div>
           
           {isEditing ? (
-            <Card>
+            <Card className="mt-4">
               <CardHeader>
                 <CardTitle>Edit Cart</CardTitle>
               </CardHeader>

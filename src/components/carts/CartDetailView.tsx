@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,17 +25,17 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left column */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Card details */}
           <Card>
             <CardHeader>
               <CardTitle>Cart Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">QR Code:</span>
                   <span>{cart.qr_code || "N/A"}</span>
@@ -63,7 +64,7 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
                 {cart.issues && cart.issues.length > 0 && (
                   <div>
                     <span className="font-semibold">Issues:</span>
-                    <ul>
+                    <ul className="mt-2 space-y-1">
                       {cart.issues.map((issue, index) => (
                         <li key={index}>{issue}</li>
                       ))}
@@ -81,10 +82,10 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
                 <CardTitle>Maintenance History</CardTitle>
               </CardHeader>
               <CardContent>
-                <ul>
+                <ul className="space-y-2">
                   {Array.isArray(cart.maintenance_history) ? (
                     cart.maintenance_history.map((history, index) => (
-                      <li key={index}>
+                      <li key={index} className="py-1">
                         {history.date}: {history.description}
                       </li>
                     ))
@@ -98,7 +99,7 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
         </div>
 
         {/* Right column */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* QR Code */}
           <CartQRCode cart={cart} />
           
@@ -108,7 +109,7 @@ export function CartDetailView({ cart, onEdit }: CartDetailViewProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={onEdit}>Edit Cart</Button>
+        <Button onClick={onEdit} className="px-5 py-2.5">Edit Cart</Button>
       </div>
     </div>
   );

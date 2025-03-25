@@ -50,12 +50,12 @@ export function CartListSection({
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-2">
+      <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-5 pb-3">
         <CardTitle>All Carts</CardTitle>
         <Button 
           onClick={handleExportCSV} 
           variant="outline" 
-          className="flex items-center gap-2 self-end sm:self-auto"
+          className="flex items-center gap-2 self-end sm:self-auto px-4 py-2.5"
           disabled={filteredCarts.length === 0}
         >
           <Download className="h-4 w-4" />
@@ -63,7 +63,7 @@ export function CartListSection({
         </Button>
       </CardHeader>
       <CartFilters onFilterChange={onFilterChange} managedStores={managedStores} />
-      <CardContent className="rounded-md bg-indigo-100">
+      <CardContent className="rounded-md bg-indigo-100 mt-2 p-5">
         <CartList 
           carts={filteredCarts} 
           onEditCart={onEditCart} 
