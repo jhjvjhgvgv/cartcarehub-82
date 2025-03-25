@@ -1,8 +1,10 @@
+
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
 import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { TestModeIndicator } from "./ui/test-mode-indicator";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -33,6 +35,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   const handleSignOut = () => {
+    // If in test mode, clear test mode data
+    if (localStorage.getItem("testMode") === "true") {
+      localStorage.removeItem("testMode");
+      localStorage.removeItem("testRole");
+    }
+    
     toast({
       title: "Signed out successfully",
       description: "You have been signed out of your account.",
@@ -84,6 +92,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             {children}
           </div>
         </main>
+        <TestModeIndicator />
       </div>
     </SidebarProvider>
   );

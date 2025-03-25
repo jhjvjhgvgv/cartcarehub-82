@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Bug } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Make sure to define this type the same way across all files
 type UserRole = "maintenance" | "store";
@@ -17,13 +18,24 @@ const Index = () => {
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
 
   useEffect(() => {
+    // Check if test mode is enabled from localStorage
+    const testMode = localStorage.getItem("testMode");
+    if (testMode) {
+      const role = localStorage.getItem("testRole") as UserRole;
+      if (role === "maintenance") {
+        navigate("/dashboard");
+      } else if (role === "store") {
+        navigate("/customer/dashboard");
+      }
+    }
+
     // Add a minimum delay to ensure loading screen is visible
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [navigate]);
 
   const handleLoadingComplete = () => {
     // Don't set loading to false immediately after completion
@@ -40,6 +52,16 @@ const Index = () => {
 
   const handleBack = () => {
     setSelectedPortal(null);
+  };
+
+  const enterTestMode = (role: UserRole) => {
+    localStorage.setItem("testMode", "true");
+    localStorage.setItem("testRole", role);
+    if (role === "maintenance") {
+      navigate("/dashboard");
+    } else {
+      navigate("/customer/dashboard");
+    }
   };
 
   if (isLoading) {
@@ -68,7 +90,34 @@ const Index = () => {
         {selectedPortal ? (
           <AuthForm selectedRole={selectedPortal} onBack={handleBack} />
         ) : (
-          <PortalSelection onPortalClick={handlePortalClick} />
+          <>
+            <PortalSelection onPortalClick={handlePortalClick} />
+            
+            {/* Test Mode Section */}
+            <div className="mt-4">
+              <div className="flex flex-col space-y-3">
+                <p className="text-white text-sm text-center font-medium flex items-center justify-center gap-1">
+                  <Bug size={16} /> Test Mode (Bypass Login)
+                </p>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                    onClick={() => enterTestMode("maintenance")}
+                  >
+                    Maintenance
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                    onClick={() => enterTestMode("store")}
+                  >
+                    Store
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
