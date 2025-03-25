@@ -4,6 +4,10 @@ import { CartFilters } from "@/components/cart-filters";
 import { CartList } from "@/components/carts/CartList";
 import { Cart } from "@/types/cart";
 import { CartFilters as CartFiltersType } from "@/components/cart-filters";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportCartsToCSV } from "@/utils/csvExport";
+import { useToast } from "@/hooks/use-toast";
 
 interface CartListSectionProps {
   filteredCarts: Cart[];
@@ -25,14 +29,40 @@ export function CartListSection({
   onFilterChange,
   managedStores
 }: CartListSectionProps) {
-  console.log('CartListSection rendered with carts:', filteredCarts); // Debug log
+  const { toast } = useToast();
+  
+  const handleExportCSV = () => {
+    try {
+      exportCartsToCSV(filteredCarts, `cart-export-${new Date().toISOString().split('T')[0]}.csv`);
+      toast({
+        title: "Export Successful",
+        description: "Your cart data has been exported to CSV",
+      });
+    } catch (error) {
+      console.error("Error exporting to CSV:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting your data",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-2">
         <CardTitle>All Carts</CardTitle>
-        <CartFilters onFilterChange={onFilterChange} managedStores={managedStores} />
+        <Button 
+          onClick={handleExportCSV} 
+          variant="outline" 
+          className="flex items-center gap-2 self-end sm:self-auto"
+          disabled={filteredCarts.length === 0}
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
       </CardHeader>
+      <CartFilters onFilterChange={onFilterChange} managedStores={managedStores} />
       <CardContent className="rounded-md bg-indigo-100">
         <CartList 
           carts={filteredCarts} 
