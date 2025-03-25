@@ -85,13 +85,13 @@ export const ShoppingCart3D = ({ autoRotate = false }: { autoRotate?: boolean })
           </mesh>
         </mesh>
         
-        {/* Wheels */}
-        <mesh position={[-0.6, -0.9, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.15, 16]} rotation={[Math.PI / 2, 0, 0]} />
+        {/* Wheels - Fixed by applying rotation to the mesh instead of the geometry */}
+        <mesh position={[-0.6, -0.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.25, 0.25, 0.15, 16]} />
           <meshStandardMaterial color="#000000" />
         </mesh>
-        <mesh position={[0.6, -0.9, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.15, 16]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh position={[0.6, -0.9, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.25, 0.25, 0.15, 16]} />
           <meshStandardMaterial color="#000000" />
         </mesh>
       </mesh>
