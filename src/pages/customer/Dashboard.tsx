@@ -1,6 +1,6 @@
 
 import CustomerLayout from "@/components/CustomerLayout";
-import { ShoppingCart, AlertTriangle, Wrench, FileCheck, BarChart } from "lucide-react";
+import { ShoppingCart, AlertTriangle, Wrench, FileCheck, BarChart, Clock } from "lucide-react";
 import { CartStatsCards } from "@/components/customer/dashboard/CartStatsCards";
 import { QuickActions } from "@/components/customer/dashboard/QuickActions";
 import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
@@ -62,7 +62,7 @@ const CustomerDashboard = () => {
           </p>
         </div>
 
-        {/* KPI Card */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <KpiCard
             title="Cart Availability Rate"
@@ -71,6 +71,14 @@ const CustomerDashboard = () => {
             description="Average uptime across all carts"
             trend={{ value: 3.2, isPositive: true }}
             iconClassName="bg-primary-50 text-primary"
+          />
+          <KpiCard
+            title="Average Downtime"
+            value="1.8 hrs"
+            icon={Clock}
+            description="Average downtime per cart this month"
+            trend={{ value: 12.5, isPositive: false }}
+            iconClassName="bg-red-50 text-red-500"
           />
         </div>
 
