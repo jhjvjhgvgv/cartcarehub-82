@@ -5,11 +5,45 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { TestModeIndicator } from "./ui/test-mode-indicator";
+import { useEffect, useState } from "react";
+import { ConnectionService } from "@/services/ConnectionService";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [hasConnections, setHasConnections] = useState(true);
+
+  useEffect(() => {
+    // Check if we're in test mode
+    if (localStorage.getItem("testMode") === "true") {
+      return; // Don't check connections in test mode
+    }
+    
+    // Verify that the maintenance provider has active connections
+    const checkConnections = async () => {
+      try {
+        const currentUser = ConnectionService.getCurrentUser();
+        const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
+        
+        const hasActiveConnections = connections.some(conn => conn.status === "active");
+        setHasConnections(hasActiveConnections);
+        
+        if (!hasActiveConnections && location.pathname !== "/settings") {
+          toast({
+            title: "No Active Connections",
+            description: "You don't have any active store connections. Please connect to at least one store.",
+            variant: "warning"
+          });
+          navigate("/settings");
+        }
+      } catch (error) {
+        console.error("Error checking connections:", error);
+      }
+    };
+    
+    checkConnections();
+  }, [location.pathname, navigate, toast]);
 
   const navigation = [
     {
@@ -21,11 +55,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       name: "Carts",
       href: "/carts",
       icon: ShoppingCart,
+      disabled: !hasConnections
     },
     {
       name: "Customers",
       href: "/customers",
       icon: Users,
+      disabled: !hasConnections
     },
     {
       name: "Settings",
@@ -68,11 +104,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                       "flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-all",
                       location.pathname === item.href
                         ? "bg-primary-50 text-primary-900 shadow-sm"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                      item.disabled && "opacity-50 cursor-not-allowed pointer-events-none"
                     )}
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="font-medium">{item.name}</span>
+                    {item.disabled && (
+                      <span className="ml-auto text-xs text-gray-400">Requires connection</span>
+                    )}
                   </Link>
                 ))}
                 <button

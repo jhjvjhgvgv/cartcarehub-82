@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Clipboard, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,25 +13,89 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { ConnectionService } from "@/services/ConnectionService";
 
 export const InspectionRequestDialog = () => {
   const [open, setOpen] = useState(false);
   const [cartId, setCartId] = useState("");
   const [preferredDate, setPreferredDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // This would typically make an API call
-    toast({
-      title: "Inspection Request Submitted",
-      description: "We'll review your request and confirm the inspection date.",
-    });
-    setOpen(false);
-    setCartId("");
-    setPreferredDate("");
-    setNotes("");
+    setIsSubmitting(true);
+    
+    try {
+      // Get current user (store)
+      const currentUser = ConnectionService.getCurrentUser();
+      
+      // This would typically make an API call to send the request to connected maintenance providers
+      // For this demo, we'll simulate saving the request
+      const request = {
+        cartId,
+        preferredDate,
+        notes,
+        storeId: currentUser.id,
+        storeName: currentUser.displayName || "Store",
+        requestDate: new Date().toISOString(),
+        status: "pending",
+      };
+      
+      // In a real app, we would save this request to a database table
+      // and notify the maintenance provider
+      
+      // Get connected maintenance providers
+      const connections = await ConnectionService.getStoreConnections(currentUser.id);
+      const activeConnections = connections.filter(conn => conn.status === "active");
+      
+      if (activeConnections.length === 0) {
+        toast({
+          title: "No Connected Maintenance Providers",
+          description: "You don't have any active maintenance connections. Please connect to a maintenance provider first.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Simulate sending notifications to all connected maintenance providers
+      for (const connection of activeConnections) {
+        console.log(`Sending inspection request notification to maintenance provider ${connection.maintenanceId}`);
+        // In a real app, this would update the database and trigger a notification
+      }
+      
+      // Add to recent activity (this would be stored in a database in a real app)
+      const activity = {
+        id: Math.random().toString(36).substring(7),
+        type: "inspection_request",
+        date: new Date().toISOString(),
+        description: `Requested inspection for cart ${cartId}`,
+        status: "pending",
+      };
+      
+      console.log("New activity added:", activity);
+      
+      toast({
+        title: "Inspection Request Submitted",
+        description: "We'll review your request and confirm the inspection date.",
+      });
+      
+      setOpen(false);
+      setCartId("");
+      setPreferredDate("");
+      setNotes("");
+    } catch (error) {
+      console.error("Error submitting inspection request:", error);
+      toast({
+        title: "Error",
+        description: "There was an error submitting your request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -83,8 +148,8 @@ export const InspectionRequestDialog = () => {
               className="min-h-[100px]"
             />
           </div>
-          <Button type="submit" className="w-full">
-            Submit Inspection Request
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Inspection Request"}
           </Button>
         </form>
       </DialogContent>

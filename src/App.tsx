@@ -21,6 +21,7 @@ import { LoadingView } from "@/components/auth/LoadingView"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { InstallPWA } from "@/components/ui/install-pwa"
 import { TestModeIndicator } from "@/components/ui/test-mode-indicator"
+import { ConnectionService } from "@/services/ConnectionService"
 
 // Create a client
 const queryClient = new QueryClient({
@@ -36,6 +37,43 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, allowedRole?: "maintenance" | "store" }) => {
   const testMode = localStorage.getItem("testMode");
   const testRole = localStorage.getItem("testRole");
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Only run verification if NOT in test mode
+    if (testMode !== "true" && allowedRole === "maintenance") {
+      // In a real app, we would check if the maintenance provider has connections
+      // to any stores before allowing access
+      const verifyConnections = async () => {
+        try {
+          const currentUser = ConnectionService.getCurrentUser();
+          const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
+          
+          const hasActiveConnections = connections.some(conn => conn.status === "active");
+          
+          if (!hasActiveConnections) {
+            toast({
+              title: "No Active Connections",
+              description: "You don't have any active store connections. Please connect to at least one store.",
+              variant: "destructive"
+            });
+            // Redirect to settings where they can establish connections
+            setIsVerified(false);
+          } else {
+            setIsVerified(true);
+          }
+        } catch (error) {
+          console.error("Error verifying connections:", error);
+          setIsVerified(true); // Default to allowing access on error
+        }
+      };
+      
+      verifyConnections();
+    } else {
+      setIsVerified(true); // Not maintenance role or in test mode
+    }
+  }, [allowedRole, testMode, toast]);
   
   // If test mode is enabled, allow access with the correct role
   if (testMode === "true") {
@@ -45,6 +83,16 @@ const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, al
       // If test mode is enabled but wrong role, redirect to appropriate dashboard
       return <Navigate to={testRole === "maintenance" ? "/dashboard" : "/customer/dashboard"} replace />;
     }
+  }
+  
+  // If verification is still in progress, show loading
+  if (isVerified === null) {
+    return <div className="flex items-center justify-center h-screen">Verifying access...</div>;
+  }
+  
+  // If no active connections for maintenance role, redirect to settings
+  if (isVerified === false) {
+    return <Navigate to="/settings" replace />;
   }
   
   // Default redirect to login if no test mode
