@@ -33,7 +33,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           toast({
             title: "No Active Connections",
             description: "You don't have any active store connections. Please connect to at least one store.",
-            variant: "warning"
+            // Fix: Change "warning" to a valid variant type
+            variant: "destructive"
           });
           navigate("/settings");
         }

@@ -38,7 +38,8 @@ export const InspectionRequestDialog = () => {
         preferredDate,
         notes,
         storeId: currentUser.id,
-        storeName: currentUser.displayName || "Store",
+        // Fix: Use name instead of displayName which doesn't exist on UserAccount
+        storeName: currentUser.name || "Store",
         requestDate: new Date().toISOString(),
         status: "pending",
       };

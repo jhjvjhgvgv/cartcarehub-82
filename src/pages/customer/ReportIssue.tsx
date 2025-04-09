@@ -122,7 +122,7 @@ const ReportIssue = () => {
                   <p className="text-muted-foreground">Checking connection status...</p>
                 </div>
               ) : !hasConnections ? (
-                <Alert variant="warning" className="mb-4">
+                <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>No maintenance providers connected</AlertTitle>
                   <AlertDescription>
