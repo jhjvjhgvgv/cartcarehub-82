@@ -77,8 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
     const inviterType = invitedBy.type === "maintenance" ? "Maintenance Provider" : "Store";
     const inviteeType = type === "maintenance" ? "Maintenance Provider" : "Store";
     
-    // Get actual domain instead of localhost for production environments
-    const domain = req.headers.get("origin") || "https://carttracker.app";
+    // Use the new domain instead of the origin or default domain
+    const domain = "https://cartrepairpros.com";
     const inviteUrl = `${domain}/invite?id=${invitedBy.id}&type=${type}`;
     
     console.log(`Invitation URL: ${inviteUrl}`);

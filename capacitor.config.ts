@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: 'cartcarehub-82',
   webDir: 'dist',
   server: {
-    url: 'https://12dae9ab-65c6-43a9-82e1-bc2521fd2adf.lovableproject.com?forceHideBadge=true',
+    url: 'https://cartrepairpros.com?forceHideBadge=true',
     cleartext: true
   },
   plugins: {
