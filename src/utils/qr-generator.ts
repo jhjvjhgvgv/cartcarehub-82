@@ -27,5 +27,7 @@ export const isValidQRCode = (qrCode: string): boolean => {
 export const generateCartQRCodeURL = (cartId: string): string => {
   // Use the new domain instead of window.location.origin
   const baseUrl = "https://cartrepairpros.com";
-  return `${baseUrl}/carts/${cartId}`;
+  // Add timestamp to prevent caching
+  const timestamp = Date.now();
+  return `${baseUrl}/carts/${cartId}?t=${timestamp}`;
 };
