@@ -22,8 +22,8 @@ const clearAllCaches = async () => {
 // Register service worker with immediate update check
 const updateSW = registerSW({
   immediate: true,
-  onRegistered(swUrl, registration) {
-    console.log('Service worker registered:', swUrl);
+  onRegistered(registration) {
+    console.log('Service worker registered');
     // Force update check
     if (registration) {
       setInterval(() => {
