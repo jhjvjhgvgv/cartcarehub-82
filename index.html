@@ -10,14 +10,16 @@
     <meta property="og:image" content="/og-image.png" />
     <meta name="theme-color" content="#ffffff" />
     
-    <!-- Aggressive cache prevention -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <!-- Ultra-aggressive cache prevention -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <meta http-equiv="Expires" content="-1" />
     <meta http-equiv="Clear-Site-Data" content="cache,cookies,storage" />
     
-    <!-- Add a dynamic timestamp to force refreshes -->
+    <!-- Add multiple dynamic timestamp params to force refreshes -->
     <meta name="app-version" content="<?php echo time(); ?>" />
+    <meta name="app-build" content="<?php echo uniqid(); ?>" />
+    <meta name="cache-bust" content="<?php echo time() . '_' . rand(); ?>" />
     
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
@@ -44,6 +46,26 @@
           window.location.reload();
         }
       });
+      
+      // Add version timestamp to localStorage and force refresh if version is different
+      const currentVersion = Date.now().toString();
+      const previousVersion = localStorage.getItem('app_version');
+      localStorage.setItem('app_version', currentVersion);
+      
+      if (previousVersion && previousVersion !== currentVersion) {
+        console.log('New version detected, reloading page');
+        window.location.reload(true);
+      }
+      
+      // Add random query parameters to all navigation
+      if (!window.location.href.includes('nocache')) {
+        const separator = window.location.href.includes('?') ? '&' : '?';
+        const newUrl = window.location.href + 
+          separator + 
+          'nocache=' + Math.random() +
+          '&t=' + Date.now();
+        window.history.replaceState(null, '', newUrl);
+      }
     </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>

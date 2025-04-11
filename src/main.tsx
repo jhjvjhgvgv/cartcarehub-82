@@ -19,6 +19,21 @@ const clearAllCaches = async () => {
   }
 };
 
+// Attempt to unregister existing service workers
+const unregisterServiceWorkers = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+        console.log('Service worker unregistered');
+      }
+    } catch (err) {
+      console.error('Failed to unregister service workers:', err);
+    }
+  }
+};
+
 // Register service worker with immediate update check
 const updateSW = registerSW({
   immediate: true,
@@ -39,13 +54,18 @@ const updateSW = registerSW({
   },
 });
 
-// Execute cache clearing
-clearAllCaches().then(() => {
-  // Add timestamp to prevent caching
+// Execute cache clearing and service worker management
+Promise.all([
+  clearAllCaches(),
+  unregisterServiceWorkers()
+]).then(() => {
+  // Add multiple random query parameters to prevent caching
   const rootElement = document.getElementById("root");
   if (rootElement) {
     const timestamp = Date.now();
+    const randomValue = Math.random().toString(36).substring(2);
     rootElement.setAttribute('data-timestamp', String(timestamp));
+    rootElement.setAttribute('data-random', randomValue);
     document.documentElement.dataset.appVersion = String(timestamp);
     createRoot(rootElement).render(<App />);
   }
