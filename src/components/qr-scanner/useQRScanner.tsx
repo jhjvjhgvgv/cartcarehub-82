@@ -44,7 +44,12 @@ export function useQRScanner({
           
           // Check if the QR code format is valid
           if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
-            onQRCodeDetected(decodedText)
+            // Add timestamp to the code to prevent cache issues
+            onQRCodeDetected(decodedText + `?_t=${Date.now()}`)
+          } else if (decodedText.includes("/carts/")) {
+            // Handle URL format by adding timestamp
+            const separator = decodedText.includes("?") ? "&" : "?";
+            onQRCodeDetected(decodedText + `${separator}_t=${Date.now()}`)
           } else {
             toast({
               title: "Invalid QR Code",
