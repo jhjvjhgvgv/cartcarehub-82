@@ -16,6 +16,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     // Check if test mode is enabled from localStorage
@@ -66,6 +67,15 @@ const Index = () => {
 
   // Force refresh the page and clear caches
   const forceRefresh = () => {
+    setRefreshing(true);
+    
+    // Clear all localStorage except for essential test mode values
+    const testMode = localStorage.getItem("testMode");
+    const testRole = localStorage.getItem("testRole");
+    localStorage.clear();
+    if (testMode) localStorage.setItem("testMode", testMode);
+    if (testRole) localStorage.setItem("testRole", testRole);
+    
     // Clear caches if possible
     if ('caches' in window) {
       caches.keys().then(names => {
@@ -75,20 +85,26 @@ const Index = () => {
       });
     }
     
-    // Unregister service workers
+    // Unregister service workers more aggressively
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (const registration of registrations) {
-          registration.unregister();
-        }
+        const promises = registrations.map(registration => registration.unregister());
+        Promise.all(promises).then(() => {
+          console.log('All service workers unregistered');
+        });
       });
     }
     
-    // Add timestamp to URL to bust cache
+    // Add extra timestamp to URL to bust cache
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2);
-    window.location.href = window.location.pathname + 
-      `?t=${timestamp}&r=${random}&_v=${timestamp}_${random}&forceUpdate=true&nocache=true`;
+    const cacheBuster = `t=${timestamp}&r=${random}&_v=${timestamp}_${random}&forceUpdate=true&nocache=true&flush=true&invalidate=${Date.now()}`;
+    
+    // Reload with extreme cache busting
+    setTimeout(() => {
+      document.location.href = window.location.pathname + 
+        `?${cacheBuster}`;
+    }, 500);
   };
 
   if (isLoading) {
@@ -120,9 +136,10 @@ const Index = () => {
               size="sm"
               className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20 flex items-center gap-1"
               onClick={forceRefresh}
+              disabled={refreshing}
             >
-              <RefreshCw size={14} />
-              Force Refresh
+              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+              {refreshing ? "Refreshing..." : "Force Refresh"}
             </Button>
           </div>
         </div>
@@ -161,7 +178,7 @@ const Index = () => {
         )}
       </div>
 
-      {/* Version info */}
+      {/* Version info with timestamp that changes on every render */}
       <div className="absolute bottom-2 text-xs text-white/40">
         Version: {Date.now().toString()}
       </div>

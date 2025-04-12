@@ -44,17 +44,20 @@ export function useQRScanner({
           
           // Check if the QR code format is valid
           if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
-            // More aggressive cache busting with multiple random parameters
+            // Super aggressive cache busting with multiple parameters
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2);
-            onQRCodeDetected(decodedText + `?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}`)
+            const random2 = Math.random().toString(36).substring(2);
+            onQRCodeDetected(decodedText + 
+              `?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`)
           } else if (decodedText.includes("/carts/")) {
-            // Handle URL format with more aggressive cache busting
+            // Handle URL format with hyper-aggressive cache busting
             const separator = decodedText.includes("?") ? "&" : "?";
             const timestamp = Date.now();
             const random = Math.random().toString(36).substring(2);
+            const random2 = Math.random().toString(36).substring(2);
             onQRCodeDetected(decodedText + 
-              `${separator}_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&forceUpdate=true&nocache=true`)
+              `${separator}_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`)
           } else {
             toast({
               title: "Invalid QR Code",
@@ -105,10 +108,11 @@ export function useQRScanner({
   }, [isScanning, onQRCodeDetected, toast])
 
   const handleTestScan = () => {
-    // Generate a valid QR code for testing with cache busting
+    // Generate a valid QR code for testing with super aggressive cache busting
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2);
-    const testCode = `CART-${random}-${timestamp.toString().substring(8)}?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}`;
+    const random2 = Math.random().toString(36).substring(2);
+    const testCode = `CART-${random.substring(0,8)}-${timestamp.toString().substring(8)}?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`;
     onQRCodeDetected(testCode)
   }
 

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Disable caching during development
+    // Disable caching during development - ultra aggressive approach
     fs: {
       strict: true,
     },
@@ -26,10 +26,14 @@ export default defineConfig(({ mode }) => ({
       interval: 100,
     },
     headers: {
-      // Set cache control headers for development server
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      // Set cache control headers for development server - now extremely strict
+      'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
       'Pragma': 'no-cache',
       'Expires': '0',
+      'X-Content-Type-Options': 'nosniff',
+      'Clear-Site-Data': '"cache", "cookies", "storage"',
+      'Surrogate-Control': 'no-store',
+      'Vary': '*',
     },
   },
   plugins: [
@@ -63,11 +67,28 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      // Force Vite PWA to update assets
+      // Force Vite PWA to update assets - now more aggressive
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,
+        navigationPreload: true,
+        disableDevLogs: false,
+        runtimeCaching: [
+          {
+            // Skip caching all runtime requests in development
+            urlPattern: /.*/,
+            handler: 'NetworkOnly',
+            options: {
+              backgroundSync: {
+                name: 'force-sync',
+                options: {
+                  maxRetentionTime: 1,
+                },
+              },
+            },
+          }
+        ],
       }
     })
   ].filter(Boolean),
@@ -86,6 +107,11 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`,
       },
     },
+    // Add a version string to the app bundle for manual cache busting
+    assetsInlineLimit: 0,
+    sourcemap: true,
+    // Add build metadata with timestamp
+    target: 'esnext',
   },
   test: {
     globals: true,
@@ -93,5 +119,10 @@ export default defineConfig(({ mode }) => ({
     setupFiles: './src/test/setup.ts',
     // you might want to disable CSS since we're testing logic only
     css: false,
+  },
+  optimizeDeps: {
+    exclude: [],
+    // Force dependencies to be re-bundled on every build
+    force: true,
   },
 }));

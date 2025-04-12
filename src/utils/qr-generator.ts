@@ -26,12 +26,16 @@ export const isValidQRCode = (qrCode: string): boolean => {
 
 /**
  * Generates a URL for a cart QR code that links to the cart details
+ * with multiple aggressive cache-busting parameters
  */
 export const generateCartQRCodeURL = (cartId: string): string => {
   // Use the new domain instead of window.location.origin
   const baseUrl = "https://cartrepairpros.com";
-  // Add multiple cache-busting parameters
+  
+  // Add multiple cache-busting parameters - super aggressive approach
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2);
-  return `${baseUrl}/carts/${cartId}?t=${timestamp}&r=${random}&v=${timestamp}_${random}&forceUpdate=true&nocache=true`;
+  const random2 = Math.random().toString(36).substring(2);
+  
+  return `${baseUrl}/carts/${cartId}?t=${timestamp}&r=${random}&v=${timestamp}_${random}&ts=${timestamp}&rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`;
 };
