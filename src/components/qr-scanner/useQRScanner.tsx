@@ -44,12 +44,17 @@ export function useQRScanner({
           
           // Check if the QR code format is valid
           if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
-            // Add timestamp to the code to prevent cache issues
-            onQRCodeDetected(decodedText + `?_t=${Date.now()}`)
+            // More aggressive cache busting with multiple random parameters
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2);
+            onQRCodeDetected(decodedText + `?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}`)
           } else if (decodedText.includes("/carts/")) {
-            // Handle URL format by adding timestamp
+            // Handle URL format with more aggressive cache busting
             const separator = decodedText.includes("?") ? "&" : "?";
-            onQRCodeDetected(decodedText + `${separator}_t=${Date.now()}`)
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2);
+            onQRCodeDetected(decodedText + 
+              `${separator}_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&forceUpdate=true&nocache=true`)
           } else {
             toast({
               title: "Invalid QR Code",
@@ -100,8 +105,10 @@ export function useQRScanner({
   }, [isScanning, onQRCodeDetected, toast])
 
   const handleTestScan = () => {
-    // Generate a valid QR code for testing
-    const testCode = `CART-${Math.random().toString(36).substring(2, 10)}-${Date.now().toString().substring(8)}`
+    // Generate a valid QR code for testing with cache busting
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2);
+    const testCode = `CART-${random}-${timestamp.toString().substring(8)}?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}`;
     onQRCodeDetected(testCode)
   }
 

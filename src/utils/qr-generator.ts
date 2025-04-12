@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const generateUniqueQRCode = (): string => {
   const uuid = uuidv4().substring(0, 8);
-  const timestamp = Date.now().toString().substring(8);
-  return `CART-${uuid}-${timestamp}`;
+  const timestamp = Date.now().toString();
+  return `CART-${uuid}-${timestamp.substring(8)}`;
 };
 
 /**
@@ -17,8 +17,11 @@ export const generateUniqueQRCode = (): string => {
  * @returns True if the QR code is valid, false otherwise
  */
 export const isValidQRCode = (qrCode: string): boolean => {
+  // Clean the QR code by removing cache-busting parameters
+  const cleanQrCode = qrCode.split('?')[0];
+  
   // Accept both the CART-uuid-timestamp format and the legacy QR-number format
-  return /^CART-[a-z0-9]{8}-\d+$/.test(qrCode) || /^QR-\d+$/.test(qrCode);
+  return /^CART-[a-z0-9]{8}-\d+$/.test(cleanQrCode) || /^QR-\d+$/.test(cleanQrCode);
 };
 
 /**
@@ -27,7 +30,8 @@ export const isValidQRCode = (qrCode: string): boolean => {
 export const generateCartQRCodeURL = (cartId: string): string => {
   // Use the new domain instead of window.location.origin
   const baseUrl = "https://cartrepairpros.com";
-  // Add timestamp to prevent caching
+  // Add multiple cache-busting parameters
   const timestamp = Date.now();
-  return `${baseUrl}/carts/${cartId}?t=${timestamp}`;
+  const random = Math.random().toString(36).substring(2);
+  return `${baseUrl}/carts/${cartId}?t=${timestamp}&r=${random}&v=${timestamp}_${random}&forceUpdate=true&nocache=true`;
 };

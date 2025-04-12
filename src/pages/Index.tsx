@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { ShoppingCart, Bug } from "lucide-react";
+import { ShoppingCart, Bug, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Make sure to define this type the same way across all files
@@ -64,6 +64,33 @@ const Index = () => {
     }
   };
 
+  // Force refresh the page and clear caches
+  const forceRefresh = () => {
+    // Clear caches if possible
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          caches.delete(name);
+        });
+      });
+    }
+    
+    // Unregister service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+    
+    // Add timestamp to URL to bust cache
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2);
+    window.location.href = window.location.pathname + 
+      `?t=${timestamp}&r=${random}&_v=${timestamp}_${random}&forceUpdate=true&nocache=true`;
+  };
+
   if (isLoading) {
     return <LoadingView onLoadingComplete={handleLoadingComplete} />;
   }
@@ -85,6 +112,19 @@ const Index = () => {
           <p className="text-sm sm:text-base text-primary-100 animate-fade-in">
             Smart Cart Management System
           </p>
+          
+          {/* Force Refresh Button */}
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20 flex items-center gap-1"
+              onClick={forceRefresh}
+            >
+              <RefreshCw size={14} />
+              Force Refresh
+            </Button>
+          </div>
         </div>
 
         {selectedPortal ? (
@@ -119,6 +159,11 @@ const Index = () => {
             </div>
           </>
         )}
+      </div>
+
+      {/* Version info */}
+      <div className="absolute bottom-2 text-xs text-white/40">
+        Version: {Date.now().toString()}
       </div>
     </div>
   );

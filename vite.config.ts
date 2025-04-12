@@ -10,6 +10,27 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Disable caching during development
+    fs: {
+      strict: true,
+    },
+    hmr: {
+      // Force full reload on changes
+      protocol: 'ws',
+      clientPort: 8080,
+      overlay: true,
+    },
+    watch: {
+      // Use polling for more reliable file watching
+      usePolling: true,
+      interval: 100,
+    },
+    headers: {
+      // Set cache control headers for development server
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
   },
   plugins: [
     react(),
@@ -41,12 +62,29 @@ export default defineConfig(({ mode }) => ({
             purpose: 'any maskable'
           }
         ]
+      },
+      // Force Vite PWA to update assets
+      workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
       }
     })
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  // Add build options to prevent caching
+  build: {
+    // Add timestamp to filenames
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`,
+      },
     },
   },
   test: {
