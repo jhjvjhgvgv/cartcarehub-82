@@ -19,7 +19,7 @@ export const PortalSelection = ({ onPortalClick }: PortalSelectionProps) => {
         <h2 className="text-2xl font-bold text-white text-center">
           Choose Your Portal
         </h2>
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full" />
+        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full -z-10" />
       </div>
       <CardContent className="p-6 pt-8">
         <div className="flex flex-col space-y-4">
