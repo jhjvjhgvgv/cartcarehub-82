@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
             description: "Passwords do not match",
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
 
@@ -88,6 +90,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
             description: message,
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
 
@@ -102,7 +105,18 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         });
 
         if (signUpError) {
-          throw signUpError;
+          // Handle the specific "Signups not allowed" error
+          if (signUpError.message.includes("Signups not allowed")) {
+            toast({
+              title: "Signup Disabled",
+              description: "Signups are currently disabled in this application. Please enable signups in the Supabase dashboard or contact the administrator.",
+              variant: "destructive",
+            });
+          } else {
+            throw signUpError;
+          }
+          setIsLoading(false);
+          return;
         }
 
         if (signUpData.user) {
@@ -239,6 +253,13 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
               >
                 Forgot Password?
               </Button>
+            </div>
+          )}
+
+          {isSignUp && (
+            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+              <p className="font-medium">Note:</p>
+              <p>If you're unable to sign up, signups may be disabled in this application. Please contact the administrator.</p>
             </div>
           )}
 
