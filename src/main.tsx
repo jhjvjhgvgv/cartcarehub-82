@@ -33,7 +33,7 @@ const updateSW = registerSW({
   },
   onNeedRefresh() {
     // Force update without asking when new content is available
-    updateSW(true);
+    updateSW();
     // Also reload the page to ensure latest version
     window.location.reload();
   },
@@ -67,13 +67,13 @@ if (rootElement) {
     
     if (storedVersion && storedVersion !== currentVersion) {
       console.log('Version changed in Lovable environment, forcing reload');
-      window.location.reload(true);
+      window.location.reload();
     }
     
     // Also force reload after a short delay (for Lovable environment only)
     setTimeout(() => {
       console.log('Scheduled refresh for Lovable environment');
-      window.location.reload(true);
+      window.location.reload();
     }, 5000); // 5 second delay to allow initial render
   }
   
