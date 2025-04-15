@@ -32,10 +32,11 @@ export const generateCartQRCodeURL = (cartId: string): string => {
   // Use the new domain instead of window.location.origin
   const baseUrl = "https://cartrepairpros.com";
   
-  // Add multiple cache-busting parameters - super aggressive approach
+  // Add multiple cache-busting parameters - ultra aggressive approach
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2);
   const random2 = Math.random().toString(36).substring(2);
+  const random3 = Math.random().toString(36).substring(2);
   
-  return `${baseUrl}/carts/${cartId}?t=${timestamp}&r=${random}&v=${timestamp}_${random}&ts=${timestamp}&rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`;
+  return `${baseUrl}/carts/${cartId}?t=${timestamp}&r=${random}&r2=${random2}&r3=${random3}&v=${timestamp}_${random}&v2=${timestamp}_${random2}&ts=${timestamp}&rnd=${random}_${random2}_${random3}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}&clearCache=true`;
 };

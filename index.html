@@ -27,33 +27,59 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     
-    <!-- Inline script to set unique version on every page load -->
+    <!-- Inline script to set unique version on every page load with more randomization -->
     <script>
-      document.getElementById('app-version').content = Date.now().toString();
-      document.getElementById('app-build').content = Math.random().toString(36).substring(2);
-      document.getElementById('cache-bust').content = Date.now() + '_' + Math.random().toString(36).substring(2);
+      // Super aggressive cache busting approach
+      const generateUniqueId = () => {
+        return Date.now().toString() + '_' + Math.random().toString(36).substring(2) + '_' + 
+               Math.random().toString(36).substring(2) + '_' + performance.now().toString().replace('.', '');
+      };
+      
+      // Set multiple unique identifiers
+      document.getElementById('app-version').content = generateUniqueId();
+      document.getElementById('app-build').content = generateUniqueId();
+      document.getElementById('cache-bust').content = generateUniqueId();
       
       // Set a unique class on the html element to force style recalculation
-      document.documentElement.className = 'v-' + Date.now();
+      document.documentElement.className = 'v-' + generateUniqueId();
+      
+      // Force reload for Lovable environment if loaded from cache
+      if (window.location.hostname.includes('lovable.app')) {
+        if (document.referrer && document.referrer.includes(window.location.hostname)) {
+          console.log('Lovable environment detected with referrer, forcing hard reload');
+          window.location.reload(true);
+        }
+        
+        // Also check performance navigation type for reload detection
+        if (performance && performance.navigation && performance.navigation.type === 1) {
+          console.log('Reload detected in Lovable environment, clearing caches');
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name));
+            });
+          }
+        }
+      }
     </script>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="text/javascript">
-      // Simple cache-busting that doesn't block rendering
+      // Enhanced cache-busting that doesn't block rendering
       window.CACHE_TIMESTAMP = Date.now();
-      window.APP_VERSION = Math.random().toString(36).substring(2);
+      window.APP_VERSION = Math.random().toString(36).substring(2) + '_' + Date.now();
       
       // Force a refresh if page is loaded from cache, but don't block rendering
       window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
-          window.location.reload();
+          console.log('Page was loaded from cache, forcing reload');
+          window.location.reload(true);
         }
       });
       
       // Add version timestamp to localStorage without blocking rendering
-      const currentVersion = Date.now().toString();
+      const currentVersion = Date.now().toString() + '_' + Math.random().toString(36).substring(2);
       try {
         const previousVersion = localStorage.getItem('app_version');
         localStorage.setItem('app_version', currentVersion);
@@ -64,6 +90,21 @@
         }
       } catch (e) {
         console.error('localStorage error:', e);
+      }
+      
+      // If in Lovable environment, add extra forces
+      if (window.location.hostname.includes('lovable.app')) {
+        // Create and append a temporary element with a unique id
+        const tempEl = document.createElement('div');
+        tempEl.id = 'force-reflow-' + Date.now();
+        tempEl.style.display = 'none';
+        document.body.appendChild(tempEl);
+        
+        // Force reflow by accessing the offsetHeight
+        void document.body.offsetHeight;
+        
+        // Remove the temporary element
+        setTimeout(() => document.body.removeChild(tempEl), 100);
       }
     </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>

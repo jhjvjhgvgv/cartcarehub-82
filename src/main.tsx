@@ -28,7 +28,7 @@ const updateSW = registerSW({
     if (registration) {
       setInterval(() => {
         registration.update().catch(console.error);
-      }, 60000); // Check for updates every minute
+      }, 30000); // Check for updates every 30 seconds (reduced from 60s)
     }
   },
   onNeedRefresh() {
@@ -42,11 +42,40 @@ const updateSW = registerSW({
 // Render the app first, then clear caches and manage service workers in background
 const rootElement = document.getElementById("root");
 if (rootElement) {
+  // Enhanced timestamp and randomization for more aggressive cache busting
   const timestamp = Date.now();
   const randomValue = Math.random().toString(36).substring(2);
+  
+  // Set more aggressive cache-busting attributes
   rootElement.setAttribute('data-timestamp', String(timestamp));
   rootElement.setAttribute('data-random', randomValue);
+  rootElement.setAttribute('data-version', `${timestamp}_${randomValue}`);
   document.documentElement.dataset.appVersion = String(timestamp);
+  
+  // Add a meta tag for cache busting
+  const meta = document.createElement('meta');
+  meta.name = 'app-cache-buster';
+  meta.content = `${timestamp}_${randomValue}`;
+  document.head.appendChild(meta);
+  
+  // Force a reload if this is a Lovable environment and we're loading from cache
+  if (window.location.hostname.includes('lovable.app')) {
+    // Check if we have a version in localStorage that's different from current
+    const storedVersion = localStorage.getItem('app_version');
+    const currentVersion = `${timestamp}_${randomValue}`;
+    localStorage.setItem('app_version', currentVersion);
+    
+    if (storedVersion && storedVersion !== currentVersion) {
+      console.log('Version changed in Lovable environment, forcing reload');
+      window.location.reload(true);
+    }
+    
+    // Also force reload after a short delay (for Lovable environment only)
+    setTimeout(() => {
+      console.log('Scheduled refresh for Lovable environment');
+      window.location.reload(true);
+    }, 5000); // 5 second delay to allow initial render
+  }
   
   // Render immediately
   createRoot(rootElement).render(<App />);
