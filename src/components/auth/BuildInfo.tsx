@@ -26,7 +26,7 @@ export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProp
         disabled={refreshing}
       >
         <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-        {refreshing ? "Refreshing..." : "Force Refresh"}
+        {refreshing ? "Refreshing..." : "Refresh App"}
       </Button>
       
       <TooltipProvider>
@@ -42,7 +42,6 @@ export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProp
           </TooltipTrigger>
           <TooltipContent>
             <p className="text-xs">Build: {buildVersion}</p>
-            <p className="text-xs">Rendered at: {new Date().toLocaleTimeString()}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

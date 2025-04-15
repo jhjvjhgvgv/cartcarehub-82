@@ -10,32 +10,15 @@
     <meta property="og:image" content="/og-image.png" />
     <meta name="theme-color" content="#ffffff" />
     
-    <!-- Moderate cache prevention -->
-    <meta http-equiv="Cache-Control" content="no-cache" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    
-    <!-- Simple version tracking -->
-    <meta name="app-version" id="app-version" content="" />
-    
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="mask-icon" href="/masked-icon.svg" color="#FFFFFF" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    
-    <!-- Simplified version tracking script -->
-    <script>
-      document.getElementById('app-version').content = Date.now().toString();
-    </script>
   </head>
 
   <body>
     <div id="root"></div>
-    <script type="text/javascript">
-      // Simple cache-busting that doesn't cause refresh loops
-      window.CACHE_TIMESTAMP = Date.now();
-    </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

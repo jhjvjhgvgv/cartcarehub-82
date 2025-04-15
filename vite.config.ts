@@ -10,34 +10,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Disable caching during development - ultra aggressive approach
-    fs: {
-      strict: true,
-    },
     hmr: {
-      // Force full reload on changes
       protocol: 'ws',
       clientPort: 8080,
       overlay: true,
     },
-    watch: {
-      // Use polling for more reliable file watching
-      usePolling: true,
-      interval: 100,
-    },
-    headers: {
-      // Set cache control headers for development server - now extremely strict
-      'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-      'X-Content-Type-Options': 'nosniff',
-      'Clear-Site-Data': '"cache", "cookies", "storage"',
-      'Surrogate-Control': 'no-store',
-      'Vary': '*',
-    },
   },
   plugins: [
-    react(), // Removed fastRefresh option correctly
+    react(),
     mode === 'development' &&
     componentTagger(),
     VitePWA({
@@ -67,28 +47,11 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      // Force Vite PWA to update assets - now more aggressive but safer
       workbox: {
         clientsClaim: true,
-        skipWaiting: true,
+        skipWaiting: false, // Don't force skip waiting to prevent refresh loops
         cleanupOutdatedCaches: true,
         navigationPreload: true,
-        disableDevLogs: false,
-        runtimeCaching: [
-          {
-            // Skip caching all runtime requests in development
-            urlPattern: /.*/,
-            handler: 'NetworkOnly',
-            options: {
-              backgroundSync: {
-                name: 'force-sync',
-                options: {
-                  maxRetentionTime: 1,
-                },
-              },
-            },
-          }
-        ],
       }
     })
   ].filter(Boolean),
@@ -97,32 +60,25 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Add build options to prevent caching
   build: {
-    // Add timestamp to filenames
+    // Simplified build options
     rollupOptions: {
       output: {
-        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-        assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`,
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash].[ext]`,
       },
     },
-    // Add a version string to the app bundle for manual cache busting
-    assetsInlineLimit: 0,
     sourcemap: true,
-    // Add build metadata with timestamp
     target: 'esnext',
   },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
-    // you might want to disable CSS since we're testing logic only
     css: false,
   },
   optimizeDeps: {
     exclude: [],
-    // Force dependencies to be re-bundled on every build but don't make it too aggressive
-    force: mode === 'development',
   },
 }));

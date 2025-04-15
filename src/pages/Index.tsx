@@ -17,7 +17,10 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [buildVersion] = useState(`${Date.now().toString().slice(-6)}`);
+  const [buildVersion] = useState(() => {
+    // Generate a simple build version only once on component mount
+    return new Date().toISOString().split('T')[0];
+  });
 
   useEffect(() => {
     // Check if test mode is enabled from localStorage
@@ -68,27 +71,7 @@ const Index = () => {
   const forceRefresh = () => {
     setRefreshing(true);
     
-    // Log operation for debugging
-    console.log('Force refresh initiated at:', new Date().toISOString());
-    
-    // Clear localStorage except for test mode values
-    const testMode = localStorage.getItem("testMode");
-    const testRole = localStorage.getItem("testRole");
-    localStorage.clear();
-    if (testMode) localStorage.setItem("testMode", testMode);
-    if (testRole) localStorage.setItem("testRole", testRole);
-    
-    // Clear caches if possible
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        console.log(`Found ${names.length} caches to clear`);
-        names.forEach(name => {
-          caches.delete(name);
-        });
-      });
-    }
-    
-    // Simple reload without cache busting parameters
+    // Simple refresh without aggressive cache clearing
     setTimeout(() => {
       window.location.reload();
     }, 500);
@@ -119,7 +102,7 @@ const Index = () => {
       </div>
 
       <div className="absolute bottom-2 text-xs text-white/40">
-        Version: {buildVersion} | Updated: {new Date().toLocaleTimeString()}
+        Version: {buildVersion}
       </div>
     </div>
   );
