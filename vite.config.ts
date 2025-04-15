@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react(), // Removed fastRefresh option
+    react(), // Removed fastRefresh option correctly
     mode === 'development' &&
     componentTagger(),
     VitePWA({
@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      // Force Vite PWA to update assets - now more aggressive
+      // Force Vite PWA to update assets - now more aggressive but safer
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
@@ -122,8 +122,7 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     exclude: [],
-    // Force dependencies to be re-bundled on every build
-    force: true,
+    // Force dependencies to be re-bundled on every build but don't make it too aggressive
+    force: mode === 'development',
   },
 }));
-
