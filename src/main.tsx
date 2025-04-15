@@ -4,20 +4,16 @@ import App from './App.tsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
 
-// Register service worker with minimal refresh intervention
+// Configure service worker with NO automatic refresh
 const updateSW = registerSW({
   onRegistered(registration) {
     console.log('Service worker registered');
-    // Check for updates less frequently
-    if (registration) {
-      setInterval(() => {
-        registration.update().catch(console.error);
-      }, 7200000); // Check for updates every 2 hours
-    }
+    // We won't set up automatic checking - this prevents refresh loops
+    // User can manually refresh with the refresh button
   },
   onNeedRefresh() {
     // Don't auto-update, just log it
-    console.log('New content available, please refresh manually');
+    console.log('New content available, refresh manually using the app refresh button');
   },
 });
 

@@ -73,11 +73,13 @@ const Index = () => {
   };
 
   const forceRefresh = () => {
+    // Safer refresh mechanism that avoids refresh loops
     setRefreshing(true);
     
-    // Simple refresh without aggressive cache clearing
+    // Simple soft reload without cache clearing
     setTimeout(() => {
-      window.location.reload();
+      window.location.href = window.location.pathname;
+      setRefreshing(false);
     }, 500);
   };
 
