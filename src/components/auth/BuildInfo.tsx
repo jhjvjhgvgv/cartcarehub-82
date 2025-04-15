@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Info } from "lucide-react";
 import {
@@ -41,7 +41,7 @@ export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProp
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Updated version! Build: {buildVersion}</p>
+            <p className="text-xs">Build: {buildVersion}</p>
             <p className="text-xs">Rendered at: {new Date().toLocaleTimeString()}</p>
           </TooltipContent>
         </Tooltip>

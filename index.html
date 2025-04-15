@@ -10,16 +10,13 @@
     <meta property="og:image" content="/og-image.png" />
     <meta name="theme-color" content="#ffffff" />
     
-    <!-- Ultra-aggressive cache prevention -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
+    <!-- Moderate cache prevention -->
+    <meta http-equiv="Cache-Control" content="no-cache" />
     <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="-1" />
-    <meta http-equiv="Clear-Site-Data" content="cache,cookies,storage" />
+    <meta http-equiv="Expires" content="0" />
     
-    <!-- Add multiple dynamic timestamp params to force refreshes - updated with inline JS -->
+    <!-- Simple version tracking -->
     <meta name="app-version" id="app-version" content="" />
-    <meta name="app-build" id="app-build" content="" />
-    <meta name="cache-bust" id="cache-bust" content="" />
     
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
@@ -27,85 +24,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     
-    <!-- Inline script to set unique version on every page load with more randomization -->
+    <!-- Simplified version tracking script -->
     <script>
-      // Super aggressive cache busting approach
-      const generateUniqueId = () => {
-        return Date.now().toString() + '_' + Math.random().toString(36).substring(2) + '_' + 
-               Math.random().toString(36).substring(2) + '_' + performance.now().toString().replace('.', '');
-      };
-      
-      // Set multiple unique identifiers
-      document.getElementById('app-version').content = generateUniqueId();
-      document.getElementById('app-build').content = generateUniqueId();
-      document.getElementById('cache-bust').content = generateUniqueId();
-      
-      // Set a unique class on the html element to force style recalculation
-      document.documentElement.className = 'v-' + generateUniqueId();
-      
-      // Force reload for Lovable environment if loaded from cache
-      if (window.location.hostname.includes('lovable.app')) {
-        if (document.referrer && document.referrer.includes(window.location.hostname)) {
-          console.log('Lovable environment detected with referrer, forcing hard reload');
-          window.location.reload();
-        }
-        
-        // Also check performance navigation type for reload detection
-        if (performance && performance.navigation && performance.navigation.type === 1) {
-          console.log('Reload detected in Lovable environment, clearing caches');
-          if ('caches' in window) {
-            caches.keys().then(names => {
-              names.forEach(name => caches.delete(name));
-            });
-          }
-        }
-      }
+      document.getElementById('app-version').content = Date.now().toString();
     </script>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="text/javascript">
-      // Enhanced cache-busting that doesn't block rendering
+      // Simple cache-busting that doesn't cause refresh loops
       window.CACHE_TIMESTAMP = Date.now();
-      window.APP_VERSION = Math.random().toString(36).substring(2) + '_' + Date.now();
-      
-      // Force a refresh if page is loaded from cache, but don't block rendering
-      window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-          console.log('Page was loaded from cache, forcing reload');
-          window.location.reload();
-        }
-      });
-      
-      // Add version timestamp to localStorage without blocking rendering
-      const currentVersion = Date.now().toString() + '_' + Math.random().toString(36).substring(2);
-      try {
-        const previousVersion = localStorage.getItem('app_version');
-        localStorage.setItem('app_version', currentVersion);
-        
-        if (previousVersion && previousVersion !== currentVersion) {
-          console.log('New version detected, reloading page');
-          window.location.reload();
-        }
-      } catch (e) {
-        console.error('localStorage error:', e);
-      }
-      
-      // If in Lovable environment, add extra forces
-      if (window.location.hostname.includes('lovable.app')) {
-        // Create and append a temporary element with a unique id
-        const tempEl = document.createElement('div');
-        tempEl.id = 'force-reflow-' + Date.now();
-        tempEl.style.display = 'none';
-        document.body.appendChild(tempEl);
-        
-        // Force reflow by accessing the offsetHeight
-        void document.body.offsetHeight;
-        
-        // Remove the temporary element
-        setTimeout(() => document.body.removeChild(tempEl), 100);
-      }
     </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
