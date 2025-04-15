@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { ShoppingCart, Bug, RefreshCw } from "lucide-react";
+import { ShoppingCart, Bug, RefreshCw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Make sure to define this type the same way across all files
 type UserRole = "maintenance" | "store";
@@ -17,6 +18,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [buildVersion] = useState(`${Date.now().toString()}`);
 
   useEffect(() => {
     // Check if test mode is enabled from localStorage
@@ -118,8 +120,8 @@ const Index = () => {
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="bg-white p-4 rounded-full shadow-lg mb-4 relative" style={{ width: '120px', height: '120px' }}>
-              {/* Replace 3D cart with simple Lucide ShoppingCart icon */}
-              <ShoppingCart className="w-full h-full text-primary-600" />
+              {/* Updated cart icon with animation */}
+              <ShoppingCart className="w-full h-full text-primary-600 animate-bounce" />
             </div>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg animate-fade-in">
@@ -130,7 +132,7 @@ const Index = () => {
           </p>
           
           {/* Force Refresh Button */}
-          <div className="mt-2">
+          <div className="mt-4 flex justify-center gap-2">
             <Button 
               variant="outline" 
               size="sm"
@@ -141,6 +143,23 @@ const Index = () => {
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
               {refreshing ? "Refreshing..." : "Force Refresh"}
             </Button>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                  >
+                    <Info size={14} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Updated version! Build: {buildVersion}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -180,7 +199,7 @@ const Index = () => {
 
       {/* Version info with timestamp that changes on every render */}
       <div className="absolute bottom-2 text-xs text-white/40">
-        Version: {Date.now().toString()}
+        Version: {buildVersion} | Updated: {new Date().toLocaleTimeString()}
       </div>
     </div>
   );

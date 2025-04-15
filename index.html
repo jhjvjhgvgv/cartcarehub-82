@@ -16,16 +16,26 @@
     <meta http-equiv="Expires" content="-1" />
     <meta http-equiv="Clear-Site-Data" content="cache,cookies,storage" />
     
-    <!-- Add multiple dynamic timestamp params to force refreshes -->
-    <meta name="app-version" content="<?php echo time(); ?>" />
-    <meta name="app-build" content="<?php echo uniqid(); ?>" />
-    <meta name="cache-bust" content="<?php echo time() . '_' . rand(); ?>" />
+    <!-- Add multiple dynamic timestamp params to force refreshes - updated with inline JS -->
+    <meta name="app-version" id="app-version" content="" />
+    <meta name="app-build" id="app-build" content="" />
+    <meta name="cache-bust" id="cache-bust" content="" />
     
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="mask-icon" href="/masked-icon.svg" color="#FFFFFF" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    
+    <!-- Inline script to set unique version on every page load -->
+    <script>
+      document.getElementById('app-version').content = Date.now().toString();
+      document.getElementById('app-build').content = Math.random().toString(36).substring(2);
+      document.getElementById('cache-bust').content = Date.now() + '_' + Math.random().toString(36).substring(2);
+      
+      // Set a unique class on the html element to force style recalculation
+      document.documentElement.className = 'v-' + Date.now();
+    </script>
   </head>
 
   <body>
@@ -63,9 +73,15 @@
         const newUrl = window.location.href + 
           separator + 
           'nocache=' + Math.random() +
-          '&t=' + Date.now();
+          '&t=' + Date.now() +
+          '&forced=true' +
+          '&v=' + Date.now() + '_' + Math.random().toString(36).substring(2);
         window.history.replaceState(null, '', newUrl);
       }
+      
+      // Set dynamic attributes on the root element
+      document.getElementById('root').setAttribute('data-version', Date.now().toString());
+      document.getElementById('root').setAttribute('data-build', Math.random().toString(36).substring(2));
     </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>

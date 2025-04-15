@@ -37,7 +37,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    react(),
+    react({
+      // Add forced refresh on every module update
+      fastRefresh: false, // Force full page reloads
+    }),
     mode === 'development' &&
     componentTagger(),
     VitePWA({
