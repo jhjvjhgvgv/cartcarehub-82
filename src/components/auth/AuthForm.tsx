@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { validateEmail, validatePassword } from "./utils/validation";
+import { PasswordInput } from "./components/PasswordInput";
+import { FormHeader } from "./components/FormHeader";
+import { SignUpMessage } from "./components/SignUpMessage";
 
 type UserRole = "maintenance" | "store";
 
@@ -14,20 +16,6 @@ interface AuthFormProps {
   selectedRole: UserRole | null;
   onBack: () => void;
 }
-
-const validateEmail = (email: string): boolean => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-
-const validatePassword = (password: string): { isValid: boolean; message: string } => {
-  if (password.length < 6) {
-    return { 
-      isValid: false, 
-      message: "Password must be at least 6 characters long" 
-    };
-  }
-  return { isValid: true, message: "" };
-};
 
 export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -163,19 +151,10 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-xl border-none overflow-hidden">
-      <div className="bg-primary-600 pt-8 pb-12 px-6 relative">
-        <button 
-          onClick={onBack}
-          className="absolute top-4 left-4 text-white hover:text-primary-100 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h2 className="text-2xl font-bold text-white text-center">
-          {isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back - ${selectedRole}`}
-        </h2>
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full -z-10" />
-      </div>
+      <FormHeader 
+        title={isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back - ${selectedRole}`}
+        onBack={onBack}
+      />
       <CardContent className="p-6 pt-8">
         <form onSubmit={handleAuth} className="space-y-5">
           <div className="space-y-3">
@@ -198,27 +177,14 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
             <label htmlFor="password" className="text-sm font-medium text-gray-700 mb-1 block">
               Password
             </label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="rounded-xl h-12 pr-10"
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+            <PasswordInput
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              showPassword={showPassword}
+              onTogglePassword={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+            />
           </div>
 
           {isSignUp && (
@@ -226,19 +192,14 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
               <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 mb-1 block">
                 Confirm Password
               </label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="rounded-xl h-12 pr-10"
-                  disabled={isLoading}
-                />
-              </div>
+              <PasswordInput
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              />
             </div>
           )}
 
@@ -256,12 +217,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
             </div>
           )}
 
-          {isSignUp && (
-            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-              <p className="font-medium">Note:</p>
-              <p>If you're unable to sign up, signups may be disabled in this application. Please contact the administrator.</p>
-            </div>
-          )}
+          {isSignUp && <SignUpMessage />}
 
           <Button 
             type="submit" 
