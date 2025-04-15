@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { ShoppingCart, Bug, RefreshCw, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Logo } from "@/components/auth/Logo";
+import { BuildInfo } from "@/components/auth/BuildInfo";
+import { TestMode } from "@/components/auth/TestMode";
 
-// Make sure to define this type the same way across all files
 type UserRole = "maintenance" | "store";
 type PortalType = UserRole | "forgot-password";
 
@@ -74,7 +72,6 @@ const Index = () => {
     }
   };
 
-  // Force refresh the page and clear caches - enhanced version
   const forceRefresh = () => {
     setRefreshing(true);
     
@@ -146,89 +143,23 @@ const Index = () => {
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800">
       <div className="w-full max-w-md px-6 py-8 flex flex-col gap-8">
-        {/* Logo Section */}
-        <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <div className="bg-white p-4 rounded-full shadow-lg mb-4 relative" style={{ width: '120px', height: '120px' }}>
-              {/* Updated cart icon with animation */}
-              <ShoppingCart className="w-full h-full text-primary-600 animate-bounce" />
-            </div>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 drop-shadow-lg animate-fade-in">
-            Cart Repair Pros
-          </h1>
-          <p className="text-sm sm:text-base text-primary-100 animate-fade-in">
-            Smart Cart Management System
-          </p>
-          
-          {/* Force Refresh Button */}
-          <div className="mt-4 flex justify-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20 flex items-center gap-1"
-              onClick={forceRefresh}
-              disabled={refreshing}
-            >
-              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-              {refreshing ? "Refreshing..." : "Force Refresh"}
-            </Button>
-            
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                  >
-                    <Info size={14} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Updated version! Build: {buildVersion}</p>
-                  <p className="text-xs">Rendered at: {new Date().toLocaleTimeString()}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-
+        <Logo />
+        <BuildInfo 
+          buildVersion={buildVersion}
+          onRefresh={forceRefresh}
+          refreshing={refreshing}
+        />
+        
         {selectedPortal ? (
           <AuthForm selectedRole={selectedPortal} onBack={handleBack} />
         ) : (
           <>
             <PortalSelection onPortalClick={handlePortalClick} />
-            
-            {/* Test Mode Section */}
-            <div className="mt-4">
-              <div className="flex flex-col space-y-3">
-                <p className="text-white text-sm text-center font-medium flex items-center justify-center gap-1">
-                  <Bug size={16} /> Test Mode (Bypass Login)
-                </p>
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                    onClick={() => enterTestMode("maintenance")}
-                  >
-                    Maintenance
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
-                    onClick={() => enterTestMode("store")}
-                  >
-                    Store
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <TestMode onEnterTestMode={enterTestMode} />
           </>
         )}
       </div>
 
-      {/* Version info with timestamp that changes on every render */}
       <div className="absolute bottom-2 text-xs text-white/40">
         Version: {buildVersion} | Updated: {new Date().toLocaleTimeString()} | ID: {Math.random().toString(36).substring(2)}
       </div>
