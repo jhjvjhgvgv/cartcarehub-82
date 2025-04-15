@@ -27,7 +27,7 @@ export const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   })
 }
 
-// Retry operation with exponential backoff
+// Retry operation with exponential backoff and circuit breaker pattern
 export const retryOperation = async <T>(
   operation: () => Promise<T>,
   retries = MAX_RETRIES,
@@ -38,18 +38,37 @@ export const retryOperation = async <T>(
   } catch (error: any) {
     console.error("Operation failed:", error.message)
     
-    if (retries > 0 && (
+    // Check for connection errors that should be retried
+    const shouldRetry = retries > 0 && (
       error.message?.includes('Failed to fetch') || 
       error.message?.includes('timed out') ||
       error.message?.includes('network') ||
       error.code === 'ECONNREFUSED' ||
       error.status === 503 || // Service Unavailable
       error.status === 504 // Gateway Timeout
-    )) {
-      console.log(`Retrying operation. Attempts remaining: ${retries-1}`)
-      await wait(delay)
-      return retryOperation(operation, retries - 1, delay * 1.5) // Exponential backoff
+    );
+    
+    // Add circuit breaker pattern - don't retry if too many failures
+    if (shouldRetry) {
+      // Store retry count in sessionStorage to track across page loads
+      const key = 'supabase_retry_count';
+      const currentCount = Number(sessionStorage.getItem(key) || '0');
+      
+      if (currentCount >= 5) {
+        // Too many retries, circuit is open
+        console.warn("Circuit breaker activated - too many connection failures");
+        sessionStorage.setItem(key, '0'); // Reset for next session
+        throw new Error("Service unavailable: Too many connection attempts failed");
+      }
+      
+      // Increment retry counter
+      sessionStorage.setItem(key, String(currentCount + 1));
+      
+      console.log(`Retrying operation. Attempts remaining: ${retries-1}`);
+      await wait(delay);
+      return retryOperation(operation, retries - 1, delay * 1.5); // Exponential backoff
     }
-    throw error
+    
+    throw error;
   }
 }

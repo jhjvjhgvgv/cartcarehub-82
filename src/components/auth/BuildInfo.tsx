@@ -15,14 +15,36 @@ interface BuildInfoProps {
   refreshing: boolean;
 }
 
+// Declare the global window property for TypeScript
+declare global {
+  interface Window {
+    updateSW?: () => Promise<void>;
+  }
+}
+
 export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProps) => {
+  const handleRefresh = () => {
+    // First try to update service worker if available
+    if (window.updateSW) {
+      try {
+        window.updateSW();
+        console.log("Service worker update triggered");
+      } catch (err) {
+        console.error("Error updating service worker:", err);
+      }
+    }
+    
+    // Then do the regular app refresh
+    onRefresh();
+  };
+  
   return (
     <div className="mt-4 flex justify-center gap-2">
       <Button 
         variant="outline" 
         size="sm"
         className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20 flex items-center gap-1"
-        onClick={onRefresh}
+        onClick={handleRefresh}
         disabled={refreshing}
       >
         <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />

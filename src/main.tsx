@@ -4,18 +4,41 @@ import App from './App.tsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
 
-// Configure service worker with NO automatic refresh
+// Track if we've already shown update notification to prevent multiple messages
+let updateNotificationShown = false;
+
+// Configure service worker with manual refresh only
 const updateSW = registerSW({
-  onRegistered(registration) {
-    console.log('Service worker registered');
-    // We won't set up automatic checking - this prevents refresh loops
-    // User can manually refresh with the refresh button
+  immediate: false,
+  onRegisteredSW(swUrl, registration) {
+    console.log('Service worker registered at:', swUrl);
+    
+    // Check for updates only once per session
+    if (registration && !sessionStorage.getItem('sw_update_checked')) {
+      sessionStorage.setItem('sw_update_checked', 'true');
+      console.log('Will check for SW updates once');
+    }
   },
   onNeedRefresh() {
-    // Don't auto-update, just log it
-    console.log('New content available, refresh manually using the app refresh button');
+    // Prevent multiple notifications
+    if (!updateNotificationShown) {
+      updateNotificationShown = true;
+      console.log('New content available, refresh manually using the app refresh button');
+    }
   },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+  onRegisterError(error) {
+    console.error('SW registration error', error);
+  }
 });
+
+// Store the update function globally to avoid importing it multiple times
+window.updateSW = () => {
+  console.log("Manual update triggered");
+  updateSW();
+}
 
 // Render the app
 const rootElement = document.getElementById("root");
