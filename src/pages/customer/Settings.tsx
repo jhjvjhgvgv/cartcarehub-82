@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { StoreConnectionsManager } from "@/components/settings/StoreConnectionsManager";
 import { StoreManager } from "@/components/settings/StoreManager";
 import { StoreMaintenanceSummary } from "@/components/settings/StoreMaintenanceSummary";
+import { DesignNotes } from "@/components/settings/DesignNotes";
 
 const CustomerSettings = () => {
   const { toast } = useToast();
@@ -95,6 +96,12 @@ const CustomerSettings = () => {
         <div className="space-y-6">
           <h3 className="text-lg font-medium">Maintenance Providers</h3>
           <StoreConnectionsManager />
+        </div>
+        
+        {/* Design Notes Section */}
+        <div className="pt-6 mt-10 border-t border-border">
+          <h2 className="text-xl font-semibold mb-4">Product Roadmap & Future Potential</h2>
+          <DesignNotes />
         </div>
       </div>
     </CustomerLayout>
