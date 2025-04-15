@@ -8,13 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
-// Updated to match other files
 type UserRole = "maintenance" | "store";
 
 interface AuthFormProps {
   selectedRole: UserRole | null;
   onBack: () => void;
 }
+
+const validateEmail = (email: string): boolean => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 const validatePassword = (password: string): { isValid: boolean; message: string } => {
   if (password.length < 6) {
@@ -30,12 +33,32 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!selectedRole) {
       toast({
@@ -46,8 +69,19 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       if (isSignUp) {
+        if (password !== confirmPassword) {
+          toast({
+            title: "Password Mismatch",
+            description: "Passwords do not match",
+            variant: "destructive",
+          });
+          return;
+        }
+
         const { isValid, message } = validatePassword(password);
         if (!isValid) {
           toast({
@@ -61,6 +95,11 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              role: selectedRole,
+            },
+          },
         });
 
         if (signUpError) {
@@ -68,16 +107,9 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         }
 
         if (signUpData.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ role: selectedRole })
-            .eq('id', signUpData.user.id);
-
-          if (profileError) throw profileError;
-
           toast({
             title: "Success",
-            description: "Account created successfully. Please check your email for confirmation.",
+            description: "Account created! Please check your email for confirmation.",
           });
           setIsSignUp(false);
         }
@@ -88,14 +120,6 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         });
 
         if (signInError) {
-          if (signInError.message.includes('Email not confirmed')) {
-            toast({
-              title: "Email Not Confirmed",
-              description: "Please check your email and confirm your account before signing in.",
-              variant: "destructive",
-            });
-            return;
-          }
           throw signInError;
         }
 
@@ -119,10 +143,10 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const roleLabel = selectedRole === 'maintenance' ? 'Maintenance' : 'Store';
 
   return (
     <Card className="w-full bg-white rounded-2xl shadow-xl border-none overflow-hidden">
@@ -135,7 +159,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-2xl font-bold text-white text-center">
-          {isSignUp ? `Sign Up - ${roleLabel}` : `Welcome Back - ${roleLabel}`}
+          {isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back - ${selectedRole}`}
         </h2>
         <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full" />
       </div>
@@ -153,6 +177,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="rounded-xl h-12"
+              disabled={isLoading}
             />
           </div>
           
@@ -170,6 +195,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
                 required
                 minLength={6}
                 className="rounded-xl h-12 pr-10"
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -180,12 +206,28 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            {isSignUp && (
-              <p className="text-xs text-gray-500">
-                Password must be at least 6 characters long
-              </p>
-            )}
           </div>
+
+          {isSignUp && (
+            <div className="space-y-3">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 mb-1 block">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="rounded-xl h-12 pr-10"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          )}
 
           {!isSignUp && (
             <div className="flex justify-end">
@@ -194,6 +236,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
                 variant="link"
                 className="text-primary-600 hover:text-primary-800 p-0 h-auto text-sm"
                 onClick={() => navigate("/forgot-password")}
+                disabled={isLoading}
               >
                 Forgot Password?
               </Button>
@@ -203,8 +246,9 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
           <Button 
             type="submit" 
             className="w-full h-12 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium"
+            disabled={isLoading}
           >
-            {isSignUp ? "Sign Up" : "Log In"}
+            {isLoading ? "Please wait..." : (isSignUp ? "Sign Up" : "Log In")}
           </Button>
           
           <div className="text-center mt-4 pt-2">
@@ -212,7 +256,11 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
               type="button"
               variant="ghost"
               className="w-full text-gray-600"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setConfirmPassword("");
+              }}
+              disabled={isLoading}
             >
               {isSignUp 
                 ? "Already have an account? Sign In" 
