@@ -12,7 +12,7 @@ const updateSW = registerSW({
     if (registration) {
       setInterval(() => {
         registration.update().catch(console.error);
-      }, 3600000); // Check for updates every hour instead of every minute
+      }, 7200000); // Check for updates every 2 hours
     }
   },
   onNeedRefresh() {

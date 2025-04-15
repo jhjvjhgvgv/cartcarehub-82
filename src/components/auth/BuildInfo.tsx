@@ -41,7 +41,7 @@ export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProp
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Build: {buildVersion}</p>
+            <p className="text-xs">Version: {buildVersion}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

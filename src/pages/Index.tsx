@@ -12,14 +12,18 @@ import { TestMode } from "@/components/auth/TestMode";
 type UserRole = "maintenance" | "store";
 type PortalType = UserRole | "forgot-password";
 
+// App version - update this when making significant changes
+const APP_VERSION = "1.0.0";
+
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [buildVersion] = useState(() => {
-    // Generate a simple build version only once on component mount
-    return new Date().toISOString().split('T')[0];
+    // Create a versioned build string with date
+    const today = new Date().toISOString().split('T')[0];
+    return `${APP_VERSION} (${today})`;
   });
 
   useEffect(() => {
