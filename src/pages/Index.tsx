@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingView } from "@/components/auth/LoadingView";
@@ -31,11 +30,60 @@ const Index = () => {
   
   const [supabaseReady, setSupabaseReady] = useState(false);
 
-  // Check Supabase connectivity on mount
+  const handleLoadingComplete = useCallback(() => {
+    // The loading state is already managed by the timer
+  }, []);
+
+  const handlePortalClick = useCallback((portal: PortalType) => {
+    if (portal === 'forgot-password') {
+      navigate('/forgot-password');
+    } else {
+      setSelectedPortal(portal);
+    }
+  }, [navigate]);
+
+  const handleBack = useCallback(() => {
+    setSelectedPortal(null);
+  }, []);
+
+  const enterTestMode = useCallback((role: UserRole) => {
+    localStorage.setItem("testMode", "true");
+    localStorage.setItem("testRole", role);
+    if (role === "maintenance") {
+      navigate("/dashboard");
+    } else {
+      navigate("/customer/dashboard");
+    }
+  }, [navigate]);
+
+  const forceRefresh = useCallback(() => {
+    refreshAttemptCount.current += 1;
+    
+    if (refreshAttemptCount.current > 3) {
+      toast({
+        title: "Too Many Refreshes",
+        description: "Please wait a moment before trying again.",
+        variant: "destructive"
+      });
+      
+      setTimeout(() => {
+        refreshAttemptCount.current = 0;
+      }, 10000);
+      
+      return;
+    }
+    
+    setRefreshing(true);
+    
+    setTimeout(() => {
+      window.location.href = window.location.pathname;
+    }, 500);
+  }, [toast]);
+
+  // Check Supabase connectivity on mount with proper deps
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        // Perform a simple health check query
         const { data, error } = await supabase.from('carts').select('count').limit(1);
         
         if (error) {
@@ -58,7 +106,6 @@ const Index = () => {
   }, [toast]);
 
   useEffect(() => {
-    // Check if test mode is enabled from localStorage
     const testMode = localStorage.getItem("testMode");
     if (testMode) {
       const role = localStorage.getItem("testRole") as UserRole;
@@ -69,67 +116,12 @@ const Index = () => {
       }
     }
 
-    // Add a minimum delay to ensure loading screen is visible
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
     
     return () => clearTimeout(timer);
   }, [navigate]);
-
-  const handleLoadingComplete = () => {
-    // The loading state is already managed by the timer
-  };
-
-  const handlePortalClick = (portal: PortalType) => {
-    if (portal === 'forgot-password') {
-      navigate('/forgot-password');
-    } else {
-      setSelectedPortal(portal);
-    }
-  };
-
-  const handleBack = () => {
-    setSelectedPortal(null);
-  };
-
-  const enterTestMode = (role: UserRole) => {
-    localStorage.setItem("testMode", "true");
-    localStorage.setItem("testRole", role);
-    if (role === "maintenance") {
-      navigate("/dashboard");
-    } else {
-      navigate("/customer/dashboard");
-    }
-  };
-
-  const forceRefresh = () => {
-    // Prevent excessive refreshing
-    refreshAttemptCount.current += 1;
-    
-    if (refreshAttemptCount.current > 3) {
-      toast({
-        title: "Too Many Refreshes",
-        description: "Please wait a moment before trying again.",
-        variant: "destructive"
-      });
-      
-      // Reset counter after a delay
-      setTimeout(() => {
-        refreshAttemptCount.current = 0;
-      }, 10000);
-      
-      return;
-    }
-    
-    setRefreshing(true);
-    
-    // Simple soft reload without cache clearing
-    setTimeout(() => {
-      // This approach avoids refresh loops while still refreshing the page
-      window.location.href = window.location.pathname;
-    }, 500);
-  };
 
   if (isLoading) {
     return <LoadingView onLoadingComplete={handleLoadingComplete} />;
@@ -168,4 +160,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default React.memo(Index);

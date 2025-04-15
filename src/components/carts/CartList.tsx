@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table"
 import { Cart } from "@/types/cart"
 import { CartTableRow } from "./CartTableRow"
@@ -18,35 +17,30 @@ export function CartList({ carts, onEditCart, onDeleteCart, onEditMultiple }: Ca
   const navigate = useNavigate()
   const [selectedCarts, setSelectedCarts] = useState<string[]>([])
 
-  const handleRowClick = (cartId: string, event: React.MouseEvent) => {
+  const handleRowClick = useCallback((cartId: string, event: React.MouseEvent) => {
     const target = event.target as HTMLElement
     const isButton = target.tagName === 'BUTTON' || target.closest('button')
     
     if (!isButton) {
       navigate(`/carts/${cartId}`)
     }
-  }
+  }, [navigate])
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedCarts(carts.map(cart => cart.id))
-    } else {
-      setSelectedCarts([])
-    }
-  }
+  const handleSelectAll = useCallback((checked: boolean) => {
+    setSelectedCarts(prevSelected => checked ? carts.map(cart => cart.id) : [])
+  }, [carts])
 
-  const handleSelectCart = (cartId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedCarts([...selectedCarts, cartId])
-    } else {
-      setSelectedCarts(selectedCarts.filter(id => id !== cartId))
-    }
-  }
+  const handleSelectCart = useCallback((cartId: string, selected: boolean) => {
+    setSelectedCarts(prevSelected => selected 
+      ? [...prevSelected, cartId]
+      : prevSelected.filter(id => id !== cartId)
+    )
+  }, [])
 
-  const handleEditSelected = () => {
+  const handleEditSelected = useCallback(() => {
     const selectedCartObjects = carts.filter(cart => selectedCarts.includes(cart.id))
     onEditMultiple(selectedCartObjects)
-  }
+  }, [carts, selectedCarts, onEditMultiple])
 
   return (
     <div>

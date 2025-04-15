@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
 import { useGemini } from "@/hooks/use-gemini";
@@ -11,7 +10,7 @@ export function AICartAssistant() {
   const { generateResponse, isLoading, error, result, clearResult, clearError } = useGemini();
   const { toast } = useToast();
 
-  const handleSubmit = async (question: string) => {
+  const handleSubmit = useCallback(async (question: string) => {
     if (!question.trim() || isLoading) return;
 
     clearResult();
@@ -23,9 +22,9 @@ export function AICartAssistant() {
       console.error("Error submitting question:", err);
       // Error is already handled by the useGemini hook
     }
-  };
+  }, [isLoading, clearResult, clearError, generateResponse]);
 
-  const handleRetry = async () => {
+  const handleRetry = useCallback(async () => {
     clearError();
     
     toast({
@@ -40,7 +39,7 @@ export function AICartAssistant() {
     } catch (err) {
       console.error("Error retrying question:", err);
     }
-  };
+  }, [clearError, toast, generateResponse]);
 
   return (
     <Card className="w-full border-t-4 border-t-primary-600">
