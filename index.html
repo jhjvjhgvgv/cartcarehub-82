@@ -47,7 +47,7 @@
       if (window.location.hostname.includes('lovable.app')) {
         if (document.referrer && document.referrer.includes(window.location.hostname)) {
           console.log('Lovable environment detected with referrer, forcing hard reload');
-          window.location.reload(true);
+          window.location.reload();
         }
         
         // Also check performance navigation type for reload detection
@@ -74,7 +74,7 @@
       window.addEventListener('pageshow', function(event) {
         if (event.persisted) {
           console.log('Page was loaded from cache, forcing reload');
-          window.location.reload(true);
+          window.location.reload();
         }
       });
       
@@ -86,7 +86,7 @@
         
         if (previousVersion && previousVersion !== currentVersion) {
           console.log('New version detected, reloading page');
-          window.location.reload(true);
+          window.location.reload();
         }
       } catch (e) {
         console.error('localStorage error:', e);
