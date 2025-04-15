@@ -15,7 +15,7 @@ interface BuildInfoProps {
   refreshing: boolean;
 }
 
-// Declare the global window property for TypeScript
+// Declare the global window property for TypeScript with correct Promise return type
 declare global {
   interface Window {
     updateSW?: () => Promise<void>;
@@ -23,11 +23,11 @@ declare global {
 }
 
 export const BuildInfo = ({ buildVersion, onRefresh, refreshing }: BuildInfoProps) => {
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     // First try to update service worker if available
     if (window.updateSW) {
       try {
-        window.updateSW();
+        await window.updateSW();
         console.log("Service worker update triggered");
       } catch (err) {
         console.error("Error updating service worker:", err);

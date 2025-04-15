@@ -10,8 +10,8 @@ let updateNotificationShown = false;
 // Configure service worker with manual refresh only
 const updateSW = registerSW({
   immediate: false,
-  onRegisteredSW(swUrl, registration) {
-    console.log('Service worker registered at:', swUrl);
+  onRegistered(registration) {
+    console.log('Service worker registered');
     
     // Check for updates only once per session
     if (registration && !sessionStorage.getItem('sw_update_checked')) {
@@ -34,10 +34,10 @@ const updateSW = registerSW({
   }
 });
 
-// Store the update function globally to avoid importing it multiple times
+// Store the update function globally with correct Promise<void> return type
 window.updateSW = () => {
   console.log("Manual update triggered");
-  updateSW();
+  return updateSW(true);
 }
 
 // Render the app
