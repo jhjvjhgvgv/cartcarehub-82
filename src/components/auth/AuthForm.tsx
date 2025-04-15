@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,7 +160,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         <h2 className="text-2xl font-bold text-white text-center">
           {isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back - ${selectedRole}`}
         </h2>
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full" />
+        <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary-500 rounded-tl-full -z-10" />
       </div>
       <CardContent className="p-6 pt-8">
         <form onSubmit={handleAuth} className="space-y-5">
