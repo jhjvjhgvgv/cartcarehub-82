@@ -95,6 +95,7 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
 
     try {
       if (isSignUp) {
+        // Sign Up flow
         if (password !== confirmPassword) {
           toast({
             title: "Password Mismatch",
@@ -116,6 +117,8 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
           return;
         }
 
+        console.log("Attempting sign up with:", { email, role: selectedRole });
+        
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -168,10 +171,13 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
         // Sign In flow
         console.log("Attempting sign in with:", { email, password });
         
+        // Use signInWithPassword instead of signIn which is deprecated
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
+
+        console.log("Sign in response:", { signInData, signInError });
 
         if (signInError) {
           console.error("Sign in error:", signInError);
@@ -180,48 +186,65 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
 
         console.log("Sign in successful:", signInData);
 
-        if (signInData.user) {
+        if (signInData?.user) {
           toast({
             title: "Success",
             description: "You have been signed in successfully!",
           });
           
           console.log("Fetching user profile...");
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', signInData.user.id)
-            .maybeSingle();
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', signInData.user.id)
+              .maybeSingle();
+              
+            if (profileError) {
+              console.error("Error fetching profile:", profileError);
+            }
             
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
-          }
-          
-          console.log("User profile:", profile);
-          
-          // Determine redirect path based on role
-          if (profile?.role === 'maintenance') {
-            console.log("Redirecting to maintenance dashboard");
-            navigate('/dashboard');
-          } else if (profile?.role === 'store') {
-            console.log("Redirecting to store dashboard");
-            navigate('/customer/dashboard');
-          } else {
-            console.log("Role not found in profile, using selected role:", selectedRole);
-            // If no role in profile, use the selected role for navigation
+            console.log("User profile:", profile);
+            
+            // Determine redirect path based on role
+            if (profile?.role === 'maintenance') {
+              console.log("Redirecting to maintenance dashboard");
+              navigate('/dashboard');
+            } else if (profile?.role === 'store') {
+              console.log("Redirecting to store dashboard");
+              navigate('/customer/dashboard');
+            } else {
+              console.log("Role not found in profile, using selected role:", selectedRole);
+              // If no role in profile, use the selected role for navigation
+              if (selectedRole === 'maintenance') {
+                navigate('/dashboard');
+              } else {
+                navigate('/customer/dashboard');
+              }
+            }
+          } catch (err) {
+            console.error("Error during profile fetch or navigation:", err);
+            // Fallback navigation if there's an error fetching the profile
             if (selectedRole === 'maintenance') {
               navigate('/dashboard');
             } else {
               navigate('/customer/dashboard');
             }
           }
+        } else {
+          console.error("No user data returned after successful sign in");
+          toast({
+            title: "Error",
+            description: "Login succeeded but user data is missing. Please try again.",
+            variant: "destructive",
+          });
         }
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Authentication failed. Please check your credentials and try again.",
         variant: "destructive",
       });
     } finally {

@@ -5,7 +5,7 @@ import { useAuthForm } from "../context/AuthFormContext";
 import { SignUpMessage } from "./SignUpMessage";
 
 export const FormActions = () => {
-  const { isSignUp, setIsSignUp, isLoading, handleAuth, setConfirmPassword } = useAuthForm();
+  const { isSignUp, setIsSignUp, isLoading, setConfirmPassword } = useAuthForm();
 
   return (
     <>
