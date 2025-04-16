@@ -126,7 +126,7 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
             toast({
               title: "Account Created",
               description: "Your account was created but we couldn't set up your profile template. Please contact support.",
-              variant: "warning",
+              variant: "default", // Changed from "warning" to "default"
             });
           }
           
