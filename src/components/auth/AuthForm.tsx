@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { validateEmail, validatePassword } from "./utils/validation";
 import { PasswordInput } from "./components/PasswordInput";
 import { FormHeader } from "./components/FormHeader";
 import { SignUpMessage } from "./components/SignUpMessage";
+import { createAccountTemplate } from "@/services/account/account-templates";
 
 type UserRole = "maintenance" | "store";
 
@@ -108,10 +110,26 @@ export const AuthForm = ({ selectedRole, onBack }: AuthFormProps) => {
         }
 
         if (signUpData.user) {
-          toast({
-            title: "Success",
-            description: "Account created! Please check your email for confirmation.",
-          });
+          // Create account template based on selected role
+          const templateCreated = await createAccountTemplate(
+            signUpData.user.id,
+            selectedRole,
+            email
+          );
+          
+          if (templateCreated) {
+            toast({
+              title: "Success",
+              description: `Your ${selectedRole} account has been created! Please check your email for confirmation.`,
+            });
+          } else {
+            toast({
+              title: "Account Created",
+              description: "Your account was created but we couldn't set up your profile template. Please contact support.",
+              variant: "warning",
+            });
+          }
+          
           setIsSignUp(false);
         }
       } else {
