@@ -164,30 +164,60 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
           setIsSignUp(false);
         }
       } else {
+        // Sign In flow
+        console.log("Attempting sign in with:", { email, password });
+        
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (signInError) {
+          console.error("Sign in error:", signInError);
           throw signInError;
         }
 
+        console.log("Sign in successful:", signInData);
+
         if (signInData.user) {
-          const { data: profile } = await supabase
+          toast({
+            title: "Success",
+            description: "You have been signed in successfully!",
+          });
+          
+          console.log("Fetching user profile...");
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', signInData.user.id)
             .maybeSingle();
-
+            
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+          }
+          
+          console.log("User profile:", profile);
+          
+          // Determine redirect path based on role
           if (profile?.role === 'maintenance') {
+            console.log("Redirecting to maintenance dashboard");
             navigate('/dashboard');
           } else if (profile?.role === 'store') {
+            console.log("Redirecting to store dashboard");
             navigate('/customer/dashboard');
+          } else {
+            console.log("Role not found in profile, using selected role:", selectedRole);
+            // If no role in profile, use the selected role for navigation
+            if (selectedRole === 'maintenance') {
+              navigate('/dashboard');
+            } else {
+              navigate('/customer/dashboard');
+            }
           }
         }
       }
     } catch (error: any) {
+      console.error("Authentication error:", error);
       toast({
         title: "Error",
         description: error.message,
