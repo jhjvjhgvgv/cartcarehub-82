@@ -62,6 +62,7 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted", { isSignUp, email, password, selectedRole });
     
     if (!email || !password) {
       toast({

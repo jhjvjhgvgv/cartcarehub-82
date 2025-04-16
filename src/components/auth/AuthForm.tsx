@@ -19,7 +19,7 @@ interface AuthFormContentProps {
 }
 
 const AuthFormContent = ({ onBack }: AuthFormContentProps) => {
-  const { isSignUp, handleAuth, selectedRole } = useAuthForm();
+  const { handleAuth, selectedRole, isSignUp } = useAuthForm();
   
   return (
     <Card className="w-full bg-white rounded-2xl shadow-xl border-none overflow-hidden">
