@@ -172,7 +172,7 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            <DevModeInstructions />
+            <DevModeInstructions show={testMode} />
           </TabsContent>
         </Tabs>
         
