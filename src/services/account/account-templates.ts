@@ -4,9 +4,9 @@ import { UserAccount } from "../connection/types";
 
 export type AccountType = "store" | "maintenance";
 
-// Default store account template
+// Empty default store account template
 const DEFAULT_STORE_TEMPLATE = {
-  name: "New Store",
+  name: "",
   address: "",
   contactPerson: "",
   contactEmail: "",
@@ -16,10 +16,10 @@ const DEFAULT_STORE_TEMPLATE = {
   maintenanceNeeded: 0
 };
 
-// Default maintenance provider template
+// Empty default maintenance provider template
 const DEFAULT_MAINTENANCE_TEMPLATE = {
-  name: "New Maintenance Provider",
-  services: ["Basic Cart Repair"],
+  name: "",
+  services: [],
   contactPerson: "",
   contactEmail: "",
   contactPhone: "",
@@ -42,11 +42,10 @@ export const createAccountTemplate = async (
     const accountId = crypto.randomUUID();
     
     if (accountType === "store") {
-      // Create store account in localStorage for now
-      // This would be replaced with Supabase database operations when fully integrated
+      // Create empty store account
       const storeAccount: UserAccount = {
         id: accountId,
-        name: DEFAULT_STORE_TEMPLATE.name,
+        name: "",
         type: "store"
       };
       
@@ -61,11 +60,10 @@ export const createAccountTemplate = async (
       
       return true;
     } else {
-      // Create maintenance provider account in localStorage for now
-      // This would be replaced with Supabase database operations when fully integrated
+      // Create empty maintenance provider account
       const maintenanceAccount: UserAccount = {
         id: accountId,
-        name: DEFAULT_MAINTENANCE_TEMPLATE.name,
+        name: "",
         type: "maintenance"
       };
       
