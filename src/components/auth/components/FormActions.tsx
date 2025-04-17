@@ -6,7 +6,7 @@ import { SignUpMessage } from "./SignUpMessage";
 import { Loader2 } from "lucide-react";
 
 export const FormActions = () => {
-  const { isSignUp, setIsSignUp, isLoading, setConfirmPassword } = useAuthForm();
+  const { isSignUp, setIsSignUp, isLoading, setConfirmPassword, handleAuth } = useAuthForm();
 
   return (
     <>
@@ -16,6 +16,12 @@ export const FormActions = () => {
         type="submit" 
         className="w-full h-12 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium"
         disabled={isLoading}
+        onClick={(e) => {
+          // This is a backup in case the form's onSubmit doesn't fire
+          if (e.currentTarget.form) {
+            e.currentTarget.form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+          }
+        }}
       >
         {isLoading ? (
           <span className="flex items-center">

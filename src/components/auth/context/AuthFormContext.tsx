@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -52,6 +52,41 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Effect to check current session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("User already has an active session:", data.session);
+          
+          // Get user profile to determine role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          if (profile?.role === 'maintenance') {
+            navigate('/dashboard');
+          } else if (profile?.role === 'store') {
+            navigate('/customer/dashboard');
+          }
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const resetForm = () => {
     setEmail("");
@@ -177,14 +212,12 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
           password,
         });
 
-        console.log("Sign in response:", { signInData, signInError });
+        console.log("Sign in response:", { data: signInData, error: signInError });
 
         if (signInError) {
           console.error("Sign in error:", signInError);
           throw signInError;
         }
-
-        console.log("Sign in successful:", signInData);
 
         if (signInData?.user) {
           toast({
@@ -206,29 +239,32 @@ export const AuthFormProvider: React.FC<AuthFormProviderProps> = ({
             
             console.log("User profile:", profile);
             
+            // Store session in localStorage to maintain login state
+            localStorage.setItem('supabase.auth.token', JSON.stringify(signInData.session));
+            
             // Determine redirect path based on role
             if (profile?.role === 'maintenance') {
               console.log("Redirecting to maintenance dashboard");
-              navigate('/dashboard');
+              navigate('/dashboard', { replace: true });
             } else if (profile?.role === 'store') {
               console.log("Redirecting to store dashboard");
-              navigate('/customer/dashboard');
+              navigate('/customer/dashboard', { replace: true });
             } else {
               console.log("Role not found in profile, using selected role:", selectedRole);
               // If no role in profile, use the selected role for navigation
               if (selectedRole === 'maintenance') {
-                navigate('/dashboard');
+                navigate('/dashboard', { replace: true });
               } else {
-                navigate('/customer/dashboard');
+                navigate('/customer/dashboard', { replace: true });
               }
             }
           } catch (err) {
             console.error("Error during profile fetch or navigation:", err);
             // Fallback navigation if there's an error fetching the profile
             if (selectedRole === 'maintenance') {
-              navigate('/dashboard');
+              navigate('/dashboard', { replace: true });
             } else {
-              navigate('/customer/dashboard');
+              navigate('/customer/dashboard', { replace: true });
             }
           }
         } else {

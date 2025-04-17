@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
@@ -39,41 +40,65 @@ const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, al
   const testMode = localStorage.getItem("testMode");
   const testRole = localStorage.getItem("testRole");
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
-    // Only run verification if NOT in test mode
-    if (testMode !== "true" && allowedRole === "maintenance") {
-      // In a real app, we would check if the maintenance provider has connections
-      // to any stores before allowing access
-      const verifyConnections = async () => {
-        try {
-          const currentUser = ConnectionService.getCurrentUser();
-          const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
-          
-          const hasActiveConnections = connections.some(conn => conn.status === "active");
-          
-          if (!hasActiveConnections) {
-            toast({
-              title: "No Active Connections",
-              description: "You don't have any active store connections. Please connect to at least one store.",
-              variant: "destructive"
-            });
-            // Redirect to settings where they can establish connections
-            setIsVerified(false);
-          } else {
-            setIsVerified(true);
-          }
-        } catch (error) {
-          console.error("Error verifying connections:", error);
-          setIsVerified(true); // Default to allowing access on error
-        }
-      };
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      // If in test mode, skip auth check
+      if (testMode === "true") {
+        setIsAuthenticated(true);
+        setIsVerified(true);
+        return;
+      }
       
-      verifyConnections();
-    } else {
-      setIsVerified(true); // Not maintenance role or in test mode
-    }
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Auth check error:", error);
+          setIsAuthenticated(false);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("User is authenticated");
+          setIsAuthenticated(true);
+          
+          // Check role permissions
+          if (allowedRole === "maintenance") {
+            // In a real app, check if the maintenance provider has connections
+            // to any stores before allowing access
+            const currentUser = ConnectionService.getCurrentUser();
+            const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
+            
+            const hasActiveConnections = connections.some(conn => conn.status === "active");
+            
+            if (!hasActiveConnections) {
+              toast({
+                title: "No Active Connections",
+                description: "You don't have any active store connections. Please connect to at least one store.",
+                variant: "destructive"
+              });
+              // Redirect to settings where they can establish connections
+              setIsVerified(false);
+            } else {
+              setIsVerified(true);
+            }
+          } else {
+            setIsVerified(true); // Not maintenance role
+          }
+        } else {
+          console.log("No active session found");
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Error in auth check:", error);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
   }, [allowedRole, testMode, toast]);
   
   // If test mode is enabled, allow access with the correct role
@@ -86,9 +111,14 @@ const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, al
     }
   }
   
-  // If verification is still in progress, show loading
-  if (isVerified === null) {
+  // Still checking auth status
+  if (isAuthenticated === null || isVerified === null) {
     return <div className="flex items-center justify-center h-screen">Verifying access...</div>;
+  }
+  
+  // Not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
   
   // If no active connections for maintenance role, redirect to settings
@@ -96,14 +126,39 @@ const ProtectedRoute = ({ element, allowedRole }: { element: React.ReactNode, al
     return <Navigate to="/settings" replace />;
   }
   
-  // Default redirect to login if no test mode
-  return <Navigate to="/" replace />;
+  // All checks passed, render the protected element
+  return <>{element}</>;
 };
 
 function App() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
-  const [authAttempted, setAuthAttempted] = useState(false)
+  const [authSubscription, setAuthSubscription] = useState<{ unsubscribe: () => void } | null>(null);
+
+  useEffect(() => {
+    // Set up auth state listener for session changes
+    const setupAuthListener = async () => {
+      const { data } = await supabase.auth.onAuthStateChange((event, session) => {
+        console.log("Auth state changed:", event, session ? "Has session" : "No session");
+        
+        if (event === 'SIGNED_OUT') {
+          // Clear any session data when signed out
+          localStorage.removeItem('supabase.auth.token');
+        }
+      });
+      
+      setAuthSubscription(data.subscription);
+    };
+    
+    setupAuthListener();
+    
+    return () => {
+      // Clean up auth listener
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Simple loading delay - but only do it once per session
@@ -118,27 +173,6 @@ function App() {
       setLoading(false)
     }
   }, [])
-
-  // Handle supabase auth state changes without causing refresh loops
-  useEffect(() => {
-    if (authAttempted) return; // Only attempt auth check once
-    
-    const checkAuth = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.warn("Auth check error (non-critical):", error.message);
-        }
-        // Note: We just check, but don't cause any side effects that could trigger loops
-      } catch (err) {
-        console.error("Auth service error:", err);
-      } finally {
-        setAuthAttempted(true);
-      }
-    };
-    
-    checkAuth();
-  }, [authAttempted]);
 
   if (loading) {
     return <LoadingView onLoadingComplete={() => setLoading(false)} />

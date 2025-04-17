@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,12 +76,50 @@ const Index = () => {
     
     setRefreshing(true);
     
-    setTimeout(() => {
-      window.location.href = window.location.pathname;
-    }, 500);
+    // Force reload the page
+    window.location.reload();
   }, [toast]);
 
-  // Check Supabase connectivity on mount with proper deps
+  // Check existing session and redirect if already logged in
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("User has an active session:", data.session);
+          
+          // Look up user profile to determine correct redirect
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.session.user.id)
+            .maybeSingle();
+            
+          if (profile?.role === 'maintenance') {
+            navigate('/dashboard', { replace: true });
+          } else if (profile?.role === 'store') {
+            navigate('/customer/dashboard', { replace: true });
+          }
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
+      }
+    };
+    
+    // Only check for existing session if not in test mode
+    const testMode = localStorage.getItem("testMode");
+    if (!testMode) {
+      checkExistingSession();
+    }
+  }, [navigate]);
+
+  // Check Supabase connectivity on mount
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
