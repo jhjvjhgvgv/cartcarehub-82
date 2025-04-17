@@ -6,7 +6,13 @@ import { SignUpMessage } from "./SignUpMessage";
 import { Loader2 } from "lucide-react";
 
 export const FormActions = () => {
-  const { isSignUp, setIsSignUp, isLoading, setConfirmPassword, handleAuth } = useAuthForm();
+  const { 
+    isSignUp, 
+    setIsSignUp, 
+    isLoading, 
+    setConfirmPassword, 
+    handleAuth 
+  } = useAuthForm();
 
   return (
     <>

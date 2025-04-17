@@ -6,8 +6,7 @@ import { EmailField } from "./components/EmailField";
 import { PasswordFields } from "./components/PasswordFields";
 import { FormActions } from "./components/FormActions";
 import { AuthFormProvider, useAuthForm } from "./context/AuthFormContext";
-
-type UserRole = "maintenance" | "store";
+import { UserRole } from "./context/types";
 
 interface AuthFormProps {
   selectedRole: UserRole | null;
