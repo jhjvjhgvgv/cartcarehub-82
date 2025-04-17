@@ -10,8 +10,10 @@ export function CartLoading({ message = "Loading cart details..." }: CartLoading
   return (
     <div className="flex items-center justify-center h-full p-8">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-muted-foreground">{message}</p>
+        <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+        </div>
+        <p className="text-muted-foreground font-medium">{message}</p>
       </div>
     </div>
   )
