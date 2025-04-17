@@ -6,11 +6,11 @@ import {
   createUserAccountIfNeeded
 } from "./storage-utils";
 
-// Initialize accounts
+// Initialize accounts - will be empty for new users
 const storeAccounts = initializeStoreAccounts();
 const maintenanceAccounts = initializeMaintenanceAccounts();
 
-// Initialize current user
+// Initialize current user - will be empty for new users
 const currentUser = createUserAccountIfNeeded(storeAccounts, maintenanceAccounts);
 
 export const UserService = {

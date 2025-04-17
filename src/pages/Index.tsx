@@ -48,6 +48,9 @@ const Index = () => {
   }, []);
 
   const enterTestMode = useCallback((role: UserRole) => {
+    // Important: Clear the new account flag when entering test mode
+    localStorage.removeItem('isNewAccountSession');
+    
     localStorage.setItem("testMode", "true");
     localStorage.setItem("testRole", role);
     if (role === "maintenance") {

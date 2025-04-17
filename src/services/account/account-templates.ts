@@ -41,6 +41,9 @@ export const createAccountTemplate = async (
     // Generate a default account ID
     const accountId = crypto.randomUUID();
     
+    // Set flag that this is a new account to prevent sample data creation
+    localStorage.setItem('isNewAccountSession', 'true');
+    
     if (accountType === "store") {
       // Create empty store account with no default data
       const storeAccount: UserAccount = {

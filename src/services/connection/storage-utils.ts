@@ -7,14 +7,14 @@ export const generateUniqueId = (prefix: string): string => {
   return `${prefix}_${randomPart}`;
 };
 
-// Get stored accounts or initialize with samples if none exist
+// Get stored accounts or initialize with empty array for new accounts
 export const getStoredAccounts = <T>(key: string, samples: T[]): T[] => {
   const stored = localStorage.getItem(key);
   if (stored) {
     return JSON.parse(stored);
   }
   
-  // For new accounts, initialize with empty array instead of sample data
+  // Always initialize with empty array for new accounts
   localStorage.setItem(key, JSON.stringify([]));
   return [];
 };
@@ -25,7 +25,12 @@ export const initializeStoreAccounts = (): StoreAccount[] => {
   const isNewAccount = localStorage.getItem('isNewAccountSession') === 'true';
   
   // For new accounts, don't use sample data
-  const sampleStores = isNewAccount ? [] : [
+  if (isNewAccount) {
+    console.log("Initializing empty store accounts for new user");
+    return getStoredAccounts('storeAccounts', []);
+  }
+  
+  const sampleStores = [
     { id: generateUniqueId("store"), name: "SuperMart Downtown" },
     { id: generateUniqueId("store"), name: "FreshMart Heights" },
     { id: generateUniqueId("store"), name: "Value Grocery West" },
@@ -40,7 +45,12 @@ export const initializeMaintenanceAccounts = (): MaintenanceAccount[] => {
   const isNewAccount = localStorage.getItem('isNewAccountSession') === 'true';
   
   // For new accounts, don't use sample data
-  const sampleMaintenance = isNewAccount ? [] : [
+  if (isNewAccount) {
+    console.log("Initializing empty maintenance accounts for new user");
+    return getStoredAccounts('maintenanceAccounts', []);
+  }
+  
+  const sampleMaintenance = [
     { id: generateUniqueId("maint"), name: "Cart Repair Pros" },
     { id: generateUniqueId("maint"), name: "Maintenance Experts" },
     { id: generateUniqueId("maint"), name: "Fix-It Solutions" },
@@ -58,13 +68,32 @@ export const createUserAccountIfNeeded = (
   const currentUser = localStorage.getItem('currentUser');
   
   if (!currentUser) {
+    // Check if this is a new account session
+    const isNewAccount = localStorage.getItem('isNewAccountSession') === 'true';
+    
+    // For new accounts, create an empty account with no defaults
+    if (isNewAccount) {
+      const defaultAccount: UserAccount = {
+        id: generateUniqueId(isNewAccount ? "new_store" : "store"),
+        name: "",
+        type: "store"
+      };
+      
+      // Save current user to localStorage
+      localStorage.setItem('currentUser', JSON.stringify(defaultAccount));
+      
+      // Create empty connections array
+      localStorage.setItem('storeConnections', JSON.stringify([]));
+      
+      return defaultAccount;
+    }
+    
     // For this implementation, we'll make the user a store account by default
     // to show the store manager functionality
     const isMaintenance = false; // Set to false to ensure store manager role
     
     let account;
     if (isMaintenance) {
-      // For new accounts, don't assign a random maintenance account
       // Check if we have any maintenance accounts
       if (maintenanceAccounts.length > 0) {
         account = maintenanceAccounts[Math.floor(Math.random() * maintenanceAccounts.length)];
@@ -74,7 +103,6 @@ export const createUserAccountIfNeeded = (
       }
       account.type = "maintenance";
     } else {
-      // For new accounts, don't assign a random store account
       // Check if we have any store accounts
       if (storeAccounts.length > 0) {
         account = storeAccounts[Math.floor(Math.random() * storeAccounts.length)];
@@ -88,10 +116,9 @@ export const createUserAccountIfNeeded = (
     // Save current user to localStorage
     localStorage.setItem('currentUser', JSON.stringify(account));
     
-    // Don't initialize any store connections for new accounts
+    // Initialize with empty connections
     const connections = getStoredConnections();
     if (connections.length === 0) {
-      // Create empty connections array for new accounts
       localStorage.setItem('storeConnections', JSON.stringify([]));
     }
     

@@ -18,6 +18,9 @@ export const signUpUser = async (
   try {
     console.log("Attempting sign up with:", { email, role: selectedRole });
     
+    // Set flag that this is a new account to prevent sample data creation
+    localStorage.setItem('isNewAccountSession', 'true');
+    
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -42,9 +45,6 @@ export const signUpUser = async (
     }
 
     if (signUpData.user) {
-      // Set flag that this is a new account to prevent sample data creation
-      localStorage.setItem('isNewAccountSession', 'true');
-      
       // Create account template based on selected role
       const templateCreated = await createAccountTemplate(
         signUpData.user.id,
