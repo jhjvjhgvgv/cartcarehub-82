@@ -14,28 +14,38 @@ export const getStoredAccounts = <T>(key: string, samples: T[]): T[] => {
     return JSON.parse(stored);
   }
   
-  // Initialize with sample data if no stored data exists
-  localStorage.setItem(key, JSON.stringify(samples));
-  return samples;
+  // For new accounts, initialize with empty array instead of sample data
+  localStorage.setItem(key, JSON.stringify([]));
+  return [];
 };
 
-// Initialize store accounts
+// Initialize store accounts - with empty arrays for new accounts
 export const initializeStoreAccounts = (): StoreAccount[] => {
-  const sampleStores = [
+  // Check if this is a new account session
+  const isNewAccount = localStorage.getItem('isNewAccountSession') === 'true';
+  
+  // For new accounts, don't use sample data
+  const sampleStores = isNewAccount ? [] : [
     { id: generateUniqueId("store"), name: "SuperMart Downtown" },
     { id: generateUniqueId("store"), name: "FreshMart Heights" },
     { id: generateUniqueId("store"), name: "Value Grocery West" },
   ];
+  
   return getStoredAccounts('storeAccounts', sampleStores);
 };
 
-// Initialize maintenance accounts
+// Initialize maintenance accounts - with empty arrays for new accounts
 export const initializeMaintenanceAccounts = (): MaintenanceAccount[] => {
-  const sampleMaintenance = [
+  // Check if this is a new account session
+  const isNewAccount = localStorage.getItem('isNewAccountSession') === 'true';
+  
+  // For new accounts, don't use sample data
+  const sampleMaintenance = isNewAccount ? [] : [
     { id: generateUniqueId("maint"), name: "Cart Repair Pros" },
     { id: generateUniqueId("maint"), name: "Maintenance Experts" },
     { id: generateUniqueId("maint"), name: "Fix-It Solutions" },
   ];
+  
   return getStoredAccounts('maintenanceAccounts', sampleMaintenance);
 };
 
@@ -54,52 +64,35 @@ export const createUserAccountIfNeeded = (
     
     let account;
     if (isMaintenance) {
-      // Assign a random maintenance account
-      account = maintenanceAccounts[Math.floor(Math.random() * maintenanceAccounts.length)];
+      // For new accounts, don't assign a random maintenance account
+      // Check if we have any maintenance accounts
+      if (maintenanceAccounts.length > 0) {
+        account = maintenanceAccounts[Math.floor(Math.random() * maintenanceAccounts.length)];
+      } else {
+        // Create a new empty maintenance account
+        account = { id: generateUniqueId("maint"), name: "" };
+      }
       account.type = "maintenance";
     } else {
-      // Assign a random store account
-      account = storeAccounts[Math.floor(Math.random() * storeAccounts.length)];
+      // For new accounts, don't assign a random store account
+      // Check if we have any store accounts
+      if (storeAccounts.length > 0) {
+        account = storeAccounts[Math.floor(Math.random() * storeAccounts.length)];
+      } else {
+        // Create a new empty store account
+        account = { id: generateUniqueId("store"), name: "" };
+      }
       account.type = "store";
     }
     
     // Save current user to localStorage
     localStorage.setItem('currentUser', JSON.stringify(account));
     
-    // Initialize store-manager relationship
-    if (!isMaintenance) {
-      // Create some sample store connections for this store manager
-      const connections = getStoredConnections();
-      if (connections.length === 0) {
-        // Create sample connections between stores and maintenance providers
-        const newConnections: StoreConnection[] = [];
-        
-        // Connect the first store with the first maintenance provider
-        if (storeAccounts.length > 0 && maintenanceAccounts.length > 0) {
-          newConnections.push({
-            id: generateUniqueId("conn"),
-            storeId: storeAccounts[0].id,
-            maintenanceId: maintenanceAccounts[0].id,
-            status: "active",
-            requestedAt: new Date().toISOString(),
-            connectedAt: new Date().toISOString()
-          });
-        }
-        
-        // Connect the second store with the second maintenance provider (if they exist)
-        if (storeAccounts.length > 1 && maintenanceAccounts.length > 1) {
-          newConnections.push({
-            id: generateUniqueId("conn"),
-            storeId: storeAccounts[1].id,
-            maintenanceId: maintenanceAccounts[1].id,
-            status: "pending",
-            requestedAt: new Date().toISOString()
-          });
-        }
-        
-        // Save connections
-        localStorage.setItem('storeConnections', JSON.stringify(newConnections));
-      }
+    // Don't initialize any store connections for new accounts
+    const connections = getStoredConnections();
+    if (connections.length === 0) {
+      // Create empty connections array for new accounts
+      localStorage.setItem('storeConnections', JSON.stringify([]));
     }
     
     return account as UserAccount;

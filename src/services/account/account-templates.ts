@@ -42,7 +42,7 @@ export const createAccountTemplate = async (
     const accountId = crypto.randomUUID();
     
     if (accountType === "store") {
-      // Create empty store account
+      // Create empty store account with no default data
       const storeAccount: UserAccount = {
         id: accountId,
         name: "",
@@ -53,14 +53,16 @@ export const createAccountTemplate = async (
         ...DEFAULT_STORE_TEMPLATE,
         id: accountId,
         userId,
-        email
+        email,
+        // Ensure no default stores are added
+        stores: []
       }));
       
       localStorage.setItem("currentUser", JSON.stringify(storeAccount));
       
       return true;
     } else {
-      // Create empty maintenance provider account
+      // Create empty maintenance provider account with no default data
       const maintenanceAccount: UserAccount = {
         id: accountId,
         name: "",
@@ -71,7 +73,9 @@ export const createAccountTemplate = async (
         ...DEFAULT_MAINTENANCE_TEMPLATE,
         id: accountId,
         userId,
-        email
+        email,
+        // Ensure no default connections are added
+        connections: []
       }));
       
       localStorage.setItem("currentUser", JSON.stringify(maintenanceAccount));
@@ -103,16 +107,17 @@ export const getAccountTemplate = (
     const accountData = localStorage.getItem(key);
     
     if (!accountData) {
+      // Return a completely empty template with no default data
       return accountType === "store" 
-        ? DEFAULT_STORE_TEMPLATE 
-        : DEFAULT_MAINTENANCE_TEMPLATE;
+        ? { ...DEFAULT_STORE_TEMPLATE, stores: [] } 
+        : { ...DEFAULT_MAINTENANCE_TEMPLATE, connections: [] };
     }
     
     return JSON.parse(accountData);
   } catch (error) {
     console.error("Failed to get account template:", error);
     return accountType === "store" 
-      ? DEFAULT_STORE_TEMPLATE 
-      : DEFAULT_MAINTENANCE_TEMPLATE;
+      ? { ...DEFAULT_STORE_TEMPLATE, stores: [] }
+      : { ...DEFAULT_MAINTENANCE_TEMPLATE, connections: [] };
   }
 };

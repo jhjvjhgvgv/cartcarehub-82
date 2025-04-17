@@ -42,6 +42,9 @@ export const signUpUser = async (
     }
 
     if (signUpData.user) {
+      // Set flag that this is a new account to prevent sample data creation
+      localStorage.setItem('isNewAccountSession', 'true');
+      
       // Create account template based on selected role
       const templateCreated = await createAccountTemplate(
         signUpData.user.id,
@@ -80,6 +83,9 @@ export const signInUser = async (
 ): Promise<AuthResult> => {
   try {
     console.log("Attempting sign in with:", { email, password });
+    
+    // Reset new account flag on sign in
+    localStorage.removeItem('isNewAccountSession');
     
     // Use signInWithPassword instead of signIn which is deprecated
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
