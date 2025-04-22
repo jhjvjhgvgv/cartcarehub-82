@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ConnectionService } from "@/services/ConnectionService";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useAuthCheck(allowedRole?: "maintenance" | "store") {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
+  const { user, isAuthenticated: authStatus } = useAuth();
   
   useEffect(() => {
     // Check if user is authenticated
@@ -20,22 +21,15 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store") {
         return;
       }
       
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error("Auth check error:", error);
-          setIsAuthenticated(false);
-          return;
-        }
-        
-        if (data.session) {
-          console.log("User is authenticated");
-          setIsAuthenticated(true);
-          
-          // Check role permissions
-          if (allowedRole === "maintenance") {
-            // Check if the maintenance provider has connections
-            // to any stores before allowing access
+      // Set authentication status based on the useAuth hook
+      setIsAuthenticated(authStatus);
+      
+      if (authStatus && user) {
+        // Check role permissions
+        if (allowedRole === "maintenance") {
+          // Check if the maintenance provider has connections
+          // to any stores before allowing access
+          try {
             const currentUser = ConnectionService.getCurrentUser();
             const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
             
@@ -52,21 +46,21 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store") {
             } else {
               setIsVerified(true);
             }
-          } else {
-            setIsVerified(true); // Not maintenance role
+          } catch (error) {
+            console.error("Error checking connections:", error);
+            setIsVerified(false);
           }
         } else {
-          console.log("No active session found");
-          setIsAuthenticated(false);
+          setIsVerified(true); // Not maintenance role
         }
-      } catch (error) {
-        console.error("Error in auth check:", error);
+      } else {
+        // Not authenticated
         setIsAuthenticated(false);
       }
     };
     
     checkAuth();
-  }, [allowedRole, toast]);
+  }, [allowedRole, authStatus, toast, user]);
 
   return { isAuthenticated, isVerified };
 }

@@ -1,13 +1,12 @@
 
 import React, { useEffect, useState, Suspense } from "react"
-import { BrowserRouter as Router, Navigate } from "react-router-dom"
+import { BrowserRouter as Router } from "react-router-dom"
 import { LoadingView } from "@/components/auth/LoadingView"
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { InstallPWA } from "@/components/ui/install-pwa"
 import { TestModeIndicator } from "@/components/ui/test-mode-indicator"
 import { AppRoutes } from "@/components/routing/AppRoutes"
-import { useSupabaseAuth } from "@/hooks/use-supabase-auth"
 
 // Create a client with optimized settings to prevent refresh loops
 const queryClient = new QueryClient({
@@ -23,7 +22,6 @@ const queryClient = new QueryClient({
 
 function App() {
   const [loading, setLoading] = useState(true)
-  const { authSubscription } = useSupabaseAuth()
 
   useEffect(() => {
     // Simple loading delay - but only do it once per session
