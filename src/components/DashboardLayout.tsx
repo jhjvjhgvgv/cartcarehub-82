@@ -7,14 +7,27 @@ import { cn } from "@/lib/utils";
 import { TestModeIndicator } from "./ui/test-mode-indicator";
 import { useEffect, useState } from "react";
 import { ConnectionService } from "@/services/ConnectionService";
+import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [hasConnections, setHasConnections] = useState(true);
+  const [isNewAccount, setIsNewAccount] = useState(false);
 
   useEffect(() => {
+    // Check if it's a new account session to skip sample data
+    const newAccount = isNewAccountSession();
+    setIsNewAccount(newAccount);
+
+    if (newAccount) {
+      // Optionally clear the flag after this first load so normal behavior resumes
+      setNewAccountSessionFlag(false);
+      setHasConnections(false); // Treat as no connections so require real setup
+      return;
+    }
+    
     // Check if we're in test mode
     if (localStorage.getItem("testMode") === "true") {
       return; // Don't check connections in test mode
@@ -33,7 +46,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           toast({
             title: "No Active Connections",
             description: "You don't have any active store connections. Please connect to at least one store.",
-            // Fix: Change "warning" to a valid variant type
             variant: "destructive"
           });
           navigate("/settings");
@@ -84,6 +96,26 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     });
     navigate("/");
   };
+
+  if (isNewAccount) {
+    // Show a simple UI for new accounts with no sample data
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+          <h1 className="mb-4 text-2xl font-semibold text-gray-900">Welcome to your new Dashboard!</h1>
+          <p className="mb-6 text-gray-700 text-center max-w-md">
+            This is a fresh account with no sample data. Start from scratch by connecting to your stores and adding your carts and customers.
+          </p>
+          <Link
+            to="/settings"
+            className="inline-block rounded bg-primary px-6 py-3 text-white hover:bg-primary-dark transition"
+          >
+            Go to Settings to Connect Stores
+          </Link>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -140,3 +172,4 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default DashboardLayout;
+

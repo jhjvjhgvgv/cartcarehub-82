@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -6,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
 
 const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -13,10 +15,21 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
+  const [isNewAccount, setIsNewAccount] = useState(false);
 
   if (location.pathname === '/customer') {
     return <Navigate to="/customer/dashboard" replace />;
   }
+
+  // Check new account session on mount
+  React.useEffect(() => {
+    const newAccount = isNewAccountSession();
+    setIsNewAccount(newAccount);
+    if (newAccount) {
+      // Clear the flag after first load
+      setNewAccountSessionFlag(false);
+    }
+  }, []);
 
   const navigation = [
     {
@@ -78,6 +91,23 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
     </>
   );
 
+  if (isNewAccount) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+        <h1 className="mb-4 text-2xl font-semibold text-gray-900">Welcome to your new Customer Dashboard!</h1>
+        <p className="mb-6 text-gray-700 text-center max-w-md">
+          This is a fresh account with no sample data. Get started by reporting an issue or contacting support.
+        </p>
+        <Link
+          to="/customer/settings"
+          className="inline-block rounded bg-primary px-6 py-3 text-white hover:bg-primary-dark transition"
+        >
+          Go to Settings
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-white px-4 md:px-6 shadow-sm">
@@ -136,3 +166,4 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default CustomerLayout;
+
