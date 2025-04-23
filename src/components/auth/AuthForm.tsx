@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormHeader } from "./components/FormHeader";
@@ -23,7 +22,7 @@ const AuthFormContent = ({ onBack }: AuthFormContentProps) => {
   return (
     <Card className="w-full bg-white rounded-2xl shadow-xl border-none overflow-hidden">
       <FormHeader 
-        title={isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back - ${selectedRole}`}
+        title={isSignUp ? `Sign Up - ${selectedRole}` : `Welcome Back`}
         onBack={onBack}
       />
       <CardContent className="p-6 pt-8">

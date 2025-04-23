@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from "react";
+import * as React from "react";  // Fixed React import to fix TS2686 error
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut, X } from "lucide-react";
@@ -62,6 +62,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
     navigate("/");
   };
 
+  // NavLinks component
   const NavLinks = () => (
     <>
       {navigation.map((item) => (
@@ -166,4 +167,3 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default CustomerLayout;
-
