@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -153,7 +152,10 @@ export function StoreMaintenanceSummary() {
                     stores.map((store) => {
                       const storeConnections = connections.filter(c => c.storeId === store.id);
                       const activeConnections = storeConnections.filter(c => c.status === "active").length;
-                      
+
+                      // Ensure createdAt is a string before using Date constructor
+                      const createdAtDate = typeof store.createdAt === "string" ? new Date(store.createdAt) : new Date();
+
                       return (
                         <TableRow key={store.id}>
                           <TableCell className="font-medium">{store.name}</TableCell>
@@ -163,7 +165,7 @@ export function StoreMaintenanceSummary() {
                             </Badge>
                           </TableCell>
                           <TableCell>{activeConnections} of {storeConnections.length}</TableCell>
-                          <TableCell>{new Date(store.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>{createdAtDate.toLocaleDateString()}</TableCell>
                         </TableRow>
                       );
                     })

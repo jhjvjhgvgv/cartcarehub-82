@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut, X } from "lucide-react";
@@ -22,7 +22,7 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Check new account session on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const newAccount = isNewAccountSession();
     setIsNewAccount(newAccount);
     if (newAccount) {
