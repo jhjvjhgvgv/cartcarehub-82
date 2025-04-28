@@ -14,14 +14,19 @@ const CustomerDashboard = () => {
 
   // Check if this is a new account session
   useEffect(() => {
+    // Check for new account flag on mount only
     const newAccountFlag = isNewAccountSession();
     console.log("CustomerDashboard - isNewAccount check:", newAccountFlag);
     setIsNewAccount(newAccountFlag);
     
-    // Clear the flag after we've used it
+    // Clear the flag after we've detected it
+    // This ensures it's only used for the initial render
     if (newAccountFlag) {
-      setNewAccountSessionFlag(false);
-      console.log("CustomerDashboard - Cleared new account flag");
+      // Use a short delay to ensure the welcome screen is shown first
+      setTimeout(() => {
+        setNewAccountSessionFlag(false);
+        console.log("CustomerDashboard - Cleared new account flag");
+      }, 500);
     }
   }, []);
 

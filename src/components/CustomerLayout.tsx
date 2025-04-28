@@ -1,5 +1,4 @@
-
-import * as React from "react";  // Fixed React import to fix TS2686 error
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
+import { isNewAccountSession } from "@/services/connection/storage-utils";
 
 const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -16,7 +15,6 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-  const [isNewAccount, setIsNewAccount] = useState(false);
 
   if (location.pathname === '/customer') {
     return <Navigate to="/customer/dashboard" replace />;
@@ -26,7 +24,6 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const newAccount = isNewAccountSession();
     console.log("CustomerLayout - isNewAccount check:", newAccount);
-    setIsNewAccount(newAccount);
   }, []);
 
   const navigation = [

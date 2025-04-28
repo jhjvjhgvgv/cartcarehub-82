@@ -38,21 +38,23 @@ export function getStoredConnections(): StoreConnection[] {
   }
 }
 
-// Initialize store accounts - always start empty
+// Initialize store accounts - always start empty for new accounts
 export function initializeStoreAccounts(): StoreAccount[] {
-  // Check if this is a new account session to avoid sample data
+  // Always check if this is a new account session to avoid sample data
   const isNewAccount = isNewAccountSession();
   console.log("initializing store accounts, isNewAccount:", isNewAccount);
   
+  // For new accounts, always return empty array
   return [];
 }
 
-// Initialize maintenance accounts - always start empty
+// Initialize maintenance accounts - always start empty for new accounts
 export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
-  // Check if this is a new account session to avoid sample data
+  // Always check if this is a new account session to avoid sample data
   const isNewAccount = isNewAccountSession();
   console.log("initializing maintenance accounts, isNewAccount:", isNewAccount);
   
+  // For new accounts, always return empty array
   return [];
 }
 
