@@ -9,9 +9,11 @@ import { UserAccount, StoreAccount, MaintenanceAccount, StoreConnection } from "
 // Check if the current session is immediately after account creation (new account)
 export function isNewAccountSession(): boolean {
   const newAccountFlag = localStorage.getItem("isNewAccountSession") === "true";
-  const lastOp = localStorage.getItem("lastOperation");
-  console.log("isNewAccountSession check:", newAccountFlag, "lastOperation:", lastOp);
-  return newAccountFlag;
+  const lastOp = localStorage.getItem("lastOperation") === "signup";
+  console.log("isNewAccountSession check:", newAccountFlag || lastOp, "lastOperation:", lastOp, "newAccountFlag:", newAccountFlag);
+  
+  // Return true if EITHER flag is set - this is more reliable
+  return newAccountFlag || lastOp;
 }
 
 // Mark the session as a new account session (used after sign up)
@@ -19,13 +21,21 @@ export function setNewAccountSessionFlag(value: boolean) {
   console.log("setNewAccountSessionFlag:", value, "Stack trace:", new Error().stack);
   if (value) {
     localStorage.setItem("isNewAccountSession", "true");
+    console.log("Set new account flag to true");
   } else {
     localStorage.removeItem("isNewAccountSession");
+    console.log("Removed new account flag");
   }
 }
 
 // Get stored connections from localStorage or empty array
 export function getStoredConnections(): StoreConnection[] {
+  // ALWAYS check if this is a new account first
+  if (isNewAccountSession()) {
+    console.log("getStoredConnections - NEW ACCOUNT - returning empty array");
+    return [];
+  }
+
   const stored = localStorage.getItem('storeConnections');
   if (!stored) return [];
   try {
@@ -41,12 +51,12 @@ export function getStoredConnections(): StoreConnection[] {
 
 // Initialize store accounts - ALWAYS return empty array for new accounts
 export function initializeStoreAccounts(): StoreAccount[] {
-  // Always check if this is a new account session to avoid sample data
+  // Always check if this is a new account session before doing anything
   const isNewAccount = isNewAccountSession();
   console.log("initializing store accounts, isNewAccount:", isNewAccount);
   
   // For new accounts, always return empty array
-  if (isNewAccount || localStorage.getItem("lastOperation") === "signup") {
+  if (isNewAccount) {
     console.log("NEW ACCOUNT DETECTED - returning empty store accounts");
     return [];
   }
@@ -58,12 +68,12 @@ export function initializeStoreAccounts(): StoreAccount[] {
 
 // Initialize maintenance accounts - ALWAYS return empty array for new accounts
 export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
-  // Always check if this is a new account session to avoid sample data
+  // Always check if this is a new account session before doing anything
   const isNewAccount = isNewAccountSession();
   console.log("initializing maintenance accounts, isNewAccount:", isNewAccount);
   
   // For new accounts, always return empty array
-  if (isNewAccount || localStorage.getItem("lastOperation") === "signup") {
+  if (isNewAccount) {
     console.log("NEW ACCOUNT DETECTED - returning empty maintenance accounts");
     return [];
   }
@@ -75,6 +85,19 @@ export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
 
 // Create or retrieve current user account from localStorage or default empty account
 export function createUserAccountIfNeeded(): UserAccount {
+  // FIRST check if this is a new account session
+  if (isNewAccountSession()) {
+    // For new accounts, always create a fresh user account
+    console.log("Creating empty user account for NEW ACCOUNT");
+    const emptyUser: UserAccount = {
+      id: '',
+      name: '',
+      type: 'store',
+    };
+    localStorage.setItem('currentUser', JSON.stringify(emptyUser));
+    return emptyUser;
+  }
+  
   const stored = localStorage.getItem('currentUser');
   if (stored) {
     try {
@@ -92,4 +115,27 @@ export function createUserAccountIfNeeded(): UserAccount {
   };
   localStorage.setItem('currentUser', JSON.stringify(emptyUser));
   return emptyUser;
+}
+
+// Clear new account flags - used after user has seen the welcome screen
+export function clearNewAccountFlags(immediate = false) {
+  console.log("Clearing new account flags, immediate:", immediate);
+  
+  if (immediate) {
+    localStorage.removeItem("isNewAccountSession");
+    localStorage.removeItem("lastOperation");
+    console.log("Immediately cleared all new account flags");
+  } else {
+    // Clear with a delay to ensure welcome screen is shown
+    setTimeout(() => {
+      localStorage.removeItem("isNewAccountSession");
+      console.log("Cleared isNewAccountSession flag with delay");
+      
+      // Clear lastOperation after another delay
+      setTimeout(() => {
+        localStorage.removeItem("lastOperation");
+        console.log("Cleared lastOperation flag with additional delay");
+      }, 5000);
+    }, 1000);
+  }
 }

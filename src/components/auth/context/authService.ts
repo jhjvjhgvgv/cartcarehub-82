@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createAccountTemplate } from "@/services/account/account-templates";
 import { NavigateFunction } from "react-router-dom";
 import { UserRole } from "./types";
-import { setNewAccountSessionFlag } from "@/services/connection/storage-utils";
+import { setNewAccountSessionFlag, clearNewAccountFlags } from "@/services/connection/storage-utils";
 
 interface AuthResult {
   success: boolean;
@@ -92,7 +92,7 @@ export const signInUser = async (
     console.log("Attempting sign in with:", { email, password });
     
     // FORCEFULLY clear any new account flags for sign-ins
-    localStorage.removeItem("isNewAccountSession");
+    clearNewAccountFlags(true); // Use immediate mode
     localStorage.setItem("lastOperation", "signin");
     console.log("⭐ NEW ACCOUNT FLAGS FORCEFULLY CLEARED - THIS IS NOT A NEW ACCOUNT ⭐");
     

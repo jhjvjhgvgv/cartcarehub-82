@@ -7,38 +7,31 @@ import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
 import { AICartAssistant } from "@/components/customer/AICartAssistant";
 import { KpiCard } from "@/components/customer/dashboard/KpiCard";
 import { useState, useEffect } from "react";
-import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
+import { isNewAccountSession, clearNewAccountFlags } from "@/services/connection/storage-utils";
 
 const CustomerDashboard = () => {
-  const [isNewAccount, setIsNewAccount] = useState(true); // Default to true until we confirm
+  const [isNewAccount, setIsNewAccount] = useState(true); // Default to true until we confirm it's not
 
   // Check if this is a new account session
   useEffect(() => {
-    // Check if this is a signup session
+    // Check if this is a signup session or has newAccountFlag
     const isSignup = localStorage.getItem("lastOperation") === "signup";
-    const newAccountFlag = isNewAccountSession();
+    const newAccountFlag = localStorage.getItem("isNewAccountSession") === "true";
     
     console.log("CustomerDashboard - MOUNT CHECK - isSignup:", isSignup, "newAccountFlag:", newAccountFlag);
     
     // If either condition is true, show the new account welcome
-    setIsNewAccount(isSignup || newAccountFlag);
+    const isNew = isSignup || newAccountFlag;
+    setIsNewAccount(isNew);
     
-    // Clear the flags after a delay to ensure welcome screen is shown
-    if (isSignup || newAccountFlag) {
+    // Clear the flags after a delay so the welcome screen has time to be seen
+    if (isNew) {
       console.log("CustomerDashboard - Will clear new account flags shortly");
-      setTimeout(() => {
-        localStorage.removeItem("isNewAccountSession");
-        console.log("CustomerDashboard - Cleared isNewAccountSession flag");
-        
-        // Don't immediately clear the lastOperation, as we might need it for a refresh
-        // But do clear it after the user has had time to see the welcome screen
-        setTimeout(() => {
-          localStorage.removeItem("lastOperation");
-          console.log("CustomerDashboard - Cleared lastOperation flag");
-        }, 10000); // Clear after 10 seconds
-      }, 1000);
+      clearNewAccountFlags();
     }
   }, []);
+  
+  console.log("CustomerDashboard rendering with isNewAccount =", isNewAccount);
 
   // For new accounts, show a welcome message and no sample data
   if (isNewAccount) {
@@ -64,7 +57,8 @@ const CustomerDashboard = () => {
     );
   }
 
-  // Sample recent activity data - only used for existing accounts
+  // The rest of the component for existing accounts
+  // This should ONLY run if we're 100% sure this is NOT a new account
   const recentActivities = [
     {
       id: 1,
