@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { UserAccount } from "../connection/types";
+import { setNewAccountSessionFlag } from "../connection/storage-utils";
 
 export type AccountType = "store" | "maintenance";
 
@@ -42,7 +43,8 @@ export const createAccountTemplate = async (
     const accountId = crypto.randomUUID();
     
     // Set flag that this is a new account to prevent sample data creation
-    localStorage.setItem('isNewAccountSession', 'true');
+    setNewAccountSessionFlag(true);
+    console.log("Set new account flag to true");
     
     if (accountType === "store") {
       // Create empty store account with no default data

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createAccountTemplate } from "@/services/account/account-templates";
 import { NavigateFunction } from "react-router-dom";
 import { UserRole } from "./types";
+import { setNewAccountSessionFlag } from "@/services/connection/storage-utils";
 
 interface AuthResult {
   success: boolean;
@@ -19,7 +20,8 @@ export const signUpUser = async (
     console.log("Attempting sign up with:", { email, role: selectedRole });
     
     // Set flag that this is a new account to prevent sample data creation
-    localStorage.setItem('isNewAccountSession', 'true');
+    setNewAccountSessionFlag(true);
+    console.log("New account flag set during signup");
     
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -84,8 +86,9 @@ export const signInUser = async (
   try {
     console.log("Attempting sign in with:", { email, password });
     
-    // Reset new account flag on sign in
-    localStorage.removeItem('isNewAccountSession');
+    // Reset new account flag on sign in for existing accounts
+    setNewAccountSessionFlag(false);
+    console.log("New account flag reset during signin");
     
     // Use signInWithPassword instead of signIn which is deprecated
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

@@ -8,6 +8,8 @@ import { UserAccount, StoreAccount, MaintenanceAccount, StoreConnection } from "
 
 // Check if the current session is immediately after account creation (new account)
 export function isNewAccountSession(): boolean {
+  // For debugging purposes, you can force this by uncommenting the next line
+  // return true;
   return localStorage.getItem("isNewAccountSession") === "true";
 }
 
@@ -37,11 +39,19 @@ export function getStoredConnections(): StoreConnection[] {
 
 // Initialize store accounts - always start empty
 export function initializeStoreAccounts(): StoreAccount[] {
+  // Check if this is a new account session to avoid sample data
+  const isNewAccount = isNewAccountSession();
+  console.log("initializing store accounts, isNewAccount:", isNewAccount);
+  
   return [];
 }
 
 // Initialize maintenance accounts - always start empty
 export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
+  // Check if this is a new account session to avoid sample data
+  const isNewAccount = isNewAccountSession();
+  console.log("initializing maintenance accounts, isNewAccount:", isNewAccount);
+  
   return [];
 }
 
