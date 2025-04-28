@@ -11,7 +11,7 @@ const storeAccounts = initializeStoreAccounts();
 const maintenanceAccounts = initializeMaintenanceAccounts();
 
 // Initialize current user - will be empty for new users
-const currentUser = createUserAccountIfNeeded(storeAccounts, maintenanceAccounts);
+const currentUser = createUserAccountIfNeeded();
 
 export const UserService = {
   // Get current user
