@@ -8,13 +8,14 @@ import { UserAccount, StoreAccount, MaintenanceAccount, StoreConnection } from "
 
 // Check if the current session is immediately after account creation (new account)
 export function isNewAccountSession(): boolean {
-  // For debugging purposes, you can force this by uncommenting the next line
-  // return true;
-  return localStorage.getItem("isNewAccountSession") === "true";
+  const newAccountFlag = localStorage.getItem("isNewAccountSession") === "true";
+  console.log("isNewAccountSession check:", newAccountFlag);
+  return newAccountFlag;
 }
 
 // Mark the session as a new account session (used after sign up)
 export function setNewAccountSessionFlag(value: boolean) {
+  console.log("setNewAccountSessionFlag:", value);
   if (value) {
     localStorage.setItem("isNewAccountSession", "true");
   } else {

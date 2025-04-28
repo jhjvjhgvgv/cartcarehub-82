@@ -1,3 +1,4 @@
+
 import * as React from "react";  // Fixed React import to fix TS2686 error
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
@@ -24,11 +25,8 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   // Check new account session on mount
   useEffect(() => {
     const newAccount = isNewAccountSession();
+    console.log("CustomerLayout - isNewAccount check:", newAccount);
     setIsNewAccount(newAccount);
-    if (newAccount) {
-      // Clear the flag after first load
-      setNewAccountSessionFlag(false);
-    }
   }, []);
 
   const navigation = [
@@ -91,23 +89,6 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
       </Button>
     </>
   );
-
-  if (isNewAccount) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-        <h1 className="mb-4 text-2xl font-semibold text-gray-900">Welcome to your new Customer Dashboard!</h1>
-        <p className="mb-6 text-gray-700 text-center max-w-md">
-          This is a fresh account with no sample data. Get started by reporting an issue or contacting support.
-        </p>
-        <Link
-          to="/customer/settings"
-          className="inline-block rounded bg-primary px-6 py-3 text-white hover:bg-primary-dark transition"
-        >
-          Go to Settings
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

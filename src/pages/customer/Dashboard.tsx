@@ -7,15 +7,47 @@ import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
 import { AICartAssistant } from "@/components/customer/AICartAssistant";
 import { KpiCard } from "@/components/customer/dashboard/KpiCard";
 import { useState, useEffect } from "react";
-import { isNewAccountSession } from "@/services/connection/storage-utils";
+import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
 
 const CustomerDashboard = () => {
   const [isNewAccount, setIsNewAccount] = useState(false);
 
   // Check if this is a new account session
   useEffect(() => {
-    setIsNewAccount(isNewAccountSession());
+    const newAccountFlag = isNewAccountSession();
+    console.log("CustomerDashboard - isNewAccount check:", newAccountFlag);
+    setIsNewAccount(newAccountFlag);
+    
+    // Clear the flag after we've used it
+    if (newAccountFlag) {
+      setNewAccountSessionFlag(false);
+      console.log("CustomerDashboard - Cleared new account flag");
+    }
   }, []);
+
+  // For new accounts, show a welcome message and no sample data
+  if (isNewAccount) {
+    return (
+      <CustomerLayout>
+        <div className="flex flex-col items-center justify-center h-full py-12">
+          <div className="text-center space-y-4 max-w-md mx-auto px-4">
+            <h1 className="text-3xl font-bold tracking-tight">Welcome to CartCareHub!</h1>
+            <p className="text-muted-foreground">
+              This is a fresh account with no sample data. Get started by adding your first cart or connecting with a maintenance provider.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <a 
+                href="/customer/settings" 
+                className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+              >
+                Go to Settings
+              </a>
+            </div>
+          </div>
+        </div>
+      </CustomerLayout>
+    );
+  }
 
   // Sample recent activity data - only used for existing accounts
   const recentActivities = [
@@ -54,41 +86,12 @@ const CustomerDashboard = () => {
   ];
 
   // Only show stats for existing accounts
-  const cartStats = isNewAccount ? {
-    activeCarts: 0,
-    inactiveCarts: 0,
-    totalCarts: 0,
-    recentIssues: 0
-  } : {
+  const cartStats = {
     activeCarts: 2,
     inactiveCarts: 1,
     totalCarts: 3,
     recentIssues: 0
   };
-
-  // For new accounts, show a welcome message
-  if (isNewAccount) {
-    return (
-      <CustomerLayout>
-        <div className="flex flex-col items-center justify-center h-full py-12">
-          <div className="text-center space-y-4 max-w-md mx-auto px-4">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome to CartCareHub!</h1>
-            <p className="text-muted-foreground">
-              This is a fresh account with no sample data. Get started by adding your first cart or connecting with a maintenance provider.
-            </p>
-            <div className="mt-6 flex justify-center">
-              <a 
-                href="/customer/settings" 
-                className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-              >
-                Go to Settings
-              </a>
-            </div>
-          </div>
-        </div>
-      </CustomerLayout>
-    );
-  }
 
   return (
     <CustomerLayout>

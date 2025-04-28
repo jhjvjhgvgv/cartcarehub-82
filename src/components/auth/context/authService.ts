@@ -21,7 +21,7 @@ export const signUpUser = async (
     
     // Set flag that this is a new account to prevent sample data creation
     setNewAccountSessionFlag(true);
-    console.log("New account flag set during signup");
+    console.log("New account flag SET during signup");
     
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -88,7 +88,7 @@ export const signInUser = async (
     
     // Reset new account flag on sign in for existing accounts
     setNewAccountSessionFlag(false);
-    console.log("New account flag reset during signin");
+    console.log("New account flag RESET during signin");
     
     // Use signInWithPassword instead of signIn which is deprecated
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
