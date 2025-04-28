@@ -9,13 +9,14 @@ import { UserAccount, StoreAccount, MaintenanceAccount, StoreConnection } from "
 // Check if the current session is immediately after account creation (new account)
 export function isNewAccountSession(): boolean {
   const newAccountFlag = localStorage.getItem("isNewAccountSession") === "true";
-  console.log("isNewAccountSession check:", newAccountFlag);
+  const lastOp = localStorage.getItem("lastOperation");
+  console.log("isNewAccountSession check:", newAccountFlag, "lastOperation:", lastOp);
   return newAccountFlag;
 }
 
 // Mark the session as a new account session (used after sign up)
 export function setNewAccountSessionFlag(value: boolean) {
-  console.log("setNewAccountSessionFlag:", value);
+  console.log("setNewAccountSessionFlag:", value, "Stack trace:", new Error().stack);
   if (value) {
     localStorage.setItem("isNewAccountSession", "true");
   } else {
@@ -38,23 +39,37 @@ export function getStoredConnections(): StoreConnection[] {
   }
 }
 
-// Initialize store accounts - always start empty for new accounts
+// Initialize store accounts - ALWAYS return empty array for new accounts
 export function initializeStoreAccounts(): StoreAccount[] {
   // Always check if this is a new account session to avoid sample data
   const isNewAccount = isNewAccountSession();
   console.log("initializing store accounts, isNewAccount:", isNewAccount);
   
   // For new accounts, always return empty array
+  if (isNewAccount || localStorage.getItem("lastOperation") === "signup") {
+    console.log("NEW ACCOUNT DETECTED - returning empty store accounts");
+    return [];
+  }
+  
+  // For existing accounts, return empty array for now too
+  console.log("EXISTING ACCOUNT DETECTED - still returning empty store accounts for consistency");
   return [];
 }
 
-// Initialize maintenance accounts - always start empty for new accounts
+// Initialize maintenance accounts - ALWAYS return empty array for new accounts
 export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
   // Always check if this is a new account session to avoid sample data
   const isNewAccount = isNewAccountSession();
   console.log("initializing maintenance accounts, isNewAccount:", isNewAccount);
   
   // For new accounts, always return empty array
+  if (isNewAccount || localStorage.getItem("lastOperation") === "signup") {
+    console.log("NEW ACCOUNT DETECTED - returning empty maintenance accounts");
+    return [];
+  }
+  
+  // For existing accounts, return empty array for now too
+  console.log("EXISTING ACCOUNT DETECTED - still returning empty maintenance accounts for consistency");
   return [];
 }
 

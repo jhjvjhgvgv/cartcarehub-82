@@ -10,23 +10,33 @@ import { useState, useEffect } from "react";
 import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
 
 const CustomerDashboard = () => {
-  const [isNewAccount, setIsNewAccount] = useState(false);
+  const [isNewAccount, setIsNewAccount] = useState(true); // Default to true until we confirm
 
   // Check if this is a new account session
   useEffect(() => {
-    // Check for new account flag on mount only
+    // Check if this is a signup session
+    const isSignup = localStorage.getItem("lastOperation") === "signup";
     const newAccountFlag = isNewAccountSession();
-    console.log("CustomerDashboard - isNewAccount check:", newAccountFlag);
-    setIsNewAccount(newAccountFlag);
     
-    // Clear the flag after we've detected it
-    // This ensures it's only used for the initial render
-    if (newAccountFlag) {
-      // Use a short delay to ensure the welcome screen is shown first
+    console.log("CustomerDashboard - MOUNT CHECK - isSignup:", isSignup, "newAccountFlag:", newAccountFlag);
+    
+    // If either condition is true, show the new account welcome
+    setIsNewAccount(isSignup || newAccountFlag);
+    
+    // Clear the flags after a delay to ensure welcome screen is shown
+    if (isSignup || newAccountFlag) {
+      console.log("CustomerDashboard - Will clear new account flags shortly");
       setTimeout(() => {
-        setNewAccountSessionFlag(false);
-        console.log("CustomerDashboard - Cleared new account flag");
-      }, 500);
+        localStorage.removeItem("isNewAccountSession");
+        console.log("CustomerDashboard - Cleared isNewAccountSession flag");
+        
+        // Don't immediately clear the lastOperation, as we might need it for a refresh
+        // But do clear it after the user has had time to see the welcome screen
+        setTimeout(() => {
+          localStorage.removeItem("lastOperation");
+          console.log("CustomerDashboard - Cleared lastOperation flag");
+        }, 10000); // Clear after 10 seconds
+      }, 1000);
     }
   }, []);
 

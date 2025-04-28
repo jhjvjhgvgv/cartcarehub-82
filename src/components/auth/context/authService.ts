@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { createAccountTemplate } from "@/services/account/account-templates";
 import { NavigateFunction } from "react-router-dom";
@@ -18,10 +19,14 @@ export const signUpUser = async (
   try {
     console.log("Attempting sign up with:", { email, role: selectedRole });
     
-    // Always set new account flag during signup and make it very explicit
-    setNewAccountSessionFlag(true);
-    console.log("NEW ACCOUNT FLAG SET DURING SIGNUP - THIS IS A NEW ACCOUNT");
+    // FORCEFULLY clear any existing flags first to avoid state confusion
+    localStorage.removeItem("isNewAccountSession");
+    localStorage.removeItem("lastOperation");
+    
+    // Now set the new account flags
+    localStorage.setItem("isNewAccountSession", "true");
     localStorage.setItem("lastOperation", "signup");
+    console.log("⭐ NEW ACCOUNT FLAGS FORCEFULLY SET - THIS IS A NEW ACCOUNT ⭐");
     
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -86,10 +91,10 @@ export const signInUser = async (
   try {
     console.log("Attempting sign in with:", { email, password });
     
-    // Reset new account flag on sign in for existing accounts
-    setNewAccountSessionFlag(false);
-    console.log("New account flag EXPLICITLY RESET during signin - THIS IS NOT A NEW ACCOUNT");
+    // FORCEFULLY clear any new account flags for sign-ins
+    localStorage.removeItem("isNewAccountSession");
     localStorage.setItem("lastOperation", "signin");
+    console.log("⭐ NEW ACCOUNT FLAGS FORCEFULLY CLEARED - THIS IS NOT A NEW ACCOUNT ⭐");
     
     // Use signInWithPassword instead of signIn which is deprecated
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
