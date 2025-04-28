@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,15 +7,8 @@ import { StoreTable } from "./store/StoreTable";
 import { StoreFormDialog } from "./store/StoreFormDialog";
 import { type ManagedStore, type StoreFormData } from "./types/store";
 
-// Example data - replace with actual API calls in a real implementation
-const initialStores: ManagedStore[] = [
-  { id: "store1", name: "Downtown Branch", status: "active", createdAt: "2023-01-15" },
-  { id: "store2", name: "Mall Location", status: "active", createdAt: "2023-03-22" },
-  { id: "store3", name: "Airport Kiosk", status: "inactive", createdAt: "2023-05-10" },
-];
-
 export function StoreManager() {
-  const [stores, setStores] = useState<ManagedStore[]>(initialStores);
+  const [stores, setStores] = useState<ManagedStore[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<ManagedStore | null>(null);
   const { toast } = useToast();

@@ -35,41 +35,18 @@ export function getStoredConnections(): StoreConnection[] {
   }
 }
 
-// Initialize store accounts - mock or retrieve from localStorage
+// Initialize store accounts - always start empty
 export function initializeStoreAccounts(): StoreAccount[] {
-  const stored = localStorage.getItem('storeAccounts');
-  if (!stored) return [];
-  try {
-    const stores = JSON.parse(stored) as StoreAccount[];
-    if (Array.isArray(stores)) {
-      return stores;
-    }
-    return [];
-  } catch {
-    return [];
-  }
+  return [];
 }
 
-// Initialize maintenance accounts - mock or retrieve from localStorage
+// Initialize maintenance accounts - always start empty
 export function initializeMaintenanceAccounts(): MaintenanceAccount[] {
-  const stored = localStorage.getItem('maintenanceAccounts');
-  if (!stored) return [];
-  try {
-    const maintenance = JSON.parse(stored) as MaintenanceAccount[];
-    if (Array.isArray(maintenance)) {
-      return maintenance;
-    }
-    return [];
-  } catch {
-    return [];
-  }
+  return [];
 }
 
-// Create or retrieve current user account from localStorage or default
-export function createUserAccountIfNeeded(
-  stores: StoreAccount[],
-  maintenance: MaintenanceAccount[]
-): UserAccount {
+// Create or retrieve current user account from localStorage or default empty account
+export function createUserAccountIfNeeded(): UserAccount {
   const stored = localStorage.getItem('currentUser');
   if (stored) {
     try {
@@ -78,18 +55,8 @@ export function createUserAccountIfNeeded(
       // ignore
     }
   }
-  // If no user stored, create default user (empty or first store or maintenance)
-  if (maintenance.length > 0) {
-    const user = maintenance[0] as UserAccount;
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    return user;
-  }
-  if (stores.length > 0) {
-    const user = stores[0] as UserAccount;
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    return user;
-  }
-  // Fallback empty user
+  
+  // Return empty user
   const emptyUser: UserAccount = {
     id: '',
     name: '',
@@ -98,4 +65,3 @@ export function createUserAccountIfNeeded(
   localStorage.setItem('currentUser', JSON.stringify(emptyUser));
   return emptyUser;
 }
-
