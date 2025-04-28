@@ -4,6 +4,7 @@ import { NavigateFunction } from "react-router-dom";
 import { UserRole } from "../context/types";
 import { AuthResult } from "./types";
 import { clearNewAccountFlags } from "@/services/connection/storage-utils";
+import { fetchUserProfile, handleNavigation } from "./profile/profileService";
 
 export const signInUser = async (
   email: string,
@@ -15,7 +16,7 @@ export const signInUser = async (
     console.log("Attempting sign in with:", { email, password });
     
     // FORCEFULLY clear any new account flags for sign-ins
-    clearNewAccountFlags(true); // Use immediate mode
+    clearNewAccountFlags(true);
     localStorage.setItem("lastOperation", "signin");
     console.log("⭐ NEW ACCOUNT FLAGS FORCEFULLY CLEARED - THIS IS NOT A NEW ACCOUNT ⭐");
     
@@ -34,27 +35,15 @@ export const signInUser = async (
       localStorage.setItem('supabase.auth.token', JSON.stringify(signInData.session));
       
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', signInData.user.id)
-          .maybeSingle();
-          
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-        }
-        
-        // Determine redirect path based on role
+        const profile = await fetchUserProfile(signInData.user.id);
         const role = profile?.role || selectedRole;
-        const redirectPath = role === 'maintenance' ? '/dashboard' : '/customer/dashboard';
-        navigate(redirectPath, { replace: true });
+        
+        handleNavigation(role, selectedRole, navigate);
         
         return { success: true, message: "You have been signed in successfully!" };
       } catch (err) {
         console.error("Error during profile fetch or navigation:", err);
-        // Fallback navigation
-        const fallbackPath = selectedRole === 'maintenance' ? '/dashboard' : '/customer/dashboard';
-        navigate(fallbackPath, { replace: true });
+        handleNavigation(selectedRole, selectedRole, navigate);
         return { success: true, message: "You have been signed in successfully!" };
       }
     }
