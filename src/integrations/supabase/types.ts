@@ -360,6 +360,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_maintenance_provider: {
         Args: { user_id: string }
         Returns: boolean
