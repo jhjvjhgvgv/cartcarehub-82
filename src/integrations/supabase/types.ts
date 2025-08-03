@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_analytics: {
+        Row: {
+          cart_id: string
+          created_at: string
+          customer_satisfaction: number | null
+          distance_traveled: number | null
+          downtime_minutes: number | null
+          id: string
+          issues_reported: number | null
+          maintenance_cost: number | null
+          metric_date: string
+          updated_at: string
+          usage_hours: number | null
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          customer_satisfaction?: number | null
+          distance_traveled?: number | null
+          downtime_minutes?: number | null
+          id?: string
+          issues_reported?: number | null
+          maintenance_cost?: number | null
+          metric_date?: string
+          updated_at?: string
+          usage_hours?: number | null
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          customer_satisfaction?: number | null
+          distance_traveled?: number | null
+          downtime_minutes?: number | null
+          id?: string
+          issues_reported?: number | null
+          maintenance_cost?: number | null
+          metric_date?: string
+          updated_at?: string
+          usage_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_analytics_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carts: {
         Row: {
           created_at: string
@@ -88,6 +138,141 @@ export type Database = {
           verification_date?: string | null
         }
         Relationships: []
+      }
+      maintenance_requests: {
+        Row: {
+          actual_duration: number | null
+          cart_id: string
+          completed_date: string | null
+          cost: number | null
+          created_at: string
+          description: string | null
+          estimated_duration: number | null
+          id: string
+          notes: Json | null
+          priority: string
+          provider_id: string
+          request_type: string
+          scheduled_date: string | null
+          status: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_duration?: number | null
+          cart_id: string
+          completed_date?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          notes?: Json | null
+          priority?: string
+          provider_id: string
+          request_type: string
+          scheduled_date?: string | null
+          status?: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_duration?: number | null
+          cart_id?: string
+          completed_date?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          notes?: Json | null
+          priority?: string
+          provider_id?: string
+          request_type?: string
+          scheduled_date?: string | null
+          status?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_schedules: {
+        Row: {
+          cart_id: string
+          created_at: string
+          estimated_duration: number
+          frequency: number
+          id: string
+          is_active: boolean
+          last_completed: string | null
+          maintenance_type: string
+          next_due_date: string
+          notes: string | null
+          provider_id: string
+          schedule_type: string
+          updated_at: string
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          estimated_duration?: number
+          frequency?: number
+          id?: string
+          is_active?: boolean
+          last_completed?: string | null
+          maintenance_type: string
+          next_due_date: string
+          notes?: string | null
+          provider_id: string
+          schedule_type: string
+          updated_at?: string
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          estimated_duration?: number
+          frequency?: number
+          id?: string
+          is_active?: boolean
+          last_completed?: string | null
+          maintenance_type?: string
+          next_due_date?: string
+          notes?: string | null
+          provider_id?: string
+          schedule_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_schedules_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_schedules_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
