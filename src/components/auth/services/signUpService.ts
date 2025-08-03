@@ -46,7 +46,7 @@ export const signUpUser = async (
     }
 
     if (signUpData.user) {
-      // Create account template based on selected role
+      // Create account template with enhanced profile data
       const templateCreated = await createAccountTemplate(
         signUpData.user.id,
         selectedRole,

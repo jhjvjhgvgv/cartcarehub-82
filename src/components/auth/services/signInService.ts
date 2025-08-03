@@ -38,6 +38,12 @@ export const signInUser = async (
         const profile = await fetchUserProfile(signInData.user.id);
         const role = profile?.role || selectedRole;
         
+        // Update last sign in timestamp
+        await supabase
+          .from('profiles')
+          .update({ last_sign_in: new Date().toISOString() })
+          .eq('id', signInData.user.id);
+        
         handleNavigation(role, selectedRole, navigate);
         
         return { success: true, message: "You have been signed in successfully!" };

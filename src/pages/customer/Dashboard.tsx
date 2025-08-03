@@ -1,150 +1,26 @@
 
 import CustomerLayout from "@/components/CustomerLayout";
-import { ShoppingCart, AlertTriangle, Wrench, FileCheck, BarChart, Clock } from "lucide-react";
 import { CartStatsCards } from "@/components/customer/dashboard/CartStatsCards";
 import { QuickActions } from "@/components/customer/dashboard/QuickActions";
 import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
-import { AICartAssistant } from "@/components/customer/AICartAssistant";
-import { KpiCard } from "@/components/customer/dashboard/KpiCard";
-import { useState, useEffect } from "react";
-import { isNewAccountSession, clearNewAccountFlags } from "@/services/connection/storage-utils";
+import { UserWelcome } from "@/components/dashboard/UserWelcome";
 
-const CustomerDashboard = () => {
-  const [isNewAccount, setIsNewAccount] = useState(true); // Default to true until we confirm it's not
-
-  // Check if this is a new account session
-  useEffect(() => {
-    // Check if this is a signup session or has newAccountFlag
-    const isSignup = localStorage.getItem("lastOperation") === "signup";
-    const newAccountFlag = localStorage.getItem("isNewAccountSession") === "true";
-    
-    console.log("CustomerDashboard - MOUNT CHECK - isSignup:", isSignup, "newAccountFlag:", newAccountFlag);
-    
-    // If either condition is true, show the new account welcome
-    const isNew = isSignup || newAccountFlag;
-    setIsNewAccount(isNew);
-    
-    // Clear the flags after a delay so the welcome screen has time to be seen
-    if (isNew) {
-      console.log("CustomerDashboard - Will clear new account flags shortly");
-      clearNewAccountFlags();
-    }
-  }, []);
-  
-  console.log("CustomerDashboard rendering with isNewAccount =", isNewAccount);
-
-  // For new accounts, show a welcome message and no sample data
-  if (isNewAccount) {
-    return (
-      <CustomerLayout>
-        <div className="flex flex-col items-center justify-center h-full py-12">
-          <div className="text-center space-y-4 max-w-md mx-auto px-4">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome to CartCareHub!</h1>
-            <p className="text-muted-foreground">
-              This is a fresh account with no sample data. Get started by adding your first cart or connecting with a maintenance provider.
-            </p>
-            <div className="mt-6 flex justify-center">
-              <a 
-                href="/customer/settings" 
-                className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-              >
-                Go to Settings
-              </a>
-            </div>
-          </div>
-        </div>
-      </CustomerLayout>
-    );
-  }
-
-  // The rest of the component for existing accounts
-  // This should ONLY run if we're 100% sure this is NOT a new account
-  const recentActivities = [
-    {
-      id: 1,
-      type: "maintenance",
-      date: "2025-03-15",
-      description: "Regular maintenance completed",
-      icon: Wrench,
-      status: "completed",
-    },
-    {
-      id: 2,
-      type: "inspection",
-      date: "2025-03-10",
-      description: "Cart #1042 inspection",
-      icon: FileCheck,
-      status: "completed",
-    },
-    {
-      id: 3,
-      type: "issue",
-      date: "2025-03-08",
-      description: "Reported wheel issue on Cart #1039",
-      icon: AlertTriangle,
-      status: "pending",
-    },
-    {
-      id: 4,
-      type: "maintenance",
-      date: "2025-03-01",
-      description: "Emergency repair request",
-      icon: Wrench,
-      status: "completed",
-    },
-  ];
-
-  // Only show stats for existing accounts
-  const cartStats = {
-    activeCarts: 2,
-    inactiveCarts: 1,
-    totalCarts: 3,
-    recentIssues: 0
-  };
-
+export default function CustomerDashboard() {
   return (
     <CustomerLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
-          <p className="text-muted-foreground">
-            Monitor your shopping cart status and report any issues.
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Monitor your shopping cart status and maintenance schedule
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <KpiCard
-            title="Cart Availability Rate"
-            value="92%"
-            icon={BarChart}
-            description="Average uptime across all carts"
-            trend={{ value: 3.2, isPositive: true }}
-            iconClassName="bg-primary-50 text-primary"
-          />
-          <KpiCard
-            title="Average Downtime"
-            value="1.8 hrs"
-            icon={Clock}
-            description="Average downtime per cart this month"
-            trend={{ value: 12.5, isPositive: false }}
-            iconClassName="bg-red-50 text-red-500"
-          />
-        </div>
-
-        <CartStatsCards cartStats={cartStats} />
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <QuickActions />
-          <RecentActivity recentActivities={recentActivities} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-1">
-          <AICartAssistant />
-        </div>
+        <UserWelcome />
+        <CartStatsCards cartStats={{ activeCarts: 0, inactiveCarts: 0, totalCarts: 0, recentIssues: 0 }} />
+        <QuickActions />
+        <RecentActivity recentActivities={[]} />
       </div>
     </CustomerLayout>
   );
-};
-
-export default CustomerDashboard;
+}

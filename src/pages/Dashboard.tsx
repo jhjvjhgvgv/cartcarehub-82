@@ -1,240 +1,103 @@
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Building2, ShoppingCart, ChevronRight, BarChart, Percent, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
-import { useState, useEffect } from "react";
-import { isNewAccountSession } from "@/services/connection/storage-utils";
+import { UserWelcome } from "@/components/dashboard/UserWelcome";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCarts } from "@/hooks/use-carts";
+import { ShoppingCart, Wrench, AlertTriangle, TrendingUp } from "lucide-react";
 
-const Index = () => {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isNewAccount, setIsNewAccount] = useState(false);
-  
-  // Check if this is a new account session
-  useEffect(() => {
-    setIsNewAccount(isNewAccountSession());
-  }, []);
+export default function Dashboard() {
+  const { carts, isLoading } = useCarts();
 
-  // Only show sample data for existing accounts
-  const stores = isNewAccount ? [] : [
+  const totalCarts = carts?.length || 0;
+  const activeCarts = carts?.filter(cart => cart.status === "active").length || 0;
+  const maintenanceCarts = carts?.filter(cart => cart.status === "maintenance").length || 0;
+  const retiredCarts = carts?.filter(cart => cart.status === "retired").length || 0;
+
+  const stats = [
     {
-      id: 1,
-      name: "SuperMart Downtown",
-      location: "123 Main St",
-      totalCarts: 50,
-      activeCarts: 45,
-      maintenanceNeeded: 5,
-      utilizationRate: 90,
-      maintenanceRate: 10,
+      title: "Total Carts",
+      value: totalCarts,
+      description: "All carts in system",
+      icon: ShoppingCart,
+      color: "text-blue-600",
     },
     {
-      id: 2,
-      name: "FreshMart Heights",
-      location: "456 Park Ave",
-      totalCarts: 75,
-      activeCarts: 70,
-      maintenanceNeeded: 5,
-      utilizationRate: 93,
-      maintenanceRate: 7,
+      title: "Active Carts",
+      value: activeCarts,
+      description: "Currently in use",
+      icon: TrendingUp,
+      color: "text-green-600",
     },
     {
-      id: 3,
-      name: "Value Grocery West",
-      location: "789 West Blvd",
-      totalCarts: 25,
-      activeCarts: 15,
-      maintenanceNeeded: 10,
-      utilizationRate: 60,
-      maintenanceRate: 40,
+      title: "Maintenance",
+      value: maintenanceCarts,
+      description: "Needs attention",
+      icon: Wrench,
+      color: "text-yellow-600",
+    },
+    {
+      title: "Retired",
+      value: retiredCarts,
+      description: "Out of service",
+      icon: AlertTriangle,
+      color: "text-red-600",
     },
   ];
 
-  const stats = {
-    totalCarts: stores.reduce((sum, store) => sum + store.totalCarts, 0),
-    activeCarts: stores.reduce((sum, store) => sum + store.activeCarts, 0),
-    maintenanceNeeded: stores.reduce((sum, store) => sum + store.maintenanceNeeded, 0),
-  };
-
-  const getUtilizationColor = (rate: number) => {
-    if (rate >= 90) return "text-green-600";
-    if (rate >= 70) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  const getMaintenanceColor = (rate: number) => {
-    if (rate <= 10) return "text-green-600";
-    if (rate <= 20) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  // For new accounts, show a clean dashboard with guidance
-  if (isNewAccount) {
-    return (
-      <DashboardLayout>
-        <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-x-hidden">
-          <div className="flex items-center space-x-2 px-2">
-            <Building2 className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
-            <h1 className="text-base md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
-          </div>
-          
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Welcome to your new maintenance dashboard!</h2>
-            <p className="text-gray-600 mb-6 max-w-lg">
-              This is a fresh account with no sample data. Get started by connecting to stores and managing their carts.
-            </p>
-            <button 
-              className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
-              onClick={() => navigate('/settings')}
-            >
-              Go to Settings to Connect Stores
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
-      <div className="h-full w-full flex flex-col space-y-4 p-2 md:p-4 overflow-x-hidden">
-        <div className="flex items-center space-x-2 px-2">
-          <Building2 className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
-          <h1 className="text-base md:text-2xl font-bold text-gray-900">Store Dashboard</h1>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Maintenance Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Overview of all cart maintenance operations
+          </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-2">
-          <Card 
-            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary-600 cursor-pointer"
-            onClick={() => navigate('/carts')}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary-50 rounded-full">
-                <Building2 className="w-4 md:w-5 h-4 md:h-5 text-primary-700" />
-              </div>
-              <div className="flex flex-col">
-                <p className="text-xs md:text-sm text-gray-500">Total Stores</p>
-                <p className="text-sm md:text-xl font-bold text-gray-900">{stores.length}</p>
-              </div>
-            </div>
-          </Card>
 
-          <Card 
-            className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-green-600 cursor-pointer"
-            onClick={() => navigate('/carts')}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-50 rounded-full">
-                <ShoppingCart className="w-4 md:w-5 h-4 md:h-5 text-green-600" />
-              </div>
-              <div className="flex flex-col">
-                <p className="text-xs md:text-sm text-gray-500">Total Carts</p>
-                <p className="text-sm md:text-xl font-bold text-gray-900">{stats.totalCarts}</p>
-              </div>
-            </div>
-          </Card>
+        {/* User Welcome Section */}
+        <UserWelcome />
 
-          <Card className="p-3 md:p-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-yellow-600">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-50 rounded-full">
-                <AlertTriangle className="w-4 md:w-5 h-4 md:h-5 text-yellow-600" />
-              </div>
-              <div className="flex flex-col">
-                <p className="text-xs md:text-sm text-gray-500">Needs Maintenance</p>
-                <p className="text-sm md:text-xl font-bold text-gray-900">{stats.maintenanceNeeded}</p>
-              </div>
-            </div>
-          </Card>
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.title}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {stat.title}
+                  </CardTitle>
+                  <Icon className={`h-4 w-4 ${stat.color}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {isLoading ? "..." : stat.value}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-        
+
         {/* Analytics Chart */}
-        <div className="px-2">
-          <AnalyticsChart />
-        </div>
-
-        <Card className="flex-1 mx-2">
-          <CardHeader className="py-2 md:py-3">
-            <CardTitle className="text-base md:text-lg">Stores Overview</CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cart Status Analytics</CardTitle>
+            <CardDescription>
+              Monthly trends for cart maintenance and status changes
+            </CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="w-full overflow-x-auto">
-              <div className="min-w-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[30%] text-xs md:text-sm">Store Name</TableHead>
-                      <TableHead className="w-[20%] text-xs md:text-sm">Location</TableHead>
-                      <TableHead className="text-right w-[25%] text-xs md:text-sm">Cart Status</TableHead>
-                      <TableHead className="text-right w-[15%] text-xs md:text-sm">Utilization</TableHead>
-                      <TableHead className="text-right w-[15%] text-xs md:text-sm">Maintenance</TableHead>
-                      <TableHead className="w-[5%]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {stores.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No stores connected yet. Go to Settings to connect with stores.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      stores.map((store) => (
-                        <TableRow 
-                          key={store.id}
-                          className="cursor-pointer hover:bg-primary-50 transition-colors min-h-[140px] md:min-h-[60px]"
-                          onClick={() => navigate(`/store/${store.id}`, { state: { storeName: store.name } })}
-                        >
-                          <TableCell className="font-medium py-4 text-xs md:text-sm">
-                            <div className="flex flex-col md:flex-row items-start md:items-center">
-                              {store.name}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4 text-xs md:text-sm">
-                            <div className="flex flex-col md:flex-row items-start md:items-center">
-                              {store.location}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <ShoppingCart className="w-4 h-4 text-primary-600" />
-                              <span className="text-xs md:text-sm">{store.activeCarts}/{store.totalCarts}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <Percent className={`w-4 h-4 ${getUtilizationColor(store.utilizationRate)}`} />
-                              <span className={`text-xs md:text-sm ${getUtilizationColor(store.utilizationRate)}`}>
-                                {store.utilizationRate}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right py-4">
-                            <div className="flex flex-col md:flex-row justify-end items-end md:items-center space-y-1 md:space-y-0 md:space-x-2">
-                              <AlertTriangle className={`w-4 h-4 ${getMaintenanceColor(store.maintenanceRate)}`} />
-                              <span className={`text-xs md:text-sm ${getMaintenanceColor(store.maintenanceRate)}`}>
-                                {store.maintenanceRate}%
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+          <CardContent>
+            <AnalyticsChart />
           </CardContent>
         </Card>
       </div>
     </DashboardLayout>
   );
-};
+}
 
-export default Index;
+

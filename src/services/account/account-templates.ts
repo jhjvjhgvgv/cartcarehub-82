@@ -1,128 +1,40 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserAccount } from "../connection/types";
-import { setNewAccountSessionFlag } from "../connection/storage-utils";
+import { UserRole } from "@/components/auth/context/types";
 
-export type AccountType = "store" | "maintenance";
-
-// Empty default store account template
-const DEFAULT_STORE_TEMPLATE = {
-  name: "",
-  address: "",
-  contactPerson: "",
-  contactEmail: "",
-  contactPhone: "",
-  carts: 0,
-  activeCarts: 0,
-  maintenanceNeeded: 0
-};
-
-// Empty default maintenance provider template
-const DEFAULT_MAINTENANCE_TEMPLATE = {
-  name: "",
-  services: [],
-  contactPerson: "",
-  contactEmail: "",
-  contactPhone: "",
-  activeStores: 0,
-  completedServices: 0
-};
-
-/**
- * Create a new account template based on account type
- */
 export const createAccountTemplate = async (
   userId: string,
-  accountType: AccountType,
+  role: UserRole,
   email: string
 ): Promise<boolean> => {
   try {
-    console.log(`Creating ${accountType} account template for user: ${userId}`);
+    console.log("Creating account template for:", { userId, role, email });
     
-    // Generate a default account ID
-    const accountId = crypto.randomUUID();
-    
-    // Set flag that this is a new account to prevent sample data creation
-    setNewAccountSessionFlag(true);
-    console.log("Set new account flag to true");
-    
-    if (accountType === "store") {
-      // Create empty store account with no default data
-      const storeAccount: UserAccount = {
-        id: accountId,
-        name: "",
-        type: "store"
-      };
-      
-      localStorage.setItem(`store_account_${userId}`, JSON.stringify({
-        ...DEFAULT_STORE_TEMPLATE,
-        id: accountId,
-        userId,
-        email,
-        // Ensure no default stores are added
-        stores: []
-      }));
-      
-      localStorage.setItem("currentUser", JSON.stringify(storeAccount));
-      
-      return true;
-    } else {
-      // Create empty maintenance provider account with no default data
-      const maintenanceAccount: UserAccount = {
-        id: accountId,
-        name: "",
-        type: "maintenance"
-      };
-      
-      localStorage.setItem(`maintenance_account_${userId}`, JSON.stringify({
-        ...DEFAULT_MAINTENANCE_TEMPLATE,
-        id: accountId,
-        userId,
-        email,
-        // Ensure no default connections are added
-        connections: []
-      }));
-      
-      localStorage.setItem("currentUser", JSON.stringify(maintenanceAccount));
-      
-      return true;
+    // Create or update profile with enhanced data
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        role: role,
+        email: email,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+    if (profileError) {
+      console.error("Profile creation error:", profileError);
+      return false;
     }
+
+    // The maintenance provider profile will be created automatically by the trigger
+    // if role is 'maintenance', so we don't need to manually create it here
+
+    console.log("Account template created successfully");
+    return true;
   } catch (error) {
-    console.error("Failed to create account template:", error);
-    if (error instanceof Error) {
-      console.error(`Error message: ${error.message}`);
-      console.error(`Error stack: ${error.stack}`);
-    }
+    console.error("Unexpected error creating account template:", error);
     return false;
   }
 };
 
-/**
- * Get account template based on user ID and account type
- */
-export const getAccountTemplate = (
-  userId: string,
-  accountType: AccountType
-): any => {
-  try {
-    const key = accountType === "store" 
-      ? `store_account_${userId}` 
-      : `maintenance_account_${userId}`;
-      
-    const accountData = localStorage.getItem(key);
-    
-    if (!accountData) {
-      // Return a completely empty template with no default data
-      return accountType === "store" 
-        ? { ...DEFAULT_STORE_TEMPLATE, stores: [] } 
-        : { ...DEFAULT_MAINTENANCE_TEMPLATE, connections: [] };
-    }
-    
-    return JSON.parse(accountData);
-  } catch (error) {
-    console.error("Failed to get account template:", error);
-    return accountType === "store" 
-      ? { ...DEFAULT_STORE_TEMPLATE, stores: [] }
-      : { ...DEFAULT_MAINTENANCE_TEMPLATE, connections: [] };
-  }
-};
