@@ -81,6 +81,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       href: "/settings",
       icon: Settings,
     },
+    {
+      name: "Admin",
+      href: "/admin",
+      icon: Settings,
+    },
   ];
 
   const handleSignOut = () => {

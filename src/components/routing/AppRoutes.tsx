@@ -10,6 +10,7 @@ import Carts from "@/pages/Carts";
 import CartDetails from "@/pages/CartDetails";
 import Customers from "@/pages/Customers";
 import Settings from "@/pages/Settings";
+import Admin from "@/pages/Admin";
 import Store from "@/pages/Store";
 import Invite from "@/pages/Invite";
 import ForgotPassword from "@/pages/ForgotPassword";
@@ -31,6 +32,7 @@ export const AppRoutes = () => {
       <Route path="/carts/:cartId" element={<ProtectedRoute element={<CartDetails />} allowedRole="maintenance" />} />
       <Route path="/customers" element={<ProtectedRoute element={<Customers />} allowedRole="maintenance" />} />
       <Route path="/settings" element={<ProtectedRoute element={<Settings />} allowedRole="maintenance" />} />
+      <Route path="/admin" element={<ProtectedRoute element={<Admin />} allowedRole="maintenance" />} />
       <Route path="/store/:id" element={<ProtectedRoute element={<Store />} allowedRole="maintenance" />} />
       
       {/* Customer routes - Protected with test mode support */}
