@@ -28,8 +28,8 @@ export const InspectionRequestDialog = () => {
     setIsSubmitting(true);
     
     try {
-      // Get current user (store)
-      const currentUser = ConnectionService.getCurrentUser();
+      // Get current user (store) - using simplified approach for demo
+      const currentUser = { id: 'demo-store-user', name: 'Demo Store', type: 'store' as const };
       
       // This would typically make an API call to send the request to connected maintenance providers
       // For this demo, we'll simulate saving the request

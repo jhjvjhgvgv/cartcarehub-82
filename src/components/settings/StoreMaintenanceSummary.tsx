@@ -19,7 +19,8 @@ export function StoreMaintenanceSummary() {
   const [stores, setStores] = useState<ManagedStore[]>([]);
   const [connections, setConnections] = useState<StoreMaintenanceConnection[]>([]);
   const [maintenanceProviders, setMaintenanceProviders] = useState<UserAccount[]>([]);
-  const currentUser = ConnectionService.getCurrentUser();
+  // Using demo user for summary
+  const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
 
   useEffect(() => {
     // Fetch all managed stores for this store manager

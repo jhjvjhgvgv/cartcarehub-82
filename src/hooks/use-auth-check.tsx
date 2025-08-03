@@ -30,8 +30,9 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store") {
           // Check if the maintenance provider has connections
           // to any stores before allowing access
           try {
-            const currentUser = ConnectionService.getCurrentUser();
-            const connections = await ConnectionService.getMaintenanceRequests(currentUser.id);
+            // Use the authenticated user ID for maintenance role checking
+            const userId = user?.id || '';
+            const connections = await ConnectionService.getMaintenanceRequests(userId);
             
             const hasActiveConnections = connections.some(conn => conn.status === "active");
             

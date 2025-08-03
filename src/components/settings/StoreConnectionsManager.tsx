@@ -10,11 +10,13 @@ import { AccountIdentifier } from "./AccountIdentifier";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { PendingInvitationsList } from "./PendingInvitationsList";
 import { ConnectedStoresList } from "./ConnectedStoresList";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export function StoreConnectionsManager() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const currentUser = ConnectionService.getCurrentUser();
+  const { profile } = useUserProfile();
+  const currentUser = { id: profile?.id || '', name: profile?.display_name || '', type: 'store' as const };
   const isMaintenance = false; // This is for store accounts
 
   const formatDate = (dateString: string) => {

@@ -11,11 +11,13 @@ import { Plus } from "lucide-react"
 import { ConnectionService } from "@/services/ConnectionService"
 import { ConnectionDialog } from "./ConnectionDialog"
 import { AccountIdentifier } from "./AccountIdentifier"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManagerProps) {
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const currentUser = ConnectionService.getCurrentUser();
+  const { profile } = useUserProfile();
+  const currentUser = { id: profile?.id || '', name: profile?.display_name || '', type: isMaintenance ? 'maintenance' as const : 'store' as const };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

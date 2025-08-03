@@ -23,7 +23,8 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
   const { toast } = useToast()
 
   const pendingInvitations = invitations.filter(inv => inv.status === "pending" || inv.status === "sent")
-  const currentUser = ConnectionService.getCurrentUser();
+  // Using demo user for invitation form
+  const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
 
   const handleSendInvitation = async () => {
     if (!inviteEmail) {

@@ -11,9 +11,11 @@ import { AICartAssistant } from "@/components/customer/AICartAssistant";
 import { ConnectionService } from "@/services/ConnectionService";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 const ReportIssue = () => {
   const { toast } = useToast();
+  const { profile } = useUserProfile();
   const [cartId, setCartId] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,8 +31,8 @@ const ReportIssue = () => {
           return;
         }
         
-        const currentUser = ConnectionService.getCurrentUser();
-        const connections = await ConnectionService.getStoreConnections(currentUser.id);
+        const userId = profile?.id || '';
+        const connections = await ConnectionService.getStoreConnections(userId);
         
         const hasActiveConnections = connections.some(conn => conn.status === "active");
         setHasConnections(hasActiveConnections);
@@ -42,7 +44,7 @@ const ReportIssue = () => {
     };
     
     checkConnections();
-  }, []);
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +52,10 @@ const ReportIssue = () => {
     
     try {
       // Get current user (store)
-      const currentUser = ConnectionService.getCurrentUser();
+      const userId = profile?.id || '';
       
       // Get connected maintenance providers
-      const connections = await ConnectionService.getStoreConnections(currentUser.id);
+      const connections = await ConnectionService.getStoreConnections(userId);
       const activeConnections = connections.filter(conn => conn.status === "active");
       
       if (activeConnections.length === 0) {

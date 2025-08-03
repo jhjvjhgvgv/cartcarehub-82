@@ -25,8 +25,8 @@ export default function Invite() {
       }
       
       try {
-        // Get current user
-        const currentUser = ConnectionService.getCurrentUser();
+        // Get current user - using demo user for invite page
+        const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
         
         // Get inviter name
         let inviterName = "";

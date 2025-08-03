@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, Link2, RefreshCw, XCircle } from "lucide-react";
 import { ConnectionService } from "@/services/ConnectionService";
 import { StoreConnection } from "./types";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 interface ConnectionStatusProps {
   isMaintenance: boolean;
@@ -14,7 +15,8 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
   const [connections, setConnections] = useState<StoreConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const currentUser = ConnectionService.getCurrentUser();
+  const { profile } = useUserProfile();
+  const currentUserId = profile?.id || '';
 
   useEffect(() => {
     const fetchConnections = async () => {
@@ -23,9 +25,9 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
         let results: StoreConnection[] = [];
         
         if (isMaintenance) {
-          results = await ConnectionService.getMaintenanceRequests(currentUser.id);
+          results = await ConnectionService.getMaintenanceRequests(currentUserId);
         } else {
-          results = await ConnectionService.getStoreConnections(currentUser.id);
+          results = await ConnectionService.getStoreConnections(currentUserId);
         }
         
         setConnections(results);
@@ -37,7 +39,7 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     };
     
     fetchConnections();
-  }, [isMaintenance, refreshKey, currentUser.id]);
+  }, [isMaintenance, refreshKey, currentUserId]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
