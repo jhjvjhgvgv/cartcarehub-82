@@ -171,6 +171,7 @@ export function UserManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="store">Store</SelectItem>
                   <SelectItem value="maintenance">Maintenance</SelectItem>
                 </SelectContent>
@@ -226,7 +227,10 @@ export function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.role === 'maintenance' ? 'default' : 'secondary'}>
+                        <Badge variant={
+                          user.role === 'admin' ? 'destructive' : 
+                          user.role === 'maintenance' ? 'default' : 'secondary'
+                        }>
                           {user.role}
                         </Badge>
                       </TableCell>

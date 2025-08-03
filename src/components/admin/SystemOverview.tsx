@@ -50,6 +50,7 @@ export function SystemOverview() {
         },
         users: {
           total: users.length,
+          admin: users.filter(u => u.role === 'admin').length,
           store: users.filter(u => u.role === 'store').length,
           maintenance: users.filter(u => u.role === 'maintenance').length,
           active: users.filter(u => u.is_active).length
@@ -81,7 +82,7 @@ export function SystemOverview() {
 
   const stats = systemStats || {
     carts: { total: 0, active: 0, maintenance: 0, retired: 0 },
-    users: { total: 0, store: 0, maintenance: 0, active: 0 },
+    users: { total: 0, admin: 0, store: 0, maintenance: 0, active: 0 },
     providers: { total: 0, verified: 0, pending: 0 },
     requests: { total: 0, pending: 0, inProgress: 0, completed: 0, urgent: 0 },
     analytics: { totalCost: 0, totalDowntime: 0, totalIssues: 0 }
@@ -133,6 +134,7 @@ export function SystemOverview() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.users.total}</div>
             <div className="flex gap-2 mt-2">
+              <Badge variant="destructive">{stats.users.admin} Admin</Badge>
               <Badge variant="outline">{stats.users.store} Store</Badge>
               <Badge variant="outline">{stats.users.maintenance} Maintenance</Badge>
             </div>

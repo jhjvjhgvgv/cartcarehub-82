@@ -6,7 +6,7 @@ import { useAuthCheck } from "@/hooks/use-auth-check";
 
 interface ProtectedRouteProps {
   element: React.ReactNode;
-  allowedRole?: "maintenance" | "store";
+  allowedRole?: "maintenance" | "store" | "admin";
 }
 
 export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) => {
@@ -20,7 +20,9 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
       return <>{element}</>;
     } else {
       // If test mode is enabled but wrong role, redirect to appropriate dashboard
-      return <Navigate to={testRole === "maintenance" ? "/dashboard" : "/customer/dashboard"} replace />;
+      const redirectPath = testRole === "maintenance" ? "/dashboard" : 
+                          testRole === "admin" ? "/admin" : "/customer/dashboard";
+      return <Navigate to={redirectPath} replace />;
     }
   }
   

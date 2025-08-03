@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConnectionService } from "@/services/ConnectionService";
 import { useAuth } from "@/hooks/use-auth";
 
-export function useAuthCheck(allowedRole?: "maintenance" | "store") {
+export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { toast } = useToast();
@@ -51,8 +51,11 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store") {
             console.error("Error checking connections:", error);
             setIsVerified(false);
           }
+        } else if (allowedRole === "admin") {
+          // Admin users don't need connection verification
+          setIsVerified(true);
         } else {
-          setIsVerified(true); // Not maintenance role
+          setIsVerified(true); // Store role or no specific role requirement
         }
       } else {
         // Not authenticated

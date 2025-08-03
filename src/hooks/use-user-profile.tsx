@@ -92,5 +92,6 @@ export const useUserProfile = () => {
     updateProfile,
     isMaintenanceUser: profile?.role === 'maintenance',
     isStoreUser: profile?.role === 'store',
+    isAdminUser: profile?.role === 'admin',
   };
 };
