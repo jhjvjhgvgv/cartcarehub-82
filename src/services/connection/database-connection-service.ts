@@ -227,5 +227,70 @@ export const DatabaseConnectionService = {
       console.error("Failed to get maintenance providers:", error);
       return [];
     }
+  },
+
+  // New function to look up maintenance provider UUID by email
+  async getMaintenanceProviderByEmail(email: string): Promise<{ id: string, name: string } | null> {
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_providers')
+        .select('id, company_name, contact_email')
+        .eq('contact_email', email.trim().toLowerCase())
+        .eq('is_verified', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching maintenance provider by email:', error);
+        return null;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return {
+        id: data.id,
+        name: data.company_name
+      };
+    } catch (error) {
+      console.error('Error in getMaintenanceProviderByEmail:', error);
+      return null;
+    }
+  },
+
+  // Enhanced connection request with email lookup support
+  async requestConnectionByEmail(storeId: string, maintenanceEmail: string): Promise<{ success: boolean, message: string }> {
+    try {
+      // First, look up the maintenance provider by email
+      const provider = await this.getMaintenanceProviderByEmail(maintenanceEmail);
+      
+      if (!provider) {
+        return {
+          success: false,
+          message: "No verified maintenance provider found with this email address."
+        };
+      }
+
+      // Use the existing requestConnection method with the found provider ID
+      const success = await this.requestConnection(storeId, provider.id);
+      
+      if (success) {
+        return {
+          success: true,
+          message: `Connection request sent to ${provider.name}.`
+        };
+      } else {
+        return {
+          success: false,
+          message: "Failed to create connection request. A connection may already exist."
+        };
+      }
+    } catch (error) {
+      console.error('Error in requestConnectionByEmail:', error);
+      return {
+        success: false,
+        message: "An unexpected error occurred while processing the connection request."
+      };
+    }
   }
 };

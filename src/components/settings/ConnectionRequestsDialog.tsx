@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { ConnectionService } from "@/services/ConnectionService";
 import { Store, StoreConnection } from "./types";
 
@@ -24,25 +25,28 @@ export function ConnectionRequestsDialog({ isMaintenance, store }: ConnectionReq
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<StoreConnection[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // For maintenance providers, fetch any pending connection requests
   useEffect(() => {
-    if (isOpen && isMaintenance) {
+    if (isOpen && isMaintenance && user) {
       const fetchRequests = async () => {
-        // In a real app, this would use the current user's ID
-        const maintenanceId = "current-maintenance-email@example.com";
-        const requests = await ConnectionService.getMaintenanceRequests(maintenanceId);
-        setPendingRequests(requests.filter(req => req.status === "pending"));
+        try {
+          const requests = await ConnectionService.getMaintenanceRequests(user.id);
+          setPendingRequests(requests.filter(req => req.status === "pending"));
+        } catch (error) {
+          console.error("Error fetching maintenance requests:", error);
+        }
       };
       
       fetchRequests();
     }
-  }, [isOpen, isMaintenance]);
+  }, [isOpen, isMaintenance, user]);
 
   const handleRequestConnection = async () => {
     if (!store) return;
     
-    if (!email) {
+    if (!email.trim()) {
       toast({
         title: "Error",
         description: "Please enter an email address",
@@ -51,22 +55,33 @@ export function ConnectionRequestsDialog({ isMaintenance, store }: ConnectionReq
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address format",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      const success = await ConnectionService.requestConnection(store.id, email);
+      const result = await ConnectionService.requestConnectionByEmail(store.id, email.trim());
       
-      if (success) {
+      if (result.success) {
         toast({
           title: "Request Sent",
-          description: `Connection request sent to ${email}`,
+          description: result.message,
         });
         setEmail("");
         setIsOpen(false);
       } else {
         toast({
-          title: "Error",
-          description: "Failed to send connection request",
+          title: "Request Failed",
+          description: result.message,
           variant: "destructive",
         });
       }
@@ -74,7 +89,7 @@ export function ConnectionRequestsDialog({ isMaintenance, store }: ConnectionReq
       console.error("Connection request error:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred while sending the request",
         variant: "destructive",
       });
     } finally {

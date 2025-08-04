@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { checkProfileCompletion, createMaintenanceProviderProfile } from "@/services/profile/profile-completion";
+import { RoleSyncService } from "@/services/profile/role-sync-service";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +29,15 @@ export const ProfileSetup = () => {
   useEffect(() => {
     const checkCompletion = async () => {
       if (user?.id) {
+        // First perform a comprehensive role sync to ensure consistency
+        const syncResult = await RoleSyncService.performComprehensiveSync(user.id);
+        
+        if (syncResult.success) {
+          console.log("Role sync completed:", syncResult.message);
+        } else {
+          console.warn("Role sync failed:", syncResult.message);
+        }
+        
         const completion = await checkProfileCompletion(user.id);
         setProfileCompletion(completion);
         
