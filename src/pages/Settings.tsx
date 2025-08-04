@@ -15,6 +15,7 @@ import { DevModeInstructions } from "@/components/settings/DevModeInstructions";
 import { ProviderVerificationPanel } from "@/components/settings/ProviderVerificationPanel";
 import { ConnectionStatusDisplay } from "@/components/settings/ConnectionStatusDisplay";
 import { ProfileCompletionCard } from "@/components/settings/ProfileCompletionCard";
+import { AppDataManager } from "@/components/settings/AppDataManager";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { DesignNotes } from "@/components/settings/DesignNotes";
@@ -163,6 +164,8 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <AppDataManager />
 
             <DevModeInstructions show={testMode} />
           </TabsContent>
