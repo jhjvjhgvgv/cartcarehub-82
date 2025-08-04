@@ -12,11 +12,16 @@ import { StoreMaintenanceManager } from "@/components/settings/StoreMaintenanceM
 import { ImprovedConnectionsManager } from "@/components/settings/ImprovedConnectionsManager";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { DevModeInstructions } from "@/components/settings/DevModeInstructions";
+import { ProviderVerificationPanel } from "@/components/settings/ProviderVerificationPanel";
+import { ConnectionStatusDisplay } from "@/components/settings/ConnectionStatusDisplay";
+import { ProfileCompletionCard } from "@/components/settings/ProfileCompletionCard";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { DesignNotes } from "@/components/settings/DesignNotes";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { isMaintenanceUser } = useUserProfile();
   const [testMode, setTestMode] = React.useState(
     localStorage.getItem("testMode") === "true"
   );
@@ -68,6 +73,15 @@ const Settings = () => {
 
           <TabsContent value="general">
             <div className="space-y-6">
+              {/* Profile Completion */}
+              <ProfileCompletionCard />
+
+              {/* Connection Status */}
+              <ConnectionStatusDisplay />
+
+              {/* Provider Verification (for maintenance users only) */}
+              {isMaintenanceUser && <ProviderVerificationPanel />}
+
               <Card>
                 <CardHeader>
                   <CardTitle>Notifications</CardTitle>
@@ -105,31 +119,6 @@ const Settings = () => {
                       <Switch id="maintenance-reminders" />
                     </div>
                     <Button type="submit">Save Notification Settings</Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Profile</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" placeholder="Your name" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="Your email" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Company</Label>
-                      <Input id="company" placeholder="Your company" />
-                    </div>
-                    <Button type="button">Update Profile</Button>
                   </form>
                 </CardContent>
               </Card>

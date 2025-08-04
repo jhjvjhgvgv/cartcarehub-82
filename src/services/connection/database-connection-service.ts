@@ -65,6 +65,12 @@ export const DatabaseConnectionService = {
       }
 
       console.log(`Created new connection between store ${storeId} and maintenance ${maintenanceId}`);
+      
+      // Send notification email (non-blocking)
+      this.sendConnectionNotification('request', storeId, maintenanceId).catch(error => {
+        console.error("Failed to send connection notification:", error);
+      });
+      
       return true;
     } catch (error) {
       console.error("Failed to request connection:", error);
@@ -87,6 +93,11 @@ export const DatabaseConnectionService = {
         console.error("Error accepting connection:", error);
         return false;
       }
+
+      // Send notification email (non-blocking)
+      this.sendConnectionNotification('accepted', '', connectionId).catch(error => {
+        console.error("Failed to send acceptance notification:", error);
+      });
 
       return true;
     } catch (error) {
@@ -315,6 +326,67 @@ export const DatabaseConnectionService = {
         success: false,
         message: "An unexpected error occurred while processing the connection request."
       };
+    }
+  },
+
+  // Send connection notification email
+  async sendConnectionNotification(type: 'request' | 'accepted' | 'rejected', storeId: string, providerIdOrConnectionId: string): Promise<void> {
+    try {
+      let providerData = null;
+      
+      if (type === 'request') {
+        // For requests, providerIdOrConnectionId is the provider ID
+        const { data } = await supabase
+          .from('maintenance_providers')
+          .select('contact_email, company_name')
+          .eq('id', providerIdOrConnectionId)
+          .maybeSingle();
+        providerData = data;
+      } else {
+        // For accepted/rejected, providerIdOrConnectionId is the connection ID
+        const { data } = await supabase
+          .from('store_provider_connections')
+          .select(`
+            store_id,
+            maintenance_providers!inner(
+              contact_email,
+              company_name
+            )
+          `)
+          .eq('id', providerIdOrConnectionId)
+          .maybeSingle();
+        
+        if (data) {
+          providerData = {
+            contact_email: (data as any).maintenance_providers.contact_email,
+            company_name: (data as any).maintenance_providers.company_name
+          };
+          storeId = (data as any).store_id;
+        }
+      }
+
+      if (!providerData) {
+        console.error("Could not find provider data for notification");
+        return;
+      }
+
+      // Call the edge function to send the email
+      const { error } = await supabase.functions.invoke('connection-notification', {
+        body: {
+          type,
+          storeId,
+          providerId: providerIdOrConnectionId,
+          providerEmail: providerData.contact_email,
+          providerName: providerData.company_name,
+          storeName: storeId // In a real app, this would be fetched from a stores table
+        }
+      });
+
+      if (error) {
+        console.error("Error sending connection notification:", error);
+      }
+    } catch (error) {
+      console.error("Failed to send connection notification:", error);
     }
   }
 };

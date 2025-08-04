@@ -22,40 +22,44 @@ export const useUserProfile = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchProfile();
+  }, [user]);
+
+  const fetchProfile = async () => {
     if (!user) {
       setProfile(null);
       setLoading(false);
       return;
     }
 
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-        if (fetchError) {
-          console.error("Error fetching profile:", fetchError);
-          setError(fetchError.message);
-          return;
-        }
-
-        setProfile(data);
-      } catch (err) {
-        console.error("Unexpected error fetching profile:", err);
-        setError("Failed to fetch profile");
-      } finally {
-        setLoading(false);
+      if (fetchError) {
+        console.error("Error fetching profile:", fetchError);
+        setError(fetchError.message);
+        return;
       }
-    };
 
-    fetchProfile();
-  }, [user]);
+      setProfile(data);
+    } catch (err) {
+      console.error("Unexpected error fetching profile:", err);
+      setError("Failed to fetch profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    await fetchProfile();
+  };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user || !profile) return false;
@@ -90,6 +94,7 @@ export const useUserProfile = () => {
     loading,
     error,
     updateProfile,
+    refreshProfile,
     isMaintenanceUser: profile?.role === 'maintenance',
     isStoreUser: profile?.role === 'store',
     isAdminUser: profile?.role === 'admin',
