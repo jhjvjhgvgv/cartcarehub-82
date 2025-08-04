@@ -39,6 +39,7 @@ export const handleNavigation = async (
     }
   }
 
-  const redirectPath = role === 'maintenance' ? '/dashboard' : '/customer/dashboard';
+  const redirectPath = role === 'maintenance' ? '/dashboard' : 
+                        role === 'admin' ? '/admin' : '/customer/dashboard';
   navigate(redirectPath, { replace: true });
 };

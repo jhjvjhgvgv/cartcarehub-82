@@ -55,7 +55,8 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
           // Admin users don't need connection verification
           setIsVerified(true);
         } else {
-          setIsVerified(true); // Store role or no specific role requirement
+          // Store role and other roles don't need connection verification
+          setIsVerified(true);
         }
       } else {
         // Not authenticated

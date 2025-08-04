@@ -25,6 +25,8 @@ export const checkSession = async (navigate: NavigateFunction): Promise<boolean>
         navigate('/dashboard');
       } else if (profile?.role === 'store') {
         navigate('/customer/dashboard');
+      } else if (profile?.role === 'admin') {
+        navigate('/admin');
       }
       
       return true;

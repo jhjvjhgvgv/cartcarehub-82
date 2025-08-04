@@ -36,9 +36,12 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
     return <Navigate to="/" replace />;
   }
   
-  // If no active connections for maintenance role, redirect to settings
+  // If verification failed, redirect to appropriate settings
   if (isVerified === false) {
-    return <Navigate to="/settings" replace />;
+    // Redirect to the correct settings page based on role
+    const testRole = localStorage.getItem("testRole");
+    const redirectPath = testRole === "store" ? "/customer/settings" : "/settings";
+    return <Navigate to={redirectPath} replace />;
   }
   
   // All checks passed, render the protected element
