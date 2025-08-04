@@ -22,6 +22,7 @@ import {
   Loader2,
   Mail
 } from "lucide-react";
+import { clearNewAccountFlags } from "@/services/connection/storage-utils";
 
 export const ImprovedConnectionsManager = () => {
   const { profile, isMaintenanceUser, isStoreUser } = useUserProfile();
@@ -145,6 +146,8 @@ export const ImprovedConnectionsManager = () => {
             description: result.message,
           });
           setNewConnectionEmail("");
+          // Clear new account flags since user has made their first connection
+          clearNewAccountFlags(true);
           await loadConnectionData(); // Refresh the data
         } else {
           toast({
@@ -181,6 +184,8 @@ export const ImprovedConnectionsManager = () => {
           title: "Connection Accepted",
           description: "Connection request has been accepted",
         });
+        // Clear new account flags since user has established their first connection
+        clearNewAccountFlags(true);
         await loadConnectionData();
       } else {
         throw new Error("Failed to accept connection");

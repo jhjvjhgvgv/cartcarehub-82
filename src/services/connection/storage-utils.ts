@@ -139,3 +139,14 @@ export function clearNewAccountFlags(immediate = false) {
     }, 1000);
   }
 }
+
+// Clear new account flags when user navigates to settings to start setup
+export function clearFlagsOnSettingsNavigation(): void {
+  console.log("Clearing new account flags on settings navigation");
+  // Clear flags when user actively navigates to settings to start setup
+  setTimeout(() => {
+    localStorage.removeItem("isNewAccountSession");
+    localStorage.removeItem("lastOperation");
+    console.log("New account flags cleared on settings navigation");
+  }, 500);
+}

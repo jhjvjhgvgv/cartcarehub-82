@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { TestModeIndicator } from "./ui/test-mode-indicator";
 import { useEffect, useState } from "react";
 import { ConnectionService } from "@/services/ConnectionService";
-import { isNewAccountSession, setNewAccountSessionFlag } from "@/services/connection/storage-utils";
+import { isNewAccountSession, setNewAccountSessionFlag, clearFlagsOnSettingsNavigation } from "@/services/connection/storage-utils";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -22,8 +22,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     setIsNewAccount(newAccount);
 
     if (newAccount) {
-      // Optionally clear the flag after this first load so normal behavior resumes
-      setNewAccountSessionFlag(false);
+      // If navigating to settings, clear the flags so settings can work normally
+      if (location.pathname === "/settings") {
+        clearFlagsOnSettingsNavigation();
+        setIsNewAccount(false);
+      }
       setHasConnections(false); // Treat as no connections so require real setup
       return;
     }
@@ -104,7 +107,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     navigate("/");
   };
 
-  if (isNewAccount) {
+  // Only show welcome screen for new accounts on dashboard routes
+  if (isNewAccount && (location.pathname === "/" || location.pathname === "/dashboard")) {
     // Show a simple UI for new accounts with no sample data
     return (
       <SidebarProvider>
