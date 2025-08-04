@@ -1,9 +1,10 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { LoginContainer } from "@/components/auth/login/LoginContainer";
 import { LoadingHandler } from "@/components/auth/login/LoadingHandler";
 import { SessionChecker } from "@/components/auth/login/SessionChecker";
 import { SupabaseConnectionChecker } from "@/components/auth/login/SupabaseConnectionChecker";
+import { logCurrentSessionState } from "@/utils/session-debug";
 
 // App version - update this when making significant changes
 const APP_VERSION = "1.0.0";
@@ -16,6 +17,12 @@ const Index = () => {
     const today = new Date().toISOString().split('T')[0];
     return `${APP_VERSION} (${today})`;
   });
+
+  // Debug session state on mount
+  useEffect(() => {
+    console.log("🏠 Index page mounted");
+    logCurrentSessionState();
+  }, []);
 
   const handleLoadingComplete = useCallback(() => {
     // The loading state is already managed by the timer

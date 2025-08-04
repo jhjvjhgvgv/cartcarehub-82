@@ -7,41 +7,61 @@ export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [authSubscription, setAuthSubscription] = useState<{ unsubscribe: () => void } | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener for session changes
+    let mounted = true;
+    
     const setupAuthListener = async () => {
-      // First check current session
-      const { data: sessionData } = await supabase.auth.getSession();
-      setSession(sessionData.session);
-      setUser(sessionData.session?.user || null);
-
-      // Then set up listener for future changes
-      const { data } = await supabase.auth.onAuthStateChange((event, session) => {
-        console.log("Auth state changed:", event, session ? "Has session" : "No session");
+      try {
+        console.log("🔐 Setting up auth listener...");
         
-        setSession(session);
-        setUser(session?.user || null);
+        // First check current session
+        const { data: sessionData, error } = await supabase.auth.getSession();
         
-        if (event === 'SIGNED_OUT') {
-          // Clear any session data when signed out
-          localStorage.removeItem('supabase.auth.token');
+        if (error) {
+          console.error("Session check error:", error);
+          return;
         }
-      });
-      
-      setAuthSubscription(data.subscription);
+        
+        if (mounted) {
+          setSession(sessionData.session);
+          setUser(sessionData.session?.user || null);
+          console.log("📱 Initial session:", sessionData.session ? "Found" : "None");
+        }
+
+        // Then set up listener for future changes
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
+          console.log("🔄 Auth state changed:", event, session ? "Has session" : "No session");
+          
+          if (mounted) {
+            setSession(session);
+            setUser(session?.user || null);
+          }
+          
+          if (event === 'SIGNED_OUT') {
+            console.log("🚪 User signed out, clearing session data");
+            localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('sb-qxutldpiaxfdicdsiomt-auth-token');
+          }
+        });
+        
+        if (mounted) {
+          setAuthSubscription(data.subscription);
+        }
+      } catch (error) {
+        console.error("Error setting up auth listener:", error);
+      }
     };
     
     setupAuthListener();
     
     return () => {
-      // Clean up auth listener
+      mounted = false;
       if (authSubscription) {
         authSubscription.unsubscribe();
       }
     };
-  }, []); // Remove toast from dependencies
+  }, []);
 
   return { 
     user,

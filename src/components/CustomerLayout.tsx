@@ -49,12 +49,23 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
     },
   ];
 
-  const handleSignOut = () => {
-    toast({
-      title: "Signed out successfully",
-      description: "You have been signed out of your account.",
-    });
-    navigate("/");
+  const handleSignOut = async () => {
+    try {
+      console.log("🚪 Customer layout sign out initiated");
+      
+      // Import the safe sign out utility
+      const { safeSignOut } = await import("@/utils/session-debug");
+      await safeSignOut();
+      
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      // Fallback - just navigate to home
+      navigate("/");
+    }
   };
 
   // NavLinks component

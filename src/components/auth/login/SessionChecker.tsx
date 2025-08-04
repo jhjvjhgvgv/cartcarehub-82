@@ -12,27 +12,50 @@ export const SessionChecker = () => {
   const checkExistingSession = useCallback(async () => {
     if (!user) return;
     
+    console.log("🔍 SessionChecker - checking existing session for user:", user.id);
+    
     try {
       // Check if profile is complete first
       const completion = await checkProfileCompletion(user.id);
       if (!completion.isComplete) {
+        console.log("📝 Profile incomplete, redirecting to setup");
         navigate('/setup-profile', { replace: true });
         return;
       }
 
       // If profile is complete, look up user role to determine correct redirect
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .maybeSingle();
         
-      if (profile?.role === 'maintenance') {
-        navigate('/dashboard', { replace: true });
-      } else if (profile?.role === 'store') {
-        navigate('/customer/dashboard', { replace: true });
-      } else if (profile?.role === 'admin') {
-        navigate('/admin', { replace: true });
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        return;
+      }
+        
+      const role = profile?.role;
+      console.log("👤 User role:", role);
+      
+      // Prevent redirect loops by checking current path
+      const currentPath = window.location.pathname;
+      let targetPath = '';
+      
+      if (role === 'maintenance') {
+        targetPath = '/dashboard';
+      } else if (role === 'store') {
+        targetPath = '/customer/dashboard';
+      } else if (role === 'admin') {
+        targetPath = '/admin';
+      }
+      
+      // Only redirect if we're not already on the target path or a sub-path
+      if (targetPath && !currentPath.startsWith(targetPath) && currentPath === '/') {
+        console.log("🔀 Redirecting to:", targetPath);
+        navigate(targetPath, { replace: true });
+      } else {
+        console.log("✅ Already on correct path or sub-path:", currentPath);
       }
     } catch (err) {
       console.error("Error checking profile:", err);
