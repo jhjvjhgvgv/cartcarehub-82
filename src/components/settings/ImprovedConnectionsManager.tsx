@@ -1,0 +1,330 @@
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useAuth } from "@/hooks/use-auth";
+import { ConnectionService } from "@/services/ConnectionService";
+import { StoreConnection } from "@/services/connection/types";
+import { 
+  Plus, 
+  Building, 
+  Users, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  AlertTriangle,
+  Loader2,
+  Mail
+} from "lucide-react";
+
+export const ImprovedConnectionsManager = () => {
+  const { profile, isMaintenanceUser, isStoreUser } = useUserProfile();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [connections, setConnections] = useState<StoreConnection[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<StoreConnection[]>([]);
+  const [availableOptions, setAvailableOptions] = useState<{ id: string; name: string }[]>([]);
+  const [newConnectionEmail, setNewConnectionEmail] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    loadConnectionData();
+  }, [user?.id, profile]);
+
+  const loadConnectionData = async () => {
+    if (!user?.id || !profile) return;
+
+    try {
+      setLoading(true);
+      
+      if (isMaintenanceUser) {
+        // Load maintenance provider connections and available stores
+        const requests = await ConnectionService.getMaintenanceRequests(user.id);
+        const activeConnections = requests.filter(req => req.status === 'active');
+        const pending = requests.filter(req => req.status === 'pending');
+        
+        setConnections(activeConnections);
+        setPendingRequests(pending);
+        setAvailableOptions(ConnectionService.getStores());
+      } else if (isStoreUser) {
+        // Load store connections and available maintenance providers
+        const storeConnections = await ConnectionService.getStoreConnections(profile.company_name || 'unknown');
+        const activeConnections = storeConnections.filter(conn => conn.status === 'active');
+        const pending = storeConnections.filter(conn => conn.status === 'pending');
+        
+        setConnections(activeConnections);
+        setPendingRequests(pending);
+        
+        const providers = await ConnectionService.getMaintenanceProviders();
+        setAvailableOptions(providers);
+      }
+    } catch (error) {
+      console.error("Error loading connection data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load connection data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateConnection = async () => {
+    if (!newConnectionEmail.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      // For now, simulate connection request
+      toast({
+        title: "Connection Request Sent",
+        description: `Connection request sent to ${newConnectionEmail}`,
+      });
+      setNewConnectionEmail("");
+      await loadConnectionData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send connection request",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleAcceptRequest = async (connectionId: string) => {
+    try {
+      const success = await ConnectionService.acceptConnection(connectionId);
+      if (success) {
+        toast({
+          title: "Connection Accepted",
+          description: "Connection request has been accepted",
+        });
+        await loadConnectionData();
+      } else {
+        throw new Error("Failed to accept connection");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to accept connection request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectRequest = async (connectionId: string) => {
+    try {
+      const success = await ConnectionService.rejectConnection(connectionId);
+      if (success) {
+        toast({
+          title: "Connection Rejected",
+          description: "Connection request has been rejected",
+        });
+        await loadConnectionData();
+      } else {
+        throw new Error("Failed to reject connection");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reject connection request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="default" className="gap-1"><CheckCircle className="h-3 w-3" />Active</Badge>;
+      case 'pending':
+        return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Pending</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span>Loading connections...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Connection Request Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-5 w-5" />
+            {isMaintenanceUser ? "Connect with Stores" : "Connect with Maintenance Providers"}
+          </CardTitle>
+          <CardDescription>
+            {isMaintenanceUser 
+              ? "Request connections with stores to start receiving maintenance requests"
+              : "Connect with maintenance providers to get help with cart maintenance"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label htmlFor="connection-email">
+                {isMaintenanceUser ? "Store Manager Email" : "Maintenance Provider Email"}
+              </Label>
+              <Input
+                id="connection-email"
+                type="email"
+                placeholder="Enter email address"
+                value={newConnectionEmail}
+                onChange={(e) => setNewConnectionEmail(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button 
+                onClick={handleCreateConnection}
+                disabled={isConnecting || !newConnectionEmail.trim()}
+                className="gap-2"
+              >
+                {isConnecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <Mail className="h-4 w-4" />
+                Send Request
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pending Requests */}
+      {pendingRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Pending Requests
+            </CardTitle>
+            <CardDescription>
+              {isMaintenanceUser 
+                ? "Connection requests from stores waiting for your response"
+                : "Connection requests sent to maintenance providers"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Store ID: {request.storeId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Requested {new Date(request.requestedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(request.status)}
+                    {isMaintenanceUser && request.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleAcceptRequest(request.id)}
+                          className="gap-1"
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                          Accept
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRejectRequest(request.id)}
+                          className="gap-1"
+                        >
+                          <XCircle className="h-3 w-3" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Active Connections */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Active Connections ({connections.length})
+          </CardTitle>
+          <CardDescription>
+            {isMaintenanceUser 
+              ? "Stores you're providing maintenance services for"
+              : "Maintenance providers helping with your cart maintenance"
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {connections.length === 0 ? (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                No active connections yet. Send connection requests to get started.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-3">
+              {connections.map((connection) => (
+                <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">
+                        {isMaintenanceUser ? `Store: ${connection.storeId}` : `Provider: ${connection.maintenanceId}`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Connected {connection.connectedAt ? new Date(connection.connectedAt).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(connection.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

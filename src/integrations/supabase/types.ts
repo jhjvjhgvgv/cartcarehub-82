@@ -356,6 +356,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
@@ -365,6 +369,10 @@ export type Database = {
         Returns: boolean
       }
       is_maintenance_provider: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      user_has_maintenance_profile: {
         Args: { user_id: string }
         Returns: boolean
       }

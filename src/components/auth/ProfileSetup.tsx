@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { checkProfileCompletion, createMaintenanceProviderProfile } from "@/services/profile/profile-completion";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ProfileSetup = () => {
   const { profile, loading, updateProfile, isMaintenanceUser } = useUserProfile();
@@ -97,22 +98,35 @@ export const ProfileSetup = () => {
         return;
       }
 
-      // If maintenance user and needs maintenance provider profile, create it
-      if (isMaintenanceUser && profileCompletion?.needsMaintenanceProfile && user?.id) {
-        const maintenanceSuccess = await createMaintenanceProviderProfile(
-          user.id,
-          formData.company_name,
-          profile?.email || "",
-          formData.contact_phone
-        );
+      // If maintenance user, ensure maintenance provider profile exists
+      // The database trigger should handle this automatically, but let's verify
+      if (isMaintenanceUser && user?.id) {
+        // Wait a moment for the trigger to execute
+        setTimeout(async () => {
+          const { data: maintenanceProfile } = await supabase
+            .from('maintenance_providers')
+            .select('id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (!maintenanceProfile) {
+            console.warn("Maintenance provider profile not created automatically, creating manually");
+            const maintenanceSuccess = await createMaintenanceProviderProfile(
+              user.id,
+              formData.company_name,
+              profile?.email || "",
+              formData.contact_phone
+            );
 
-        if (!maintenanceSuccess) {
-          toast({
-            title: "Warning", 
-            description: "Profile updated but maintenance provider setup failed. You may need to complete this later.",
-            variant: "destructive",
-          });
-        }
+            if (!maintenanceSuccess) {
+              toast({
+                title: "Warning", 
+                description: "Profile updated but maintenance provider setup failed. You may need to complete this later.",
+                variant: "destructive",
+              });
+            }
+          }
+        }, 1000);
       }
 
       toast({

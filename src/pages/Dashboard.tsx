@@ -1,5 +1,6 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
+import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { UserWelcome } from "@/components/dashboard/UserWelcome";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,13 +48,14 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold">Maintenance Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Overview of all cart maintenance operations
-          </p>
-        </div>
+      <ConnectionStatusHandler showWarnings={true}>
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold">Maintenance Dashboard</h1>
+            <p className="text-muted-foreground mt-2">
+              Overview of all cart maintenance operations
+            </p>
+          </div>
 
         {/* User Welcome Section */}
         <UserWelcome />
@@ -94,8 +96,9 @@ export default function Dashboard() {
           <CardContent>
             <AnalyticsChart />
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </div>
+      </ConnectionStatusHandler>
     </DashboardLayout>
   );
 }

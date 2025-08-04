@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MaintenanceSettings from "@/components/settings/MaintenanceSettings";
 import { StoreMaintenanceManager } from "@/components/settings/StoreMaintenanceManager";
+import { ImprovedConnectionsManager } from "@/components/settings/ImprovedConnectionsManager";
+import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { DevModeInstructions } from "@/components/settings/DevModeInstructions";
 import { useToast } from "@/hooks/use-toast";
 import { DesignNotes } from "@/components/settings/DesignNotes";
@@ -47,13 +49,14 @@ const Settings = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences.
-          </p>
-        </div>
+      <ConnectionStatusHandler>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences.
+            </p>
+          </div>
 
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList>
@@ -138,7 +141,7 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="stores">
-            <StoreMaintenanceManager isMaintenance={true} />
+            <ImprovedConnectionsManager />
           </TabsContent>
 
           <TabsContent value="developer">
@@ -176,12 +179,13 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Design Notes Section */}
-        <div className="pt-6 mt-10 border-t border-border">
-          <h2 className="text-xl font-semibold mb-4">Product Roadmap & Future Potential</h2>
-          <DesignNotes />
+          {/* Design Notes Section */}
+          <div className="pt-6 mt-10 border-t border-border">
+            <h2 className="text-xl font-semibold mb-4">Product Roadmap & Future Potential</h2>
+            <DesignNotes />
+          </div>
         </div>
-      </div>
+      </ConnectionStatusHandler>
     </DashboardLayout>
   );
 };

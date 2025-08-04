@@ -28,7 +28,9 @@ export const signUpUser = async (
       options: {
         data: {
           role: selectedRole,
+          display_name: email, // Use email as initial display name
         },
+        emailRedirectTo: `${window.location.origin}/setup-profile`
       },
     });
 

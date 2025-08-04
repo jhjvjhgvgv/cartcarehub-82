@@ -78,6 +78,18 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
 
 export const createMaintenanceProviderProfile = async (userId: string, companyName: string, contactEmail: string, contactPhone?: string): Promise<boolean> => {
   try {
+    // Check if maintenance provider profile already exists
+    const { data: existingProvider } = await supabase
+      .from('maintenance_providers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingProvider) {
+      console.log("Maintenance provider profile already exists");
+      return true; // Already exists, consider it successful
+    }
+
     const { error } = await supabase
       .from('maintenance_providers')
       .insert({
