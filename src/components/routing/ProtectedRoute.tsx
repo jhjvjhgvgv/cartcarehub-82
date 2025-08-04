@@ -12,10 +12,10 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) => {
   const testMode = localStorage.getItem("testMode");
   const testRole = localStorage.getItem("testRole");
-  const { user } = useAuth();
-  const { isAuthenticated, isVerified } = useAuthCheck(allowedRole);
+  const { user, isLoading } = useAuth();
+  const { isAuthenticated, isVerified, roleCheckComplete } = useAuthCheck(allowedRole);
   
-  console.log("🛡️ ProtectedRoute", { allowedRole, isAuthenticated, isVerified, testMode });
+  console.log("🛡️ ProtectedRoute", { allowedRole, isAuthenticated, isVerified, roleCheckComplete, testMode, isLoading });
   
   // If test mode is enabled, allow access with the correct role
   if (testMode === "true") {
@@ -31,9 +31,9 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
     }
   }
   
-  // Still checking auth status
-  if (isAuthenticated === null || isVerified === null) {
-    console.log("⏳ Still verifying access...");
+  // Still checking auth status - wait for complete verification
+  if (isLoading || !roleCheckComplete || isAuthenticated === null || isVerified === null) {
+    console.log("⏳ Still verifying access...", { isLoading, roleCheckComplete, isAuthenticated, isVerified });
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -55,17 +55,43 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
     console.log("❌ Verification failed");
     
     // If we have a user but wrong role, redirect to appropriate dashboard
-    if (user) {
-      const userRole = user.user_metadata?.role;
-      console.log("🔀 Wrong role, redirecting. User role:", userRole);
+    if (user && isAuthenticated) {
+      // Get role from database by calling an async function safely
+      setTimeout(async () => {
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          const userRole = profile?.role;
+          console.log("🔀 Wrong role detected, user role:", userRole);
+          
+          // Redirect based on actual database role
+          if (userRole === "maintenance") {
+            window.location.href = "/dashboard";
+          } else if (userRole === "admin") {
+            window.location.href = "/admin";
+          } else {
+            window.location.href = "/customer/dashboard";
+          }
+        } catch (error) {
+          console.error("Error checking user role:", error);
+          window.location.href = "/";
+        }
+      }, 0);
       
-      if (userRole === "maintenance") {
-        return <Navigate to="/dashboard" replace />;
-      } else if (userRole === "admin") {
-        return <Navigate to="/admin" replace />;
-      } else {
-        return <Navigate to="/customer/dashboard" replace />;
-      }
+      // Show loading while redirecting
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Redirecting to appropriate dashboard...</p>
+          </div>
+        </div>
+      );
     }
     
     // Fallback to login if no user

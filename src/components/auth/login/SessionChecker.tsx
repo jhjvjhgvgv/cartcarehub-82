@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -7,10 +7,12 @@ import { checkProfileCompletion } from "@/services/profile/profile-completion";
 
 export const SessionChecker = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const hasRedirected = useRef(false);
 
   const checkExistingSession = useCallback(async () => {
-    if (!user) return;
+    // Prevent multiple redirects
+    if (!user || hasRedirected.current || isLoading) return;
     
     console.log("🔍 SessionChecker - checking existing session for user:", user.id);
     
@@ -19,6 +21,7 @@ export const SessionChecker = () => {
       const completion = await checkProfileCompletion(user.id);
       if (!completion.isComplete) {
         console.log("📝 Profile incomplete, redirecting to setup");
+        hasRedirected.current = true;
         navigate('/setup-profile', { replace: true });
         return;
       }
@@ -38,37 +41,35 @@ export const SessionChecker = () => {
       const role = profile?.role;
       console.log("👤 User role:", role);
       
-      // Prevent redirect loops by checking current path
+      // Only redirect if we're on the root path to avoid redirect loops
       const currentPath = window.location.pathname;
-      let targetPath = '';
       
-      if (role === 'maintenance') {
-        targetPath = '/dashboard';
-      } else if (role === 'store') {
-        targetPath = '/customer/dashboard';
-      } else if (role === 'admin') {
-        targetPath = '/admin';
-      }
-      
-      // Only redirect if we're not already on the target path or a sub-path
-      if (targetPath && !currentPath.startsWith(targetPath) && currentPath === '/') {
-        console.log("🔀 Redirecting to:", targetPath);
-        navigate(targetPath, { replace: true });
-      } else {
-        console.log("✅ Already on correct path or sub-path:", currentPath);
+      if (currentPath === '/' || currentPath === '/login') {
+        hasRedirected.current = true;
+        
+        if (role === 'maintenance') {
+          console.log("🔀 Redirecting maintenance user to dashboard");
+          navigate('/dashboard', { replace: true });
+        } else if (role === 'store') {
+          console.log("🔀 Redirecting store user to customer dashboard");
+          navigate('/customer/dashboard', { replace: true });
+        } else if (role === 'admin') {
+          console.log("🔀 Redirecting admin user to admin dashboard");
+          navigate('/admin', { replace: true });
+        }
       }
     } catch (err) {
       console.error("Error checking profile:", err);
     }
-  }, [navigate, user]);
+  }, [navigate, user, isLoading]);
   
   useEffect(() => {
     // Only check for existing session if not in test mode
     const testMode = localStorage.getItem("testMode");
-    if (!testMode && user) {
+    if (!testMode && user && !hasRedirected.current && !isLoading) {
       checkExistingSession();
     }
-  }, [checkExistingSession, user]);
+  }, [user, isLoading, checkExistingSession]);
 
   // This component doesn't render anything
   return null;

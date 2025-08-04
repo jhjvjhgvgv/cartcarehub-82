@@ -8,13 +8,14 @@ import { supabase } from "@/integrations/supabase/client";
 export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { user, isAuthenticated: authStatus } = useAuth();
+  const [roleCheckComplete, setRoleCheckComplete] = useState(false);
+  const { user, isAuthenticated: authStatus, isLoading } = useAuth();
   
   useEffect(() => {
     let mounted = true;
     
     const checkAuth = async () => {
-      console.log("🔍 useAuthCheck - checking auth", { allowedRole, authStatus, userId: user?.id });
+      console.log("🔍 useAuthCheck - checking auth", { allowedRole, authStatus, userId: user?.id, isLoading });
       
       // If in test mode, skip auth check
       const testMode = localStorage.getItem("testMode");
@@ -23,7 +24,14 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
         if (mounted) {
           setIsAuthenticated(true);
           setIsVerified(true);
+          setRoleCheckComplete(true);
         }
+        return;
+      }
+      
+      // Wait for auth loading to complete
+      if (isLoading) {
+        console.log("⏳ Auth still loading...");
         return;
       }
       
@@ -67,11 +75,17 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
           // For maintenance role, we'll skip the connection check for now to avoid complex dependencies
           // The connection check can be handled at the component level if needed
           console.log("✅ Auth check passed");
-          if (mounted) setIsVerified(true);
+          if (mounted) {
+            setIsVerified(true);
+            setRoleCheckComplete(true);
+          }
           
         } catch (error) {
           console.error("Error in auth check:", error);
-          if (mounted) setIsVerified(false);
+          if (mounted) {
+            setIsVerified(false);
+            setRoleCheckComplete(true);
+          }
         }
       } else {
         // Not authenticated
@@ -79,6 +93,7 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
         if (mounted) {
           setIsAuthenticated(false);
           setIsVerified(false);
+          setRoleCheckComplete(true);
         }
       }
     };
@@ -88,7 +103,7 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
     return () => {
       mounted = false;
     };
-  }, [allowedRole, authStatus, user?.id]);
+  }, [allowedRole, authStatus, user?.id, isLoading]);
 
-  return { isAuthenticated, isVerified };
+  return { isAuthenticated, isVerified, roleCheckComplete };
 }

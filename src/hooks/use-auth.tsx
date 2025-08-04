@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Session, User } from "@supabase/supabase-js";
 
 export const useAuth = () => {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [authSubscription, setAuthSubscription] = useState<{ unsubscribe: () => void } | null>(null);
 
   useEffect(() => {
@@ -15,27 +16,14 @@ export const useAuth = () => {
       try {
         console.log("🔐 Setting up auth listener...");
         
-        // First check current session
-        const { data: sessionData, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session check error:", error);
-          return;
-        }
-        
-        if (mounted) {
-          setSession(sessionData.session);
-          setUser(sessionData.session?.user || null);
-          console.log("📱 Initial session:", sessionData.session ? "Found" : "None");
-        }
-
-        // Then set up listener for future changes
+        // Set up listener FIRST to catch all events
         const { data } = supabase.auth.onAuthStateChange((event, session) => {
           console.log("🔄 Auth state changed:", event, session ? "Has session" : "No session");
           
           if (mounted) {
             setSession(session);
             setUser(session?.user || null);
+            setIsLoading(false);
           }
           
           if (event === 'SIGNED_OUT') {
@@ -48,8 +36,25 @@ export const useAuth = () => {
         if (mounted) {
           setAuthSubscription(data.subscription);
         }
+
+        // THEN check current session
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          if (mounted) setIsLoading(false);
+          return;
+        }
+        
+        if (mounted) {
+          setSession(sessionData.session);
+          setUser(sessionData.session?.user || null);
+          setIsLoading(false);
+          console.log("📱 Initial session:", sessionData.session ? "Found" : "None");
+        }
       } catch (error) {
         console.error("Error setting up auth listener:", error);
+        if (mounted) setIsLoading(false);
       }
     };
     
@@ -67,5 +72,6 @@ export const useAuth = () => {
     user,
     session,
     isAuthenticated: !!user,
+    isLoading,
   };
 };
