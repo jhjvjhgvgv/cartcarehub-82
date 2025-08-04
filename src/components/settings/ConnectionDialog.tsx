@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,14 +20,19 @@ export function ConnectionDialog({ isDialogOpen, setIsDialogOpen, isMaintenance,
   const { toast } = useToast()
 
   // Load available connection options when dialog opens
-  // useEffect moved to the main component and passed to this component as a prop
-  if (isDialogOpen && availableOptions.length === 0) {
-    if (isMaintenance) {
-      setAvailableOptions(ConnectionService.getStores());
-    } else {
-      setAvailableOptions(ConnectionService.getMaintenanceProviders());
-    }
-  }
+  useEffect(() => {
+    const loadOptions = async () => {
+      if (isDialogOpen && availableOptions.length === 0) {
+        if (isMaintenance) {
+          setAvailableOptions(ConnectionService.getStores());
+        } else {
+          const providers = await ConnectionService.getMaintenanceProviders();
+          setAvailableOptions(providers);
+        }
+      }
+    };
+    loadOptions();
+  }, [isDialogOpen, availableOptions.length, isMaintenance]);
 
   const handleCreateConnection = async () => {
     if (!connectionId.trim()) {

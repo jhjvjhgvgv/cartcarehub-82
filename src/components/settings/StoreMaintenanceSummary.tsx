@@ -54,7 +54,7 @@ export function StoreMaintenanceSummary() {
         // Get all maintenance providers connected to any of the stores
         
         // Get unique maintenance providers
-        const uniqueProviderIds = [...new Set(storeConnections.map(conn => conn.maintenanceId))];
+        const uniqueProviderIds = [...new Set(storeConnections.map(conn => conn.maintenanceId))] as string[];
         const providers = uniqueProviderIds.map(id => ConnectionService.getMaintenanceById(id)).filter(Boolean) as UserAccount[];
         
         // Count pending connections
