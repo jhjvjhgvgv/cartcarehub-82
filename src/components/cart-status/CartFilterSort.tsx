@@ -126,10 +126,6 @@ export function CartFilterSort({
           </div>
         </PopoverContent>
       </Popover>
-      <Button onClick={() => {/* onStartScan action passed from parent */}} className="flex items-center gap-2">
-        <ScanLine className="h-4 w-4" />
-        Scan QR Code
-      </Button>
     </div>
   );
 }
