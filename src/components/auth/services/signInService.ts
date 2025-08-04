@@ -44,12 +44,12 @@ export const signInUser = async (
           .update({ last_sign_in: new Date().toISOString() })
           .eq('id', signInData.user.id);
         
-        handleNavigation(role, selectedRole, navigate);
+        await handleNavigation(role, selectedRole, navigate, signInData.user.id);
         
         return { success: true, message: "You have been signed in successfully!" };
       } catch (err) {
         console.error("Error during profile fetch or navigation:", err);
-        handleNavigation(selectedRole, selectedRole, navigate);
+        await handleNavigation(selectedRole, selectedRole, navigate, signInData.user.id);
         return { success: true, message: "You have been signed in successfully!" };
       }
     }

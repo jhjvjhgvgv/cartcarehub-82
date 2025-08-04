@@ -43,7 +43,7 @@ export default function Invite() {
           
           if (success) {
             // Auto-accept the connection since it's from an invitation
-            const connections = ConnectionService.getStoredConnections();
+            const connections = await ConnectionService.getStoreConnections(currentUser.id);
             const connection = connections.find(
               conn => conn.storeId === currentUser.id && conn.maintenanceId === inviterId
             );

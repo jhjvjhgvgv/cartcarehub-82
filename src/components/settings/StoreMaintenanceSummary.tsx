@@ -27,8 +27,8 @@ export function StoreMaintenanceSummary() {
     const fetchManagedStores = async () => {
       try {
         // In a real implementation, this would filter stores by the current manager ID
-        const allStores = ConnectionService.getStoredConnections()
-          .reduce((stores: ManagedStore[], connection) => {
+        const storeConnections = await ConnectionService.getStoreConnections(ConnectionService.getCurrentUserId());
+        const allStores = storeConnections.reduce((stores: ManagedStore[], connection) => {
             // Find store details
             const storeDetails = ConnectionService.getStoreById(connection.storeId);
             if (storeDetails) {
@@ -52,7 +52,6 @@ export function StoreMaintenanceSummary() {
         const activeStores = allStores.filter(s => s.status === "active").length;
         
         // Get all maintenance providers connected to any of the stores
-        const storeConnections = ConnectionService.getStoredConnections();
         
         // Get unique maintenance providers
         const uniqueProviderIds = [...new Set(storeConnections.map(conn => conn.maintenanceId))];

@@ -3,6 +3,7 @@ import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { checkProfileCompletion } from "@/services/profile/profile-completion";
 
 export const SessionChecker = () => {
   const navigate = useNavigate();
@@ -12,7 +13,14 @@ export const SessionChecker = () => {
     if (!user) return;
     
     try {
-      // Look up user profile to determine correct redirect
+      // Check if profile is complete first
+      const completion = await checkProfileCompletion(user.id);
+      if (!completion.isComplete) {
+        navigate('/setup-profile', { replace: true });
+        return;
+      }
+
+      // If profile is complete, look up user role to determine correct redirect
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -23,6 +31,8 @@ export const SessionChecker = () => {
         navigate('/dashboard', { replace: true });
       } else if (profile?.role === 'store') {
         navigate('/customer/dashboard', { replace: true });
+      } else if (profile?.role === 'admin') {
+        navigate('/admin', { replace: true });
       }
     } catch (err) {
       console.error("Error checking profile:", err);

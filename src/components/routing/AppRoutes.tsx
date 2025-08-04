@@ -18,6 +18,7 @@ import CustomerDashboard from "@/pages/customer/Dashboard";
 import CartStatus from "@/pages/customer/CartStatus";
 import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
+import { ProfileSetup } from "@/components/auth/ProfileSetup";
 
 export const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ export const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/invite" element={<Invite />} />
+      <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} />} />
       
       {/* Maintenance Routes - Protected with test mode support */}
       <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRole="maintenance" />} />
