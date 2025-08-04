@@ -17,7 +17,19 @@ export const SessionChecker = () => {
     console.log("🔍 SessionChecker - checking existing session for user:", user.id);
     
     try {
-      // Check if profile is complete first
+      // Ensure user is properly set up first
+      const { data: setupResult, error: setupError } = await supabase.rpc('safe_user_setup', {
+        user_id_param: user.id
+      });
+
+      if (setupError) {
+        console.error("❌ User setup failed:", setupError);
+        // Continue with profile check anyway
+      } else {
+        console.log("✅ User setup result:", setupResult);
+      }
+
+      // Check if profile is complete
       const completion = await checkProfileCompletion(user.id);
       if (!completion.isComplete) {
         console.log("📝 Profile incomplete, redirecting to setup");
@@ -35,6 +47,23 @@ export const SessionChecker = () => {
         
       if (profileError) {
         console.error("Profile fetch error:", profileError);
+        // Try to get role from setup result as fallback
+        const fallbackRole = typeof setupResult === 'object' && setupResult !== null && 'role' in setupResult 
+          ? setupResult.role as string 
+          : 'store';
+        console.log("📋 Using fallback role:", fallbackRole);
+        
+        // Use fallback role for redirect
+        if (fallbackRole === 'maintenance') {
+          hasRedirected.current = true;
+          navigate('/dashboard', { replace: true });
+        } else if (fallbackRole === 'admin') {
+          hasRedirected.current = true;
+          navigate('/admin', { replace: true });
+        } else {
+          hasRedirected.current = true;
+          navigate('/customer/dashboard', { replace: true });
+        }
         return;
       }
         
@@ -60,6 +89,11 @@ export const SessionChecker = () => {
       }
     } catch (err) {
       console.error("Error checking profile:", err);
+      // Redirect to setup as safeguard
+      if (!hasRedirected.current) {
+        hasRedirected.current = true;
+        navigate('/setup-profile', { replace: true });
+      }
     }
   }, [navigate, user, isLoading]);
   

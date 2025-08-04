@@ -372,6 +372,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      safe_user_setup: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
       sync_user_roles_from_metadata: {
         Args: Record<PropertyKey, never>
         Returns: undefined

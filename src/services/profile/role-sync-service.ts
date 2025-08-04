@@ -15,53 +15,41 @@ export const RoleSyncService = {
    */
   async syncUserRole(userId: string): Promise<RoleSyncResult> {
     try {
-      // Get current user from auth
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("🔄 Syncing role for user:", userId);
       
-      if (authError || !user) {
-        return {
-          success: false,
-          message: "Could not retrieve user authentication data"
+      // Use the new safe setup function
+      const { data, error } = await supabase.rpc('safe_user_setup', {
+        user_id_param: userId
+      });
+
+      if (error) {
+        console.error("❌ Failed to setup user:", error);
+        return { 
+          success: false, 
+          message: `Failed to setup user: ${error.message}` 
         };
       }
 
-      // Get role from user metadata
-      const metadataRole = user.user_metadata?.role;
+      const result = data as { success: boolean; message: string; role?: string };
       
-      if (!metadataRole) {
-        return {
-          success: false,
-          message: "No role found in user metadata"
+      if (!result.success) {
+        return { 
+          success: false, 
+          message: result.message 
         };
       }
 
-      // Update profile with the role from metadata
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          role: metadataRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error("Error updating profile role:", updateError);
-        return {
-          success: false,
-          message: "Failed to update profile role"
-        };
-      }
-
-      return {
-        success: true,
-        message: "Role successfully synced",
-        updatedRole: metadataRole
+      console.log("✅ User setup completed successfully");
+      return { 
+        success: true, 
+        message: result.message,
+        updatedRole: result.role
       };
     } catch (error) {
-      console.error("Error in syncUserRole:", error);
-      return {
-        success: false,
-        message: "An unexpected error occurred during role sync"
+      console.error("❌ Error in syncUserRole:", error);
+      return { 
+        success: false, 
+        message: `Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
       };
     }
   },
@@ -75,6 +63,8 @@ export const RoleSyncService = {
     contactPhone?: string;
   }): Promise<RoleSyncResult> {
     try {
+      console.log("🏢 Ensuring maintenance provider profile for user:", userId);
+      
       // Check if maintenance provider profile already exists
       const { data: existingProvider, error: checkError } = await supabase
         .from('maintenance_providers')
@@ -82,49 +72,56 @@ export const RoleSyncService = {
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error("Error checking maintenance provider:", checkError);
-        return {
-          success: false,
-          message: "Error checking existing maintenance provider profile"
-        };
+      if (checkError) {
+        console.error("❌ Error checking existing provider:", checkError);
+        // Don't fail completely, this might be due to RLS
+        console.warn("⚠️ Could not check existing provider, proceeding with creation attempt");
       }
 
       if (existingProvider) {
-        return {
-          success: true,
-          message: "Maintenance provider profile already exists"
+        console.log("✅ Maintenance provider profile already exists");
+        return { 
+          success: true, 
+          message: "Maintenance provider profile already exists" 
         };
       }
 
-      // Create maintenance provider profile
-      const { error: insertError } = await supabase
+      // Create maintenance provider profile with defensive handling
+      const { error: createError } = await supabase
         .from('maintenance_providers')
         .insert({
           user_id: userId,
-          company_name: profileData.companyName || 'Unnamed Company',
+          company_name: profileData.companyName || 'Company Name Required',
           contact_email: profileData.contactEmail || '',
-          contact_phone: profileData.contactPhone || null,
+          contact_phone: profileData.contactPhone || '',
           is_verified: false
         });
 
-      if (insertError) {
-        console.error("Error creating maintenance provider profile:", insertError);
-        return {
-          success: false,
-          message: "Failed to create maintenance provider profile"
+      if (createError) {
+        console.error("❌ Error creating maintenance provider profile:", createError);
+        // Return success if it's a duplicate key error (already exists)
+        if (createError.code === '23505') {
+          return { 
+            success: true, 
+            message: "Maintenance provider profile already exists" 
+          };
+        }
+        return { 
+          success: false, 
+          message: `Failed to create maintenance provider profile: ${createError.message}` 
         };
       }
 
-      return {
-        success: true,
-        message: "Maintenance provider profile created successfully"
+      console.log("✅ Maintenance provider profile created successfully");
+      return { 
+        success: true, 
+        message: "Maintenance provider profile created successfully" 
       };
     } catch (error) {
-      console.error("Error in ensureMaintenanceProviderProfile:", error);
-      return {
-        success: false,
-        message: "An unexpected error occurred while creating maintenance provider profile"
+      console.error("❌ Error creating maintenance provider profile:", error);
+      return { 
+        success: false, 
+        message: `Failed to create maintenance provider profile: ${error instanceof Error ? error.message : 'Unknown error'}` 
       };
     }
   },

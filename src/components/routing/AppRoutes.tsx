@@ -19,6 +19,7 @@ import CartStatus from "@/pages/customer/CartStatus";
 import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
 import { ProfileSetup } from "@/components/auth/ProfileSetup";
+import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 
 export const AppRoutes = () => {
   return (
@@ -26,6 +27,7 @@ export const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/invite" element={<Invite />} />
+      <Route path="/error-recovery" element={<ErrorRecovery error="Authentication error occurred" />} />
       <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} />} />
       
       {/* Maintenance Routes - Protected with test mode support */}

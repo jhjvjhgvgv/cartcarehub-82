@@ -28,31 +28,47 @@ export const ProfileSetup = () => {
   // Check if profile is already complete and redirect if so
   useEffect(() => {
     const checkCompletion = async () => {
-      if (user?.id) {
-        // First perform a comprehensive role sync to ensure consistency
-        const syncResult = await RoleSyncService.performComprehensiveSync(user.id);
-        
-        if (syncResult.success) {
-          console.log("Role sync completed:", syncResult.message);
+      if (!user?.id) return;
+      
+      console.log("🔍 Checking profile completion for user:", user.id);
+      
+      try {
+        // Use the safe user setup function
+        const { data: setupResult, error: setupError } = await supabase.rpc('safe_user_setup', {
+          user_id_param: user.id
+        });
+
+        if (setupError) {
+          console.error("❌ User setup failed:", setupError);
         } else {
-          console.warn("Role sync failed:", syncResult.message);
+          console.log("✅ User setup completed:", setupResult);
         }
         
         const completion = await checkProfileCompletion(user.id);
         setProfileCompletion(completion);
         
         if (completion.isComplete) {
-          // Profile is already complete, redirect to appropriate dashboard
-          const redirectPath = isMaintenanceUser ? '/dashboard' : '/customer/dashboard';
-          navigate(redirectPath, { replace: true });
+          console.log("✅ Profile is already complete, redirecting to dashboard");
+          const role = profile?.role;
+          
+          if (role === 'maintenance') {
+            navigate('/dashboard', { replace: true });
+          } else if (role === 'store') {
+            navigate('/customer/dashboard', { replace: true });
+          } else if (role === 'admin') {
+            navigate('/admin', { replace: true });
+          }
         }
+      } catch (error) {
+        console.error("❌ Error checking profile completion:", error);
+        setProfileCompletion({ isComplete: false, missingFields: [] });
       }
     };
-
-    if (!loading && user) {
+    
+    if (user && !loading) {
       checkCompletion();
     }
-  }, [user, loading, isMaintenanceUser, navigate]);
+  }, [user, loading, profile?.role, navigate]);
 
   // Update form data when profile loads
   useEffect(() => {
