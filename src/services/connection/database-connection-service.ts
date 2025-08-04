@@ -232,19 +232,39 @@ export const DatabaseConnectionService = {
   // New function to look up maintenance provider UUID by email
   async getMaintenanceProviderByEmail(email: string): Promise<{ id: string, name: string } | null> {
     try {
+      console.log('DatabaseConnectionService: Searching for maintenance provider by email', email);
+      
       const { data, error } = await supabase
         .from('maintenance_providers')
-        .select('id, company_name, contact_email')
+        .select('id, company_name, contact_email, is_verified')
         .eq('contact_email', email.trim().toLowerCase())
         .eq('is_verified', true)
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching maintenance provider by email:', error);
-        return null;
+        console.error('DatabaseConnectionService: Error fetching verified provider by email:', error);
+        // If no verified records found, try searching without verification requirement
+        const { data: unverifiedData, error: unverifiedError } = await supabase
+          .from('maintenance_providers')
+          .select('id, company_name, contact_email, is_verified')
+          .eq('contact_email', email.trim().toLowerCase())
+          .maybeSingle();
+        
+        if (unverifiedError) {
+          console.error('DatabaseConnectionService: No maintenance provider found with email:', email);
+          return null;
+        }
+        
+        console.log('DatabaseConnectionService: Found unverified provider', unverifiedData);
+        return unverifiedData ? {
+          id: unverifiedData.id,
+          name: unverifiedData.company_name
+        } : null;
       }
 
+      console.log('DatabaseConnectionService: Found verified provider', data);
       if (!data) {
+        console.log('DatabaseConnectionService: No provider found with email:', email);
         return null;
       }
 
@@ -253,7 +273,7 @@ export const DatabaseConnectionService = {
         name: data.company_name
       };
     } catch (error) {
-      console.error('Error in getMaintenanceProviderByEmail:', error);
+      console.error('DatabaseConnectionService: Error in getMaintenanceProviderByEmail:', error);
       return null;
     }
   },
@@ -261,8 +281,11 @@ export const DatabaseConnectionService = {
   // Enhanced connection request with email lookup support
   async requestConnectionByEmail(storeId: string, maintenanceEmail: string): Promise<{ success: boolean, message: string }> {
     try {
+      console.log('DatabaseConnectionService: Requesting connection by email', { storeId, maintenanceEmail });
+      
       // First, look up the maintenance provider by email
       const provider = await this.getMaintenanceProviderByEmail(maintenanceEmail);
+      console.log('DatabaseConnectionService: Found provider', provider);
       
       if (!provider) {
         return {
@@ -273,6 +296,7 @@ export const DatabaseConnectionService = {
 
       // Use the existing requestConnection method with the found provider ID
       const success = await this.requestConnection(storeId, provider.id);
+      console.log('DatabaseConnectionService: Connection request result', success);
       
       if (success) {
         return {
@@ -286,7 +310,7 @@ export const DatabaseConnectionService = {
         };
       }
     } catch (error) {
-      console.error('Error in requestConnectionByEmail:', error);
+      console.error('DatabaseConnectionService: Error in requestConnectionByEmail:', error);
       return {
         success: false,
         message: "An unexpected error occurred while processing the connection request."

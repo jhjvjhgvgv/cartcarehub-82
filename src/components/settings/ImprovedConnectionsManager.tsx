@@ -39,23 +39,39 @@ export const ImprovedConnectionsManager = () => {
   }, [user?.id, profile]);
 
   const loadConnectionData = async () => {
-    if (!user?.id || !profile) return;
+    if (!user?.id || !profile) {
+      console.log('ImprovedConnectionsManager: Missing user or profile', { userId: user?.id, profile });
+      return;
+    }
+    
+    console.log('ImprovedConnectionsManager: Loading connection data', { 
+      userId: user.id, 
+      isMaintenanceUser, 
+      isStoreUser,
+      profileCompanyName: profile?.company_name 
+    });
 
     try {
       setLoading(true);
       
       if (isMaintenanceUser) {
+        console.log('ImprovedConnectionsManager: Loading data for maintenance user');
         // Load maintenance provider connections and available stores
         const requests = await ConnectionService.getMaintenanceRequests(user.id);
+        console.log('ImprovedConnectionsManager: Maintenance requests loaded', requests);
         const activeConnections = requests.filter(req => req.status === 'active');
         const pending = requests.filter(req => req.status === 'pending');
         
         setConnections(activeConnections);
         setPendingRequests(pending);
-        setAvailableOptions(ConnectionService.getStores());
+        const stores = ConnectionService.getStores();
+        console.log('ImprovedConnectionsManager: Available stores', stores);
+        setAvailableOptions(stores);
       } else if (isStoreUser) {
+        console.log('ImprovedConnectionsManager: Loading data for store user');
         // Load store connections and available maintenance providers
         const storeConnections = await ConnectionService.getStoreConnections(profile.company_name || 'unknown');
+        console.log('ImprovedConnectionsManager: Store connections loaded', storeConnections);
         const activeConnections = storeConnections.filter(conn => conn.status === 'active');
         const pending = storeConnections.filter(conn => conn.status === 'pending');
         
@@ -63,10 +79,11 @@ export const ImprovedConnectionsManager = () => {
         setPendingRequests(pending);
         
         const providers = await ConnectionService.getMaintenanceProviders();
+        console.log('ImprovedConnectionsManager: Available providers', providers);
         setAvailableOptions(providers);
       }
     } catch (error) {
-      console.error("Error loading connection data:", error);
+      console.error("ImprovedConnectionsManager: Error loading connection data:", error);
       toast({
         title: "Error",
         description: "Failed to load connection data",
@@ -87,16 +104,65 @@ export const ImprovedConnectionsManager = () => {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "User not authenticated",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('ImprovedConnectionsManager: Creating connection', { 
+      email: newConnectionEmail, 
+      isMaintenanceUser, 
+      isStoreUser,
+      userCompany: profile?.company_name 
+    });
+
     setIsConnecting(true);
     try {
-      // For now, simulate connection request
-      toast({
-        title: "Connection Request Sent",
-        description: `Connection request sent to ${newConnectionEmail}`,
-      });
-      setNewConnectionEmail("");
-      await loadConnectionData();
+      if (isMaintenanceUser) {
+        // For maintenance users, connect to store by email (not yet implemented)
+        toast({
+          title: "Info",
+          description: "Store connection feature coming soon",
+        });
+        console.log('ImprovedConnectionsManager: Store connection not yet implemented for maintenance users');
+      } else if (isStoreUser) {
+        // For store users, connect to maintenance provider by email
+        console.log('ImprovedConnectionsManager: Requesting connection as store user');
+        const result = await ConnectionService.requestConnectionByEmail(
+          profile?.company_name || 'unknown',
+          newConnectionEmail
+        );
+        
+        console.log('ImprovedConnectionsManager: Connection request result', result);
+        
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: result.message,
+          });
+          setNewConnectionEmail("");
+          await loadConnectionData(); // Refresh the data
+        } else {
+          toast({
+            title: "Error",
+            description: result.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        console.log('ImprovedConnectionsManager: User role not recognized', { isMaintenanceUser, isStoreUser });
+        toast({
+          title: "Error",
+          description: "Unable to determine user type",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
+      console.error('ImprovedConnectionsManager: Error creating connection:', error);
       toast({
         title: "Error",
         description: "Failed to send connection request",
