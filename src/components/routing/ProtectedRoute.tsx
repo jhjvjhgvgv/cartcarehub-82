@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) => {
   const testMode = localStorage.getItem("testMode");
   const testRole = localStorage.getItem("testRole");
+  const { user } = useAuth();
   const { isAuthenticated, isVerified } = useAuthCheck(allowedRole);
   
   // If test mode is enabled, allow access with the correct role
@@ -36,11 +37,11 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
     return <Navigate to="/" replace />;
   }
   
-  // If verification failed, redirect to appropriate settings
+  // If verification failed, redirect based on actual user role, not test role
   if (isVerified === false) {
-    // Redirect to the correct settings page based on role
-    const testRole = localStorage.getItem("testRole");
-    const redirectPath = testRole === "store" ? "/customer/settings" : "/settings";
+    // Get the actual user role from auth metadata
+    const userRole = user?.user_metadata?.role;
+    const redirectPath = userRole === "store" ? "/customer/settings" : "/settings";
     return <Navigate to={redirectPath} replace />;
   }
   

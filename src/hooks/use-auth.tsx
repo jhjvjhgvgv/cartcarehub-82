@@ -41,7 +41,7 @@ export const useAuth = () => {
         authSubscription.unsubscribe();
       }
     };
-  }, [toast]);
+  }, []); // Remove toast from dependencies
 
   return { 
     user,

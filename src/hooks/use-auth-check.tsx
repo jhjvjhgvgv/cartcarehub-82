@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ConnectionService } from "@/services/ConnectionService";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
@@ -11,61 +12,84 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
   const { user, isAuthenticated: authStatus } = useAuth();
   
   useEffect(() => {
-    // Check if user is authenticated
+    let mounted = true; // Prevent state updates if component unmounted
+    
     const checkAuth = async () => {
       // If in test mode, skip auth check
       const testMode = localStorage.getItem("testMode");
       if (testMode === "true") {
-        setIsAuthenticated(true);
-        setIsVerified(true);
+        if (mounted) {
+          setIsAuthenticated(true);
+          setIsVerified(true);
+        }
         return;
       }
       
-      // Set authentication status based on the useAuth hook
-      setIsAuthenticated(authStatus);
+      // Wait for auth status to be determined
+      if (authStatus === null) return;
+      
+      if (mounted) {
+        setIsAuthenticated(authStatus);
+      }
       
       if (authStatus && user) {
-        // Check role permissions
+        // Get user role first
+        const { data: profile } = await supabase.auth.getUser();
+        const userRole = profile?.user?.user_metadata?.role;
+        
+        // Check if user has required role
+        if (allowedRole && userRole !== allowedRole) {
+          if (mounted) {
+            setIsVerified(false);
+          }
+          return;
+        }
+        
+        // For maintenance role, check connections
         if (allowedRole === "maintenance") {
-          // Check if the maintenance provider has connections
-          // to any stores before allowing access
           try {
-            // Use the authenticated user ID for maintenance role checking
-            const userId = user?.id || '';
-            const connections = await ConnectionService.getMaintenanceRequests(userId);
-            
+            const connections = await ConnectionService.getMaintenanceRequests(user.id);
             const hasActiveConnections = connections.some(conn => conn.status === "active");
             
-            if (!hasActiveConnections) {
-              toast({
-                title: "No Active Connections",
-                description: "You don't have any active store connections. Please connect to at least one store.",
-                variant: "destructive"
-              });
-              // Redirect to settings where they can establish connections
-              setIsVerified(false);
-            } else {
-              setIsVerified(true);
+            if (mounted) {
+              if (!hasActiveConnections) {
+                toast({
+                  title: "No Active Connections",
+                  description: "You don't have any active store connections. Please connect to at least one store.",
+                  variant: "destructive"
+                });
+                setIsVerified(false);
+              } else {
+                setIsVerified(true);
+              }
             }
           } catch (error) {
             console.error("Error checking connections:", error);
-            setIsVerified(false);
+            if (mounted) {
+              setIsVerified(false);
+            }
           }
-        } else if (allowedRole === "admin") {
-          // Admin users don't need connection verification
-          setIsVerified(true);
         } else {
-          // Store role and other roles don't need connection verification
-          setIsVerified(true);
+          // Store role, admin role, or no specific role requirement
+          if (mounted) {
+            setIsVerified(true);
+          }
         }
       } else {
         // Not authenticated
-        setIsAuthenticated(false);
+        if (mounted) {
+          setIsAuthenticated(false);
+          setIsVerified(false);
+        }
       }
     };
     
     checkAuth();
-  }, [allowedRole, authStatus, toast, user]);
+    
+    return () => {
+      mounted = false; // Cleanup flag to prevent state updates
+    };
+  }, [allowedRole, authStatus, user?.id]); // Remove toast from dependencies and only use user.id
 
   return { isAuthenticated, isVerified };
 }
