@@ -163,6 +163,7 @@ export const RoleSyncService = {
           };
         }
       }
+      // Store users and admin users don't need additional profile setup
 
       return {
         success: true,

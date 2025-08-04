@@ -372,6 +372,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      sync_user_roles_from_metadata: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       user_has_maintenance_profile: {
         Args: { user_id: string }
         Returns: boolean

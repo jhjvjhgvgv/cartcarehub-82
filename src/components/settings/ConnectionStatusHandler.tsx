@@ -38,7 +38,7 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
         // Only check connections if profile is complete
         if (completion.isComplete) {
           if (isStoreUser) {
-            // For store users, check if they have any accepted connections
+            // For store users, check if they have any accepted connections with maintenance providers
             const connections = await ConnectionService.getStoreConnections(profile.company_name || 'unknown');
             const activeConnections = connections.filter(conn => conn.status === 'active');
             setConnectionStatus({ 
@@ -46,7 +46,7 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
               hasActiveConnections: activeConnections.length > 0 
             });
           } else if (isMaintenanceUser) {
-            // For maintenance users, check if they have any accepted connections
+            // For maintenance users, check if they have any accepted connections with stores
             const requests = await ConnectionService.getMaintenanceRequests(user.id);
             const activeConnections = requests.filter(req => req.status === 'active');
             setConnectionStatus({ 
@@ -54,10 +54,12 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
               hasActiveConnections: activeConnections.length > 0 
             });
           } else {
-            setConnectionStatus({ loading: false, hasActiveConnections: true }); // Other roles don't need connections
+            // Admin users and other roles don't need connections
+            setConnectionStatus({ loading: false, hasActiveConnections: true });
           }
         } else {
-          setConnectionStatus({ loading: false, hasActiveConnections: true }); // Don't show warnings for incomplete profiles
+          // Profile incomplete - connections not relevant yet
+          setConnectionStatus({ loading: false, hasActiveConnections: true });
         }
       } catch (error) {
         console.error("Error checking connection status:", error);
@@ -123,7 +125,8 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
     profileComplete === true && 
     !connectionStatus.loading && 
     !connectionStatus.hasActiveConnections && 
-    !connectionStatus.error;
+    !connectionStatus.error &&
+    (isStoreUser || isMaintenanceUser); // Only show warnings for users who actually need connections
 
   return (
     <div className="space-y-4">
@@ -146,7 +149,7 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
                 <Button 
                   variant="link" 
                   className="p-0 h-auto text-sm underline ml-1"
-                  onClick={() => window.location.href = '/settings'}
+                  onClick={() => window.location.href = '/customer/settings'}
                 >
                   Connect with maintenance providers
                 </Button> to access full features.
