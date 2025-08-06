@@ -111,8 +111,52 @@ export const ProfileSetup = () => {
         return;
       }
 
-      // Update profile first
-      const success = await updateProfile(formData);
+      // First ensure user setup is complete and profile exists
+      if (user) {
+        try {
+          const setupResult = await RoleSyncService.performComprehensiveSync(user.id);
+          if (!setupResult.success) {
+            console.warn('User setup sync warning:', setupResult.message);
+            // Continue anyway - might be a minor issue
+          }
+        } catch (error) {
+          console.error('Error during user setup sync:', error);
+          // Continue anyway - we'll try profile update directly
+        }
+      }
+
+      // Attempt to update the profile
+      let success = await updateProfile(formData);
+      
+      // If update failed and profile doesn't exist, try to create it
+      if (!success && user) {
+        console.log('Profile update failed, attempting to create profile...');
+        
+        try {
+          // Create profile directly using Supabase
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              email: user.email,
+              display_name: formData.display_name.trim(),
+              company_name: formData.company_name.trim(),
+              contact_phone: formData.contact_phone.trim() || null,
+              role: 'store', // Default role
+              is_active: true,
+            });
+
+          if (!createError) {
+            success = true;
+            // Refresh the profile data by refetching
+            window.location.reload();
+          } else {
+            console.error('Failed to create profile:', createError);
+          }
+        } catch (createError) {
+          console.error('Error creating profile:', createError);
+        }
+      }
       
       if (!success) {
         toast({
@@ -125,34 +169,28 @@ export const ProfileSetup = () => {
       }
 
       // If maintenance user, ensure maintenance provider profile exists
-      // The database trigger should handle this automatically, but let's verify
       if (isMaintenanceUser && user?.id) {
-        // Wait a moment for the trigger to execute
-        setTimeout(async () => {
-          const { data: maintenanceProfile } = await supabase
-            .from('maintenance_providers')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (!maintenanceProfile) {
-            console.warn("Maintenance provider profile not created automatically, creating manually");
-            const maintenanceSuccess = await createMaintenanceProviderProfile(
-              user.id,
-              formData.company_name,
-              profile?.email || "",
-              formData.contact_phone
-            );
-
-            if (!maintenanceSuccess) {
-              toast({
-                title: "Warning", 
-                description: "Profile updated but maintenance provider setup failed. You may need to complete this later.",
-                variant: "destructive",
-              });
+        try {
+          const providerResult = await RoleSyncService.ensureMaintenanceProviderProfile(
+            user.id,
+            {
+              companyName: formData.company_name.trim(),
+              contactEmail: user.email || '',
+              contactPhone: formData.contact_phone.trim() || undefined,
             }
+          );
+          
+          if (!providerResult.success) {
+            console.warn('Failed to create maintenance provider profile:', providerResult.message);
+            toast({
+              title: "Warning", 
+              description: "Profile updated but maintenance provider setup failed. You may need to complete this later.",
+              variant: "destructive",
+            });
           }
-        }, 1000);
+        } catch (error) {
+          console.error('Error creating maintenance provider profile:', error);
+        }
       }
 
       toast({
