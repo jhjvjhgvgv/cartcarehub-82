@@ -58,6 +58,7 @@ export function ConnectionDialog({
 
       if (isMaintenance) {
         // Maintenance provider connecting to store
+        // Use email domain as store ID for consistency with how stores identify themselves
         const targetStoreId = storeId.trim() || email.split('@')[1] || `store-${Date.now()}`
         
         // Get maintenance provider ID from profile using user ID
@@ -77,7 +78,7 @@ export function ConnectionDialog({
           : "Failed to send connection request. A connection may already exist."
       } else {
         // Store connecting to maintenance provider
-        const userStoreId = profile?.company_name || "default-store"
+        const userStoreId = profile?.email?.split('@')[1] || profile?.company_name || "default-store"
         const result = await DatabaseConnectionService.requestConnectionByEmail(userStoreId, email)
         success = result.success
         message = result.message

@@ -173,7 +173,7 @@ export const ImprovedConnectionsManager = () => {
         
         try {
           const { DatabaseConnectionService } = await import("@/services/connection/database-connection-service");
-          const storeId = profile?.company_name || "default-store";
+          const storeId = profile?.email?.split('@')[1] || profile?.company_name || "default-store";
           const result = await DatabaseConnectionService.requestConnectionByEmail(storeId, newConnectionEmail);
           
           if (result.success) {

@@ -42,8 +42,23 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
         connectionData = await DatabaseConnectionService.getMaintenanceRequests(profile.id)
       } else {
         // For store users, get their connections with maintenance providers
-        const storeId = profile.company_name || "default-store" // Use company name as store ID
-        connectionData = await DatabaseConnectionService.getStoreConnections(storeId)
+        // Use both company name and email domain to search for connections
+        const possibleStoreIds = [
+          profile.company_name || "default-store",
+          profile.email?.split('@')[1] || "default-store",
+          `store-${profile.id}` // fallback using user ID
+        ]
+        
+        // Try to get connections using any of the possible store IDs
+        for (const storeId of possibleStoreIds) {
+          const storeConnections = await DatabaseConnectionService.getStoreConnections(storeId)
+          connectionData = connectionData.concat(storeConnections)
+        }
+        
+        // Remove duplicates based on connection ID
+        connectionData = connectionData.filter((conn, index, self) => 
+          index === self.findIndex(c => c.id === conn.id)
+        )
       }
       
       setConnections(connectionData)

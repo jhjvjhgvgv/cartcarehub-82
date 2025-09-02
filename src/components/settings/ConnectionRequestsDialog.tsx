@@ -41,8 +41,22 @@ export function ConnectionRequestsDialog({ isMaintenance, store, onUpdate }: Con
       if (isMaintenance) {
         requests = await DatabaseConnectionService.getMaintenanceRequests(profile.id)
       } else {
-        const storeId = profile.company_name || "default-store"
-        requests = await DatabaseConnectionService.getStoreConnections(storeId)
+        // For store users, check multiple possible store IDs
+        const possibleStoreIds = [
+          profile.company_name || "default-store",
+          profile.email?.split('@')[1] || "default-store",
+          `store-${profile.id}`
+        ]
+        
+        for (const storeId of possibleStoreIds) {
+          const storeConnections = await DatabaseConnectionService.getStoreConnections(storeId)
+          requests = requests.concat(storeConnections)
+        }
+        
+        // Remove duplicates
+        requests = requests.filter((req, index, self) => 
+          index === self.findIndex(r => r.id === req.id)
+        )
       }
       setPendingRequests(requests.filter(r => r.status === 'pending'))
     } catch (error) {
@@ -112,7 +126,8 @@ export function ConnectionRequestsDialog({ isMaintenance, store, onUpdate }: Con
         }
       } else {
         // Store requesting connection to maintenance provider
-        const storeId = profile.company_name || "default-store"
+        // Use email domain as primary store ID for consistency
+        const storeId = profile.email?.split('@')[1] || profile.company_name || "default-store"
         const result = await DatabaseConnectionService.requestConnectionByEmail(storeId, email)
         
         if (result.success) {
