@@ -103,6 +103,45 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          branding: Json | null
+          company_name: string
+          company_type: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          settings: Json | null
+          subscription_tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          branding?: Json | null
+          company_name: string
+          company_type: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          settings?: Json | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          branding?: Json | null
+          company_name?: string
+          company_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          settings?: Json | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       maintenance_providers: {
         Row: {
           company_name: string
@@ -274,6 +313,42 @@ export type Database = {
           },
         ]
       }
+      onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: Json | null
+          created_at: string | null
+          current_step: number | null
+          id: string
+          is_completed: boolean | null
+          onboarding_data: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: Json | null
+          created_at?: string | null
+          current_step?: number | null
+          id?: string
+          is_completed?: boolean | null
+          onboarding_data?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: Json | null
+          created_at?: string | null
+          current_step?: number | null
+          id?: string
+          is_completed?: boolean | null
+          onboarding_data?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -351,6 +426,42 @@ export type Database = {
           },
         ]
       }
+      system_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -371,6 +482,16 @@ export type Database = {
       is_maintenance_provider: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      log_system_action: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_resource_id?: string
+          p_resource_type: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       safe_user_setup: {
         Args: { user_id_param: string }
