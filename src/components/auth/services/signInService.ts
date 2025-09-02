@@ -35,8 +35,25 @@ export const signInUser = async (
       localStorage.setItem('supabase.auth.token', JSON.stringify(signInData.session));
       
       try {
+        // Ensure profile/role is synced from auth metadata before routing
+        try {
+          const { error: setupError } = await supabase.rpc('safe_user_setup', {
+            user_id_param: signInData.user.id,
+          });
+          if (setupError) {
+            console.warn('safe_user_setup failed, continuing with existing profile:', setupError);
+          }
+        } catch (e) {
+          console.warn('safe_user_setup threw, continuing:', e);
+        }
+        
+        // Fetch the (potentially updated) profile
         const profile = await fetchUserProfile(signInData.user.id);
-        const role = profile?.role || selectedRole;
+        const roleFromProfile = profile?.role || null;
+        const roleFromMetadata = (signInData.user.user_metadata as any)?.role || null;
+        
+        // Prefer synced profile role; if missing, fall back to auth metadata, then selected portal
+        const role = roleFromProfile || roleFromMetadata || selectedRole;
         
         // Update last sign in timestamp
         await supabase
