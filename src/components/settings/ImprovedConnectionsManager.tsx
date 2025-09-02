@@ -124,36 +124,78 @@ export const ImprovedConnectionsManager = () => {
     setIsConnecting(true);
     try {
       if (isMaintenanceUser) {
-        // For maintenance users, connect to store by email (not yet implemented)
-        toast({
-          title: "Info",
-          description: "Store connection feature coming soon",
-        });
-        console.log('ImprovedConnectionsManager: Store connection not yet implemented for maintenance users');
+        // For maintenance users, connect to store by email
+        console.log('ImprovedConnectionsManager: Requesting connection as maintenance user');
+        const storeId = newConnectionEmail.split('@')[1] || `store-${Date.now()}`;
+        
+        try {
+          const { DatabaseConnectionService } = await import("@/services/connection/database-connection-service");
+          
+          // Get maintenance provider ID from profile
+          const provider = await DatabaseConnectionService.getMaintenanceProviderByEmail(profile?.email || "");
+          if (!provider) {
+            toast({
+              title: "Provider not found",
+              description: "Your maintenance provider profile could not be found. Please complete your profile setup.",
+              variant: "destructive"
+            });
+            return;
+          }
+
+          const success = await DatabaseConnectionService.requestConnection(storeId, provider.id);
+          
+          if (success) {
+            toast({
+              title: "Connection request sent",
+              description: `Request sent to store: ${storeId}`
+            });
+            setNewConnectionEmail("");
+            // Refresh connections if there's a callback
+            loadConnectionData();
+          } else {
+            toast({
+              title: "Request failed",
+              description: "Failed to send connection request or connection already exists",
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.error("Error sending connection request:", error);
+          toast({
+            title: "Error",
+            description: "An unexpected error occurred",
+            variant: "destructive"
+          });
+        }
       } else if (isStoreUser) {
         // For store users, connect to maintenance provider by email
         console.log('ImprovedConnectionsManager: Requesting connection as store user');
-        const result = await ConnectionService.requestConnectionByEmail(
-          profile?.company_name || 'unknown',
-          newConnectionEmail
-        );
         
-        console.log('ImprovedConnectionsManager: Connection request result', result);
-        
-        if (result.success) {
-          toast({
-            title: "Success",
-            description: result.message,
-          });
-          setNewConnectionEmail("");
-          // Clear new account flags since user has made their first connection
-          clearNewAccountFlags(true);
-          await loadConnectionData(); // Refresh the data
-        } else {
+        try {
+          const { DatabaseConnectionService } = await import("@/services/connection/database-connection-service");
+          const storeId = profile?.company_name || "default-store";
+          const result = await DatabaseConnectionService.requestConnectionByEmail(storeId, newConnectionEmail);
+          
+          if (result.success) {
+            toast({
+              title: "Connection request sent",
+              description: result.message
+            });
+            setNewConnectionEmail("");
+            loadConnectionData();
+          } else {
+            toast({
+              title: "Request failed",
+              description: result.message,
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.error("Error sending connection request:", error);
           toast({
             title: "Error",
-            description: result.message,
-            variant: "destructive",
+            description: "An unexpected error occurred",
+            variant: "destructive"
           });
         }
       } else {
