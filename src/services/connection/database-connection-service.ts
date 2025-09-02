@@ -240,6 +240,38 @@ export const DatabaseConnectionService = {
     }
   },
 
+  // Get maintenance provider by user ID (more reliable than email)
+  async getMaintenanceProviderByUserId(userId: string): Promise<{ id: string, name: string } | null> {
+    try {
+      console.log('DatabaseConnectionService: Searching for maintenance provider by user ID', userId);
+      
+      const { data, error } = await supabase
+        .from('maintenance_providers')
+        .select('id, company_name, contact_email, is_verified')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('DatabaseConnectionService: Error fetching provider by user ID:', error);
+        return null;
+      }
+
+      if (!data) {
+        console.log('DatabaseConnectionService: No maintenance provider found for user ID:', userId);
+        return null;
+      }
+
+      console.log('DatabaseConnectionService: Found provider for user', data);
+      return {
+        id: data.id,
+        name: data.company_name
+      };
+    } catch (error) {
+      console.error('DatabaseConnectionService: Error in getMaintenanceProviderByUserId:', error);
+      return null;
+    }
+  },
+
   // New function to look up maintenance provider UUID by email
   async getMaintenanceProviderByEmail(email: string): Promise<{ id: string, name: string } | null> {
     try {
@@ -249,31 +281,14 @@ export const DatabaseConnectionService = {
         .from('maintenance_providers')
         .select('id, company_name, contact_email, is_verified')
         .eq('contact_email', email.trim().toLowerCase())
-        .eq('is_verified', true)
-        .maybeSingle();
+        .maybeSingle(); // Remove verification requirement to find any provider
 
       if (error) {
-        console.error('DatabaseConnectionService: Error fetching verified provider by email:', error);
-        // If no verified records found, try searching without verification requirement
-        const { data: unverifiedData, error: unverifiedError } = await supabase
-          .from('maintenance_providers')
-          .select('id, company_name, contact_email, is_verified')
-          .eq('contact_email', email.trim().toLowerCase())
-          .maybeSingle();
-        
-        if (unverifiedError) {
-          console.error('DatabaseConnectionService: No maintenance provider found with email:', email);
-          return null;
-        }
-        
-        console.log('DatabaseConnectionService: Found unverified provider', unverifiedData);
-        return unverifiedData ? {
-          id: unverifiedData.id,
-          name: unverifiedData.company_name
-        } : null;
+        console.error('DatabaseConnectionService: Error fetching provider by email:', error);
+        return null;
       }
 
-      console.log('DatabaseConnectionService: Found verified provider', data);
+      console.log('DatabaseConnectionService: Found provider by email', data);
       if (!data) {
         console.log('DatabaseConnectionService: No provider found with email:', email);
         return null;

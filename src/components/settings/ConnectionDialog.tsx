@@ -60,8 +60,8 @@ export function ConnectionDialog({
         // Maintenance provider connecting to store
         const targetStoreId = storeId.trim() || email.split('@')[1] || `store-${Date.now()}`
         
-        // Get maintenance provider ID from profile
-        const provider = await DatabaseConnectionService.getMaintenanceProviderByEmail(profile?.email || "")
+        // Get maintenance provider ID from profile using user ID
+        const provider = await DatabaseConnectionService.getMaintenanceProviderByUserId(currentUserId)
         if (!provider) {
           toast({
             title: "Provider not found",

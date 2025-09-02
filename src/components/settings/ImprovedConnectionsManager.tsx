@@ -131,8 +131,8 @@ export const ImprovedConnectionsManager = () => {
         try {
           const { DatabaseConnectionService } = await import("@/services/connection/database-connection-service");
           
-          // Get maintenance provider ID from profile
-          const provider = await DatabaseConnectionService.getMaintenanceProviderByEmail(profile?.email || "");
+          // Get maintenance provider ID from profile using user ID instead of email
+          const provider = await DatabaseConnectionService.getMaintenanceProviderByUserId(profile?.id || "");
           if (!provider) {
             toast({
               title: "Provider not found",
