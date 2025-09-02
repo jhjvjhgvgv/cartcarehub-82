@@ -93,18 +93,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     },
   ];
 
-  const handleSignOut = () => {
-    // If in test mode, clear test mode data
-    if (localStorage.getItem("testMode") === "true") {
-      localStorage.removeItem("testMode");
-      localStorage.removeItem("testRole");
+  const handleSignOut = async () => {
+    try {
+      console.log("🚪 Dashboard layout sign out initiated");
+      
+      // Import the safe sign out utility
+      const { safeSignOut } = await import("@/utils/session-debug");
+      await safeSignOut();
+      
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      // Fallback - just navigate to home
+      navigate("/");
     }
-    
-    toast({
-      title: "Signed out successfully",
-      description: "You have been signed out of your account.",
-    });
-    navigate("/");
   };
 
   // Only show welcome screen for new accounts on dashboard routes
