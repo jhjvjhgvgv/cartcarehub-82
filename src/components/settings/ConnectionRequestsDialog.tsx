@@ -1,214 +1,382 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { ConnectionService } from "@/services/ConnectionService";
-import { Store, StoreConnection } from "./types";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Search, Mail, CheckCircle, XCircle, Clock, Users, Building, Phone } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { DatabaseConnectionService } from "@/services/connection/database-connection-service"
+import { useUserProfile } from "@/hooks/use-user-profile"
+import { StoreConnection } from "@/services/connection/types"
 
 interface ConnectionRequestsDialogProps {
-  isMaintenance: boolean;
-  store?: Store;
+  isMaintenance: boolean
+  store?: {
+    id: string
+    name: string
+    status: string
+    connectedSince: string
+  }
+  onUpdate?: () => void
 }
 
-export function ConnectionRequestsDialog({ isMaintenance, store }: ConnectionRequestsDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingRequests, setPendingRequests] = useState<StoreConnection[]>([]);
-  const { toast } = useToast();
-  const { user } = useAuth();
+export function ConnectionRequestsDialog({ isMaintenance, store, onUpdate }: ConnectionRequestsDialogProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [pendingRequests, setPendingRequests] = useState<StoreConnection[]>([])
+  const [availableProviders, setAvailableProviders] = useState<Array<{id: string, name: string}>>([])
+  const { toast } = useToast()
+  const { profile } = useUserProfile()
 
-  // For maintenance providers, fetch any pending connection requests
-  useEffect(() => {
-    if (isOpen && isMaintenance && user) {
-      const fetchRequests = async () => {
-        try {
-          const requests = await ConnectionService.getMaintenanceRequests(user.id);
-          setPendingRequests(requests.filter(req => req.status === "pending"));
-        } catch (error) {
-          console.error("Error fetching maintenance requests:", error);
-        }
-      };
-      
-      fetchRequests();
-    }
-  }, [isOpen, isMaintenance, user]);
-
-  const handleRequestConnection = async () => {
-    if (!store) return;
-    
-    if (!email.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address format",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+  const loadPendingRequests = async () => {
+    if (!profile?.id) return
     
     try {
-      const result = await ConnectionService.requestConnectionByEmail(store.id, email.trim());
-      
-      if (result.success) {
-        toast({
-          title: "Request Sent",
-          description: result.message,
-        });
-        setEmail("");
-        setIsOpen(false);
+      let requests: StoreConnection[] = []
+      if (isMaintenance) {
+        requests = await DatabaseConnectionService.getMaintenanceRequests(profile.id)
       } else {
-        toast({
-          title: "Request Failed",
-          description: result.message,
-          variant: "destructive",
-        });
+        const storeId = profile.company_name || "default-store"
+        requests = await DatabaseConnectionService.getStoreConnections(storeId)
+      }
+      setPendingRequests(requests.filter(r => r.status === 'pending'))
+    } catch (error) {
+      console.error("Error loading pending requests:", error)
+    }
+  }
+
+  const loadAvailableProviders = async () => {
+    if (!isMaintenance) return
+    
+    try {
+      const providers = await DatabaseConnectionService.getMaintenanceProviders()
+      setAvailableProviders(providers)
+    } catch (error) {
+      console.error("Error loading providers:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      loadPendingRequests()
+      loadAvailableProviders()
+    }
+  }, [isOpen, profile?.id])
+
+  const handleSendRequest = async () => {
+    if (!email.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!profile?.id) {
+      toast({
+        title: "Authentication required", 
+        description: "Please sign in to send connection requests",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      if (isMaintenance) {
+        // Maintenance provider requesting connection to store
+        // For now, use a simple store ID based on email domain
+        const storeId = email.split('@')[1] || "store-" + Date.now()
+        const success = await DatabaseConnectionService.requestConnection(storeId, profile.id)
+        
+        if (success) {
+          toast({
+            title: "Connection request sent",
+            description: `Request sent to store at ${email}`
+          })
+          setEmail("")
+          loadPendingRequests()
+          onUpdate?.()
+        } else {
+          toast({
+            title: "Request failed",
+            description: "Failed to send connection request",
+            variant: "destructive"
+          })
+        }
+      } else {
+        // Store requesting connection to maintenance provider
+        const storeId = profile.company_name || "default-store"
+        const result = await DatabaseConnectionService.requestConnectionByEmail(storeId, email)
+        
+        if (result.success) {
+          toast({
+            title: "Connection request sent",
+            description: result.message
+          })
+          setEmail("")
+          loadPendingRequests()
+          onUpdate?.()
+        } else {
+          toast({
+            title: "Request failed",
+            description: result.message,
+            variant: "destructive"
+          })
+        }
       }
     } catch (error) {
-      console.error("Connection request error:", error);
+      console.error("Error sending request:", error)
       toast({
         title: "Error",
-        description: "An unexpected error occurred while sending the request",
-        variant: "destructive",
-      });
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
     } finally {
-      setIsSubmitting(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleAcceptRequest = async (connectionId: string) => {
     try {
-      const success = await ConnectionService.acceptConnection(connectionId);
-      
+      const success = await DatabaseConnectionService.acceptConnection(connectionId)
       if (success) {
-        setPendingRequests(requests => requests.filter(req => req.id !== connectionId));
         toast({
-          title: "Connection Accepted",
-          description: "You've successfully connected with the store",
-        });
+          title: "Connection accepted",
+          description: "The connection has been established"
+        })
+        loadPendingRequests()
+        onUpdate?.()
+      } else {
+        toast({
+          title: "Failed to accept",
+          description: "Could not accept the connection request",
+          variant: "destructive"
+        })
       }
     } catch (error) {
-      console.error("Failed to accept connection:", error);
+      console.error("Error accepting request:", error)
       toast({
         title: "Error",
-        description: "Failed to accept the connection",
-        variant: "destructive",
-      });
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
     }
-  };
+  }
 
   const handleRejectRequest = async (connectionId: string) => {
     try {
-      const success = await ConnectionService.rejectConnection(connectionId);
-      
+      const success = await DatabaseConnectionService.rejectConnection(connectionId)
       if (success) {
-        setPendingRequests(requests => requests.filter(req => req.id !== connectionId));
         toast({
-          title: "Connection Rejected",
-          description: "Connection request has been rejected",
-        });
+          title: "Connection rejected",
+          description: "The connection request has been rejected"
+        })
+        loadPendingRequests()
+        onUpdate?.()
+      } else {
+        toast({
+          title: "Failed to reject",
+          description: "Could not reject the connection request",
+          variant: "destructive"
+        })
       }
     } catch (error) {
-      console.error("Failed to reject connection:", error);
+      console.error("Error rejecting request:", error)
       toast({
         title: "Error",
-        description: "Failed to reject the connection",
-        variant: "destructive",
-      });
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      })
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          {isMaintenance ? "View Connection Requests" : "Connect to Maintenance Provider"}
+        <Button variant="outline" size="sm">
+          <Users className="h-4 w-4 mr-2" />
+          {isMaintenance ? "Connect to Stores" : "Find Maintenance"}
+          {pendingRequests.length > 0 && (
+            <Badge variant="secondary" className="ml-2">
+              {pendingRequests.length}
+            </Badge>
+          )}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isMaintenance 
-              ? "Store Connection Requests" 
-              : "Connect to Maintenance Provider"}
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            {isMaintenance ? "Connect to Stores" : "Connect to Maintenance Providers"}
           </DialogTitle>
+          <DialogDescription>
+            {isMaintenance 
+              ? "Send connection requests to stores that need maintenance services"
+              : "Find and connect with maintenance providers for your shopping carts"
+            }
+          </DialogDescription>
         </DialogHeader>
-        
-        {isMaintenance ? (
-          <div className="space-y-4">
-            {pendingRequests.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                No pending connection requests
-              </p>
-            ) : (
-              pendingRequests.map(request => (
-                <div key={request.id} className="p-4 border rounded-md">
-                  <p className="font-medium mb-2">Store ID: {request.storeId}</p>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Requested: {new Date(request.requestedAt).toLocaleString()}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleAcceptRequest(request.id)}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleRejectRequest(request.id)}
-                    >
-                      Reject
-                    </Button>
-                  </div>
+
+        <div className="space-y-6">
+          {/* Send New Request */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                Send Connection Request
+              </CardTitle>
+              <CardDescription>
+                Enter the email address of the {isMaintenance ? "store" : "maintenance provider"} you'd like to connect with
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={isMaintenance ? "store@example.com" : "maintenance@provider.com"}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !loading && handleSendRequest()}
+                  />
                 </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Maintenance Provider Email
-              </label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="maintenance@example.com"
-              />
-            </div>
-            <Button 
-              onClick={handleRequestConnection}
-              disabled={isSubmitting}
-              className="w-full"
-            >
-              {isSubmitting ? "Sending request..." : "Send Connection Request"}
-            </Button>
-          </div>
-        )}
+                <div className="flex items-end">
+                  <Button 
+                    onClick={handleSendRequest}
+                    disabled={loading || !email.trim()}
+                    className="flex items-center gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    {loading ? "Sending..." : "Send Request"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Available Providers (for maintenance users) */}
+          {isMaintenance && availableProviders.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Available Stores
+                </CardTitle>
+                <CardDescription>
+                  Verified stores that are available for connections
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {availableProviders.map((provider) => (
+                    <div key={provider.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{provider.name}</p>
+                        <p className="text-sm text-muted-foreground">Store ID: {provider.id.slice(0, 8)}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEmail(`${provider.name.toLowerCase().replace(/\s+/g, '')}@store.com`)
+                        }}
+                      >
+                        Select
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending Requests */}
+          {pendingRequests.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Pending Requests
+                  <Badge variant="secondary">{pendingRequests.length}</Badge>
+                </CardTitle>
+                <CardDescription>
+                  {isMaintenance 
+                    ? "Connection requests you've received from stores"
+                    : "Your pending connection requests to maintenance providers"
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{isMaintenance ? "Store" : "Provider"}</TableHead>
+                      <TableHead>Requested</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-muted-foreground" />
+                            {isMaintenance ? request.storeId : `Provider ${request.maintenanceId.slice(0, 8)}`}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(request.requestedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                            <Clock className="h-3 w-3" />
+                            Pending
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isMaintenance ? (
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleAcceptRequest(request.id)}
+                                className="flex items-center gap-1"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRejectRequest(request.id)}
+                                className="flex items-center gap-1"
+                              >
+                                <XCircle className="h-3 w-3" />
+                                Reject
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge variant="outline">Waiting for response</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

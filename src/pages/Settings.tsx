@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MaintenanceSettings from "@/components/settings/MaintenanceSettings";
 import { StoreMaintenanceManager } from "@/components/settings/StoreMaintenanceManager";
+import { MaintenanceConnectionManager } from "@/components/settings/MaintenanceConnectionManager";
 import { ImprovedConnectionsManager } from "@/components/settings/ImprovedConnectionsManager";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { DevModeInstructions } from "@/components/settings/DevModeInstructions";
@@ -131,7 +132,10 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="stores">
-            <ImprovedConnectionsManager />
+            <div className="space-y-6">
+              <ImprovedConnectionsManager />
+              <MaintenanceConnectionManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="developer">
