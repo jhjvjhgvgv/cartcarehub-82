@@ -125,9 +125,9 @@ export function ConnectionRequestsDialog({ isMaintenance, store, onUpdate }: Con
           })
         }
       } else {
-        // Store requesting connection to maintenance provider
-        // Use email domain as primary store ID for consistency
-        const storeId = profile.email?.split('@')[1] || profile.company_name || "default-store"
+        // Store requesting connection to maintenance provider - use standardized store ID
+        const storeId = generateStoreId(profile)
+        console.log('ConnectionRequestsDialog: Using store ID:', storeId, 'for profile:', profile)
         const result = await DatabaseConnectionService.requestConnectionByEmail(storeId, email)
         
         if (result.success) {
