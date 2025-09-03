@@ -467,6 +467,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bulk_update_cart_status: {
+        Args: { cart_ids: string[]; new_status: string; updated_by?: string }
+        Returns: Json
+      }
+      get_cart_analytics_summary: {
+        Args: { date_from?: string; date_to?: string; store_id_param?: string }
+        Returns: Json
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -495,6 +503,10 @@ export type Database = {
       }
       safe_user_setup: {
         Args: { user_id_param: string }
+        Returns: Json
+      }
+      schedule_maintenance_requests: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       sync_user_roles_from_metadata: {

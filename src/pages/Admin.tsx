@@ -26,6 +26,7 @@ import { ProviderManagement } from "@/components/admin/ProviderManagement";
 import { SystemAnalytics } from "@/components/admin/SystemAnalytics";
 import { MaintenanceMetrics } from "@/components/admin/MaintenanceMetrics";
 import { SystemSettings } from "@/components/admin/SystemSettings";
+import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -81,7 +82,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <SystemAnalytics />
+            <AdvancedAnalytics />
           </TabsContent>
 
           <TabsContent value="maintenance" className="space-y-6">
