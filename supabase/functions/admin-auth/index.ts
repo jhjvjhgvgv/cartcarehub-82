@@ -30,9 +30,8 @@ serve(async (req) => {
     console.log(`Admin auth action: ${action}`)
 
     // Get client IP and user agent for security logging
-    const clientIP = req.headers.get('x-forwarded-for') || 
-                     req.headers.get('x-real-ip') || 
-                     'unknown'
+    const forwardedFor = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')
+    const clientIP = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown'
     const userAgent = req.headers.get('user-agent') || 'unknown'
 
     switch (action) {
