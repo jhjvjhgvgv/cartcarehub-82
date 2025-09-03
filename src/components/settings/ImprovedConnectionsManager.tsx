@@ -11,6 +11,7 @@ import { useUserProfile } from "@/hooks/use-user-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { ConnectionService } from "@/services/ConnectionService";
 import { StoreConnection } from "@/services/connection/types";
+import { generateStoreId } from "@/utils/store-id-utils";
 import { 
   Plus, 
   Building, 

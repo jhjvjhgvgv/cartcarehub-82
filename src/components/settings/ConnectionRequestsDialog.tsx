@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { DatabaseConnectionService } from "@/services/connection/database-connection-service"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { StoreConnection } from "@/services/connection/types"
+import { generateStoreId } from "@/utils/store-id-utils"
 
 interface ConnectionRequestsDialogProps {
   isMaintenance: boolean

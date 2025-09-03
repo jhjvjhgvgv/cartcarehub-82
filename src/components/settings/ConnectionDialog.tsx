@@ -10,6 +10,7 @@ import { Mail, Building, Search, Users, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { DatabaseConnectionService } from "@/services/connection/database-connection-service"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { generateStoreId } from "@/utils/store-id-utils"
 
 interface ConnectionDialogProps {
   isDialogOpen: boolean
