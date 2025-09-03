@@ -1,45 +1,44 @@
-
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { CheckCircle, Clock, Store, Pencil, Link, AlertCircle, Users } from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { StoreForm } from "./StoreForm"
-import { useToast } from "@/hooks/use-toast"
-import { ConnectionRequestsDialog } from "./ConnectionRequestsDialog"
-import { DatabaseConnectionService } from "@/services/connection/database-connection-service"
-import { useUserProfile } from "@/hooks/use-user-profile"
-import { StoreConnection } from "@/services/connection/types"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Store, Settings, CheckCircle, Clock, XCircle, Eye, Loader2, Wifi, WifiOff, Users } from "lucide-react";
+import { DatabaseConnectionService } from "@/services/connection/database-connection-service";
+import { StoreConnection } from "@/services/connection/types";
+import { ConnectionRequestsDialog } from "./ConnectionRequestsDialog";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { useNavigate } from "react-router-dom";
+import { StoreForm } from "./store/StoreForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useRealtimeConnections } from "@/hooks/use-realtime-connections";
+import { getConnectionStatusInfo, getStoreDisplayInfo } from "@/utils/connection-display-utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ConnectedStoresListProps {
-  isMaintenance: boolean
-  formatDate: (dateString: string) => string
+  isMaintenance: boolean;
+  formatDate: (dateString: string) => string;
 }
 
 export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStoresListProps) {
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const { profile } = useUserProfile()
-  const [connections, setConnections] = useState<StoreConnection[]>([])
-  const [loading, setLoading] = useState(true)
-  const [editingStore, setEditingStore] = useState<{
-    id: string;
-    name: string;
-    status: "active" | "inactive" | "pending";
-    connectedSince: string;
-  } | null>(null)
+  const [connections, setConnections] = useState<StoreConnection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingStore, setEditingStore] = useState<any>(null);
+  const { profile } = useUserProfile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { isConnected: realtimeConnected } = useRealtimeConnections(loadConnections);
 
-  const loadConnections = async () => {
-    if (!profile?.id) return
+  async function loadConnections() {
+    if (!profile?.id) return;
     
-    setLoading(true)
+    setLoading(true);
     try {
-      let connectionData: StoreConnection[] = []
+      let connectionData: StoreConnection[] = [];
       
       if (isMaintenance) {
         // For maintenance users, get their connection requests
-        connectionData = await DatabaseConnectionService.getMaintenanceRequests(profile.id)
+        connectionData = await DatabaseConnectionService.getMaintenanceRequests(profile.id);
       } else {
         // For store users, get their connections with maintenance providers
         // Use both company name and email domain to search for connections
@@ -47,191 +46,225 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
           profile.company_name || "default-store",
           profile.email?.split('@')[1] || "default-store",
           `store-${profile.id}` // fallback using user ID
-        ]
+        ];
         
         // Try to get connections using any of the possible store IDs
         for (const storeId of possibleStoreIds) {
-          const storeConnections = await DatabaseConnectionService.getStoreConnections(storeId)
-          connectionData = connectionData.concat(storeConnections)
+          const storeConnections = await DatabaseConnectionService.getStoreConnections(storeId);
+          connectionData = connectionData.concat(storeConnections);
         }
         
         // Remove duplicates based on connection ID
         connectionData = connectionData.filter((conn, index, self) => 
           index === self.findIndex(c => c.id === conn.id)
-        )
+        );
       }
       
-      setConnections(connectionData)
+      setConnections(connectionData);
     } catch (error) {
-      console.error("Error loading connections:", error)
+      console.error("Error loading connections:", error);
       toast({
         title: "Error",
         description: "Failed to load connections",
         variant: "destructive"
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadConnections()
-  }, [profile?.id, isMaintenance])
+    loadConnections();
+  }, [profile?.id, isMaintenance]);
 
   const handleViewDetails = (storeId: string, storeName: string) => {
-    navigate(`/store/${storeId}`, { state: { storeName } })
-  }
+    navigate(`/store/${storeId}`, { state: { storeName } });
+  };
 
   const getStatusIcon = (status: string) => {
+    const statusInfo = getConnectionStatusInfo(status);
     switch (status) {
-      case 'active':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
       case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />
+        return <Clock className={`h-4 w-4 ${statusInfo.color}`} />;
+      case 'accepted':
+      case 'active':
+        return <CheckCircle className={`h-4 w-4 ${statusInfo.color}`} />;
       case 'rejected':
-        return <AlertCircle className="h-4 w-4 text-red-500" />
+        return <XCircle className={`h-4 w-4 ${statusInfo.color}`} />;
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />
+        return <Clock className="h-4 w-4 text-gray-500" />;
     }
-  }
+  };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Active'
-      case 'pending':
-        return 'Pending'
-      case 'rejected':
-        return 'Rejected'
-      default:
-        return 'Unknown'
-    }
-  }
+    const statusInfo = getConnectionStatusInfo(status);
+    return statusInfo.label;
+  };
 
   if (loading) {
     return (
       <div className="rounded-md border p-8">
         <div className="flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Loading connections...</p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-sm font-medium flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Connected {isMaintenance ? "Stores" : "Maintenance Providers"}
-          <span className="bg-muted px-2 py-1 rounded text-xs">
-            {connections.filter(c => c.status === 'active').length}
-          </span>
-        </h3>
-        {isMaintenance && (
-          <ConnectionRequestsDialog isMaintenance={true} onUpdate={loadConnections} />
-        )}
-      </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              {isMaintenance ? "Connected Stores" : "Connected Providers"}
+              <span className="bg-muted px-2 py-1 rounded text-xs">
+                {connections.filter(c => c.status === 'active').length}
+              </span>
+            </h3>
+            <div className="flex items-center gap-1">
+              {realtimeConnected ? (
+                <div className="flex items-center gap-1" title="Real-time updates active">
+                  <Wifi className="h-4 w-4 text-green-500" />
+                </div>
+              ) : (
+                <div className="flex items-center gap-1" title="Real-time updates inactive">
+                  <WifiOff className="h-4 w-4 text-gray-400" />
+                </div>
+              )}
+            </div>
+          </div>
+          {isMaintenance && (
+            <ConnectionRequestsDialog isMaintenance={true} onUpdate={loadConnections} />
+          )}
+        </div>
+      </CardHeader>
       
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{isMaintenance ? "Store" : "Provider"}</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Connected Since</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {connections.length > 0 ? (
-              connections.map((connection) => (
-                <TableRow key={connection.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Store className="h-4 w-4 text-muted-foreground" />
-                      {isMaintenance ? connection.storeId : `Provider ${connection.maintenanceId.slice(0, 8)}`}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-2">
-                      {getStatusIcon(connection.status)}
-                      {getStatusLabel(connection.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      {formatDate(connection.connectedAt || connection.requestedAt)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {isMaintenance && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleViewDetails(connection.storeId, connection.storeId)}
-                        >
-                          View Store
-                        </Button>
-                      )}
-                      {!isMaintenance && connection.status === 'active' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            toast({
-                              title: "Provider Details",
-                              description: "Provider management features coming soon!"
-                            })
-                          }}
-                        >
-                          Manage
-                        </Button>
+      <CardContent>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{isMaintenance ? "Store" : "Provider"}</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Connected Since</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {connections.length > 0 ? (
+                connections.map((connection) => (
+                  <TableRow key={connection.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Store className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="font-medium">
+                            {isMaintenance ? getStoreDisplayInfo(connection.storeId).name : `Provider ${connection.maintenanceId.slice(0, 8)}`}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {isMaintenance ? connection.storeId : connection.maintenanceId.slice(0, 8)}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(connection.status)}
+                        <Badge variant={getConnectionStatusInfo(connection.status).variant}>
+                          {getStatusLabel(connection.status)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        {formatDate(connection.connectedAt || connection.requestedAt)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {isMaintenance && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewDetails(connection.storeId, connection.storeId)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Store
+                          </Button>
+                        )}
+                        {!isMaintenance && connection.status === 'active' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              toast({
+                                title: "Provider Details",
+                                description: "Provider management features coming soon!"
+                              });
+                            }}
+                          >
+                            <Settings className="h-4 w-4 mr-1" />
+                            Manage
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-3">
+                      <Users className="h-12 w-12 text-muted-foreground/30" />
+                      <div className="text-center">
+                        <p className="font-medium text-muted-foreground">
+                          No {isMaintenance ? "stores" : "maintenance providers"} connected yet
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {isMaintenance 
+                            ? "Start by requesting connections with stores to receive maintenance requests"
+                            : "Connect with maintenance providers to get your shopping carts serviced"
+                          }
+                        </p>
+                        <div className="mt-2 text-xs text-muted-foreground flex items-center justify-center gap-1">
+                          {realtimeConnected ? (
+                            <>
+                              <Wifi className="h-3 w-3 text-green-500" />
+                              Real-time updates active
+                            </>
+                          ) : (
+                            <>
+                              <WifiOff className="h-3 w-3 text-gray-400" />
+                              Real-time updates inactive
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {!isMaintenance && (
+                        <ConnectionRequestsDialog 
+                          isMaintenance={false} 
+                          store={{
+                            id: profile?.company_name || "your-store",
+                            name: profile?.company_name || "Your Store",
+                            status: "active",
+                            connectedSince: new Date().toISOString()
+                          }} 
+                          onUpdate={loadConnections}
+                        />
                       )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  <div className="flex flex-col items-center gap-3">
-                    <Users className="h-12 w-12 text-muted-foreground/30" />
-                    <div className="text-center">
-                      <p className="font-medium text-muted-foreground">
-                        No {isMaintenance ? "stores" : "maintenance providers"} connected yet
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {isMaintenance 
-                          ? "Start by requesting connections with stores to receive maintenance requests"
-                          : "Connect with maintenance providers to get your shopping carts serviced"
-                        }
-                      </p>
-                    </div>
-                    {!isMaintenance && (
-                      <ConnectionRequestsDialog 
-                        isMaintenance={false} 
-                        store={{
-                          id: profile?.company_name || "your-store",
-                          name: profile?.company_name || "Your Store",
-                          status: "active",
-                          connectedSince: new Date().toISOString()
-                        }} 
-                        onUpdate={loadConnections}
-                      />
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
 
       <Dialog open={editingStore !== null} onOpenChange={(open) => !open && setEditingStore(null)}>
         <DialogContent>
@@ -245,14 +278,14 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                 toast({
                   title: "Store updated",
                   description: `Successfully updated ${data.name}`
-                })
-                setEditingStore(null)
+                });
+                setEditingStore(null);
               }}
               onCancel={() => setEditingStore(null)}
             />
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  )
+    </Card>
+  );
 }
