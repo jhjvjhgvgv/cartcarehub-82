@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activities: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          target_id: string | null
+          target_type: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          target_id?: string | null
+          target_type: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          target_id?: string | null
+          target_type?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_activities_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_permissions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean
+          permissions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          permissions?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          permissions?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_analytics: {
         Row: {
           cart_id: string
@@ -426,6 +527,47 @@ export type Database = {
           },
         ]
       }
+      system_configuration: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_configuration_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_logs: {
         Row: {
           action: string
@@ -467,8 +609,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_manage_user: {
+        Args: {
+          p_action: string
+          p_new_role?: string
+          p_reason?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       bulk_update_cart_status: {
         Args: { cart_ids: string[]; new_status: string; updated_by?: string }
+        Returns: Json
+      }
+      get_admin_dashboard_stats: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_cart_analytics_summary: {
@@ -483,6 +638,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      has_admin_permission: {
+        Args: { permission_name: string }
+        Returns: boolean
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -490,6 +649,17 @@ export type Database = {
       is_maintenance_provider: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      log_admin_activity: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_error_message?: string
+          p_success?: boolean
+          p_target_id?: string
+          p_target_type: string
+        }
+        Returns: undefined
       }
       log_system_action: {
         Args: {

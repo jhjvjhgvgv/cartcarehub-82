@@ -27,6 +27,9 @@ import { SystemAnalytics } from "@/components/admin/SystemAnalytics";
 import { MaintenanceMetrics } from "@/components/admin/MaintenanceMetrics";
 import { SystemSettings } from "@/components/admin/SystemSettings";
 import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
+import { AdminSystemSettings } from "@/components/admin/AdminSystemSettings";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -70,11 +73,11 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <SystemOverview />
+            <AdminDashboard />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserManagement />
+            <AdminUserManagement />
           </TabsContent>
 
           <TabsContent value="providers" className="space-y-6">
@@ -90,7 +93,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <SystemSettings />
+            <AdminSystemSettings />
           </TabsContent>
         </Tabs>
       </div>
