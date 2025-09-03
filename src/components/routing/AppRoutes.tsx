@@ -2,6 +2,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { AdminProtectedRoute } from "@/components/AdminProtectedRoute";
 
 // Pages
 import Index from "@/pages/Index";
@@ -20,6 +21,7 @@ import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
 import { ProfileSetup } from "@/components/auth/ProfileSetup";
 import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
+import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
 
 export const AppRoutes = () => {
   return (
@@ -30,13 +32,20 @@ export const AppRoutes = () => {
       <Route path="/error-recovery" element={<ErrorRecovery error="Authentication error occurred" />} />
       <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} />} />
       
+      {/* Master Admin Routes - Separate authentication system */}
+      <Route path="/master-admin" element={<MasterAdminLogin />} />
+      
       {/* Maintenance Routes - Protected with test mode support */}
       <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRole="maintenance" />} />
       <Route path="/carts" element={<ProtectedRoute element={<Carts />} allowedRole="maintenance" />} />
       <Route path="/carts/:cartId" element={<ProtectedRoute element={<CartDetails />} allowedRole="maintenance" />} />
       <Route path="/customers" element={<ProtectedRoute element={<Customers />} allowedRole="maintenance" />} />
       <Route path="/settings" element={<ProtectedRoute element={<Settings />} allowedRole="maintenance" />} />
-      <Route path="/admin" element={<ProtectedRoute element={<Admin />} allowedRole="admin" />} />
+      <Route path="/admin" element={
+        <AdminProtectedRoute>
+          <Admin />
+        </AdminProtectedRoute>
+      } />
       <Route path="/store/:id" element={<ProtectedRoute element={<Store />} allowedRole="maintenance" />} />
       
       {/* Customer routes - Protected with test mode support */}

@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_accounts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          display_name: string | null
+          email: string
+          id: string
+          is_active: boolean
+          last_login: string | null
+          locked_until: string | null
+          login_attempts: number
+          password_hash: string
+          permissions: Json
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          locked_until?: string | null
+          login_attempts?: number
+          password_hash: string
+          permissions?: Json
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          display_name?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          last_login?: string | null
+          locked_until?: string | null
+          login_attempts?: number
+          password_hash?: string
+          permissions?: Json
+          updated_at?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_accounts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_activities: {
         Row: {
           action: string
@@ -111,6 +167,47 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_sessions: {
+        Row: {
+          admin_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean
+          session_token: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          session_token: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          session_token?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -618,6 +715,15 @@ export type Database = {
         }
         Returns: Json
       }
+      authenticate_admin: {
+        Args: {
+          p_ip_address?: unknown
+          p_password: string
+          p_user_agent?: string
+          p_username: string
+        }
+        Returns: Json
+      }
       bulk_update_cart_status: {
         Args: { cart_ids: string[]; new_status: string; updated_by?: string }
         Returns: Json
@@ -671,6 +777,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      logout_admin: {
+        Args: { p_session_token: string }
+        Returns: Json
+      }
       safe_user_setup: {
         Args: { user_id_param: string }
         Returns: Json
@@ -686,6 +796,10 @@ export type Database = {
       user_has_maintenance_profile: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      verify_admin_session: {
+        Args: { p_session_token: string }
+        Returns: Json
       }
     }
     Enums: {

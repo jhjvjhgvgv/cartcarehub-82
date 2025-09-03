@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
+import { AdminAuthProvider } from './contexts/AdminAuthContext.tsx'
 
 // Configure service worker with automatic updates
 const updateSW = registerSW({
@@ -32,6 +33,10 @@ window.updateSW = () => {
 // Render the app
 const rootElement = document.getElementById("root");
 if (rootElement) {
-  createRoot(rootElement).render(<App />);
+  createRoot(rootElement).render(
+    <AdminAuthProvider>
+      <App />
+    </AdminAuthProvider>
+  );
 }
 
