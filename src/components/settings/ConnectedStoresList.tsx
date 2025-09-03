@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,9 +27,8 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
   const { profile } = useUserProfile();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isConnected: realtimeConnected } = useRealtimeConnections(loadConnections);
 
-  async function loadConnections() {
+  const loadConnections = useCallback(async () => {
     if (!profile?.id) return;
     
     setLoading(true);
@@ -71,11 +70,13 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
     } finally {
       setLoading(false);
     }
-  }
+  }, [profile?.id, profile?.company_name, profile?.email, isMaintenance, toast]);
+
+  const { isConnected: realtimeConnected } = useRealtimeConnections(loadConnections);
 
   useEffect(() => {
     loadConnections();
-  }, [profile?.id, isMaintenance]);
+  }, [loadConnections]);
 
   const handleViewDetails = (storeId: string, storeName: string) => {
     navigate(`/store/${storeId}`, { state: { storeName } });

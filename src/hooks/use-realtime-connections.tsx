@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,6 +14,13 @@ export interface RealtimeConnectionUpdate {
 export function useRealtimeConnections(onUpdate?: () => void) {
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
+
+  // Stabilize the onUpdate callback
+  const stableOnUpdate = useCallback(() => {
+    if (onUpdate) {
+      onUpdate();
+    }
+  }, [onUpdate]);
 
   useEffect(() => {
     console.log('Setting up real-time connection listener...');
@@ -61,9 +68,7 @@ export function useRealtimeConnections(onUpdate?: () => void) {
           }
           
           // Trigger data refresh
-          if (onUpdate) {
-            onUpdate();
-          }
+          stableOnUpdate();
         }
       )
       .subscribe((status) => {
@@ -85,7 +90,7 @@ export function useRealtimeConnections(onUpdate?: () => void) {
       supabase.removeChannel(channel);
       setIsConnected(false);
     };
-  }, [onUpdate, toast]);
+  }, [stableOnUpdate]); // Only depend on the stable callback, not toast
 
   return { isConnected };
 }
