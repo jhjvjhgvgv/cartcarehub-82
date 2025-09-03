@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminUser {
   id: string;
@@ -52,19 +53,19 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const verifyStoredSession = async (token: string): Promise<boolean> => {
     try {
-      const { data } = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: {
           action: 'verify',
-          session_token: token
-        })
-      }).then(res => res.json());
+          session_token: token,
+        },
+      });
 
-      if (data.success) {
+      if (error) {
+        console.error('Session verification failed:', error);
+        return false;
+      }
+
+      if (data?.success) {
         setAdmin(data.admin);
         return true;
       }
@@ -78,29 +79,27 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
-      
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: {
           action: 'login',
           username,
-          password
-        })
+          password,
+        },
       });
 
-      const data = await response.json();
+      if (error) {
+        console.error('Login failed:', error);
+        return { success: false, error: 'Login failed. Please try again.' };
+      }
 
-      if (data.success) {
+      if (data?.success) {
         setAdmin(data.admin);
         setSessionToken(data.session_token);
         localStorage.setItem('admin_session_token', data.session_token);
         return { success: true };
       } else {
-        return { success: false, error: data.error };
+        return { success: false, error: data?.error || data?.message || 'Invalid credentials' };
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -113,16 +112,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const logout = async (): Promise<void> => {
     try {
       if (sessionToken) {
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
+        await supabase.functions.invoke('admin-auth', {
+          body: {
             action: 'logout',
-            session_token: sessionToken
-          })
+            session_token: sessionToken,
+          },
         });
       }
     } catch (error) {

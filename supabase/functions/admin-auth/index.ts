@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // Get client IP and user agent for security logging
     const forwardedFor = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')
-    const clientIP = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown'
+    const clientIP = forwardedFor ? forwardedFor.split(',')[0].trim() : null
     const userAgent = req.headers.get('user-agent') || 'unknown'
 
     switch (action) {
