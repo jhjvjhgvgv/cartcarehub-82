@@ -133,6 +133,10 @@ export const ProfileSetup = () => {
         console.log('Profile update failed, attempting to create profile...');
         
         try {
+          // Get the user's role from auth metadata
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const userRole = authUser?.user_metadata?.role || 'store';
+          
           // Create profile directly using Supabase
           const { error: createError } = await supabase
             .from('profiles')
@@ -142,7 +146,7 @@ export const ProfileSetup = () => {
               display_name: formData.display_name.trim(),
               company_name: formData.company_name.trim(),
               contact_phone: formData.contact_phone.trim() || null,
-              role: 'store', // Default role
+              role: userRole, // Use role from auth metadata
               is_active: true,
             });
 
