@@ -10,27 +10,23 @@ export const createAccountTemplate = async (
   try {
     console.log("Creating account template for:", { userId, role, email });
     
-    // Create or update profile with enhanced data
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: userId,
-        role: role,
-        email: email,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+    // Use RPC call to safely setup user with proper permissions
+    const { data, error } = await supabase.rpc('safe_user_setup', {
+      user_id_param: userId
+    });
 
-    if (profileError) {
-      console.error("Profile creation error:", profileError);
+    if (error) {
+      console.error("Profile creation error:", error);
       return false;
     }
 
-    // The maintenance provider profile will be created automatically by the trigger
-    // if role is 'maintenance', so we don't need to manually create it here
+    const result = data as { success: boolean; message?: string } | null;
+    if (result && !result.success) {
+      console.error("User setup failed:", result.message);
+      return false;
+    }
 
-    console.log("Account template created successfully");
+    console.log("Account template created successfully via RPC");
     return true;
   } catch (error) {
     console.error("Unexpected error creating account template:", error);
