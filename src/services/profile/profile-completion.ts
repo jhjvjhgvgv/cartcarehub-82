@@ -43,8 +43,15 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       missingFields.push('company_name');
     }
 
+    // Get user's role from user_roles table
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
     // If user is a maintenance provider, check if they have a maintenance_providers profile
-    if (profile.role === 'maintenance') {
+    if (userRole?.role === 'maintenance') {
       const { data: maintenanceProfile, error: maintenanceError } = await supabase
         .from('maintenance_providers')
         .select('id')

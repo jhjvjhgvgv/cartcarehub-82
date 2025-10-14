@@ -49,7 +49,15 @@ export const ProfileSetup = () => {
         
         if (completion.isComplete) {
           console.log("✅ Profile is already complete, redirecting to dashboard");
-          const role = profile?.role;
+          
+          // Get user's role from user_roles table
+          const { data: userRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          const role = userRole?.role;
           
           if (role === 'maintenance') {
             navigate('/dashboard', { replace: true });
@@ -133,10 +141,6 @@ export const ProfileSetup = () => {
         console.log('Profile update failed, attempting to create profile...');
         
         try {
-          // Get the user's role from auth metadata
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          const userRole = authUser?.user_metadata?.role || 'store';
-          
           // Create profile directly using Supabase
           const { error: createError } = await supabase
             .from('profiles')
@@ -146,7 +150,6 @@ export const ProfileSetup = () => {
               display_name: formData.display_name.trim(),
               company_name: formData.company_name.trim(),
               contact_phone: formData.contact_phone.trim() || null,
-              role: userRole, // Use role from auth metadata
               is_active: true,
             });
 
@@ -202,8 +205,17 @@ export const ProfileSetup = () => {
         description: "Your profile has been set up successfully. Welcome!",
       });
 
-      // Redirect to appropriate dashboard
-      const redirectPath = isMaintenanceUser ? '/dashboard' : '/customer/dashboard';
+      // Get user's role from user_roles table to ensure correct redirect
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      const role = userRole?.role || 'store';
+      const redirectPath = role === 'maintenance' ? '/dashboard' : 
+                          role === 'admin' ? '/admin' : 
+                          '/customer/dashboard';
       navigate(redirectPath, { replace: true });
       
     } catch (error) {
