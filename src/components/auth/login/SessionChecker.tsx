@@ -31,6 +31,16 @@ export const SessionChecker = () => {
 
       // Check if profile is complete
       const completion = await checkProfileCompletion(user.id);
+      
+      // If email not verified or onboarding not complete, redirect to onboarding
+      if (!completion.emailVerified || !completion.onboardingCompleted) {
+        console.log("📧 Email verification or onboarding incomplete, redirecting to onboarding");
+        hasRedirected.current = true;
+        navigate('/onboarding', { replace: true });
+        return;
+      }
+      
+      // If profile has other missing fields, redirect to profile setup
       if (!completion.isComplete) {
         console.log("📝 Profile incomplete, redirecting to setup");
         hasRedirected.current = true;

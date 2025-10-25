@@ -78,7 +78,7 @@ export type Database = {
           details: Json | null
           error_message: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean
           target_id: string | null
           target_type: string
@@ -91,7 +91,7 @@ export type Database = {
           details?: Json | null
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           target_id?: string | null
           target_type: string
@@ -104,7 +104,7 @@ export type Database = {
           details?: Json | null
           error_message?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           target_id?: string | null
           target_type?: string
@@ -177,7 +177,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_active: boolean
           session_token: string
           user_agent: string | null
@@ -187,7 +187,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean
           session_token: string
           user_agent?: string | null
@@ -197,7 +197,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean
           session_token?: string
           user_agent?: string | null
@@ -578,9 +578,14 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          email_verified: boolean | null
+          email_verified_at: string | null
           id: string
           is_active: boolean | null
           last_sign_in: string | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
+          onboarding_step: number | null
           role: string | null
           updated_at: string
         }
@@ -590,9 +595,14 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_verified?: boolean | null
+          email_verified_at?: string | null
           id: string
           is_active?: boolean | null
           last_sign_in?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           role?: string | null
           updated_at?: string
         }
@@ -602,9 +612,14 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          email_verified?: boolean | null
+          email_verified_at?: string | null
           id?: string
           is_active?: boolean | null
           last_sign_in?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           role?: string | null
           updated_at?: string
         }
@@ -702,7 +717,7 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string
           user_agent: string | null
@@ -713,7 +728,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type: string
           user_agent?: string | null
@@ -724,7 +739,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string
           user_agent?: string | null
@@ -809,26 +824,14 @@ export type Database = {
         Args: { cart_ids: string[]; new_status: string; updated_by?: string }
         Returns: Json
       }
-      get_admin_dashboard_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_cart_analytics_summary: {
         Args: { date_from?: string; date_to?: string; store_id_param?: string }
         Returns: Json
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_primary_role: {
-        Args: { _user_id: string }
-        Returns: string
-      }
-      get_user_role: {
-        Args: { user_id: string }
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
+      get_user_primary_role: { Args: { _user_id: string }; Returns: string }
+      get_user_role: { Args: { user_id: string }; Returns: string }
       has_admin_permission: {
         Args: { permission_name: string }
         Returns: boolean
@@ -840,14 +843,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_maintenance_provider: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_maintenance_provider: { Args: { user_id: string }; Returns: boolean }
       log_admin_activity: {
         Args: {
           p_action: string
@@ -869,30 +866,15 @@ export type Database = {
         }
         Returns: undefined
       }
-      logout_admin: {
-        Args: { p_session_token: string }
-        Returns: Json
-      }
-      safe_user_setup: {
-        Args: { user_id_param: string }
-        Returns: Json
-      }
-      schedule_maintenance_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      sync_user_roles_from_metadata: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      logout_admin: { Args: { p_session_token: string }; Returns: Json }
+      safe_user_setup: { Args: { user_id_param: string }; Returns: Json }
+      schedule_maintenance_requests: { Args: never; Returns: Json }
+      sync_user_roles_from_metadata: { Args: never; Returns: undefined }
       user_has_maintenance_profile: {
         Args: { user_id: string }
         Returns: boolean
       }
-      verify_admin_session: {
-        Args: { p_session_token: string }
-        Returns: Json
-      }
+      verify_admin_session: { Args: { p_session_token: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "maintenance" | "store"

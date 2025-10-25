@@ -4,6 +4,8 @@ export interface ProfileCompletion {
   isComplete: boolean;
   missingFields: string[];
   needsMaintenanceProfile: boolean;
+  emailVerified: boolean;
+  onboardingCompleted: boolean;
 }
 
 export const checkProfileCompletion = async (userId: string): Promise<ProfileCompletion> => {
@@ -20,7 +22,9 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       return {
         isComplete: false,
         missingFields: ['profile'],
-        needsMaintenanceProfile: false
+        needsMaintenanceProfile: false,
+        emailVerified: false,
+        onboardingCompleted: false,
       };
     }
 
@@ -28,12 +32,26 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       return {
         isComplete: false,
         missingFields: ['profile'],
-        needsMaintenanceProfile: false
+        needsMaintenanceProfile: false,
+        emailVerified: false,
+        onboardingCompleted: false,
       };
     }
 
     const missingFields: string[] = [];
     let needsMaintenanceProfile = false;
+
+    // Check email verification
+    const emailVerified = profile.email_verified || false;
+    if (!emailVerified) {
+      missingFields.push('email_verification');
+    }
+
+    // Check onboarding completion
+    const onboardingCompleted = profile.onboarding_completed || false;
+    if (!onboardingCompleted) {
+      missingFields.push('onboarding');
+    }
 
     // Check required fields for all users
     if (!profile.display_name) {
@@ -66,19 +84,23 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       }
     }
 
-    const isComplete = missingFields.length === 0 && !needsMaintenanceProfile;
+    const isComplete = missingFields.length === 0 && !needsMaintenanceProfile && emailVerified && onboardingCompleted;
 
     return {
       isComplete,
       missingFields,
-      needsMaintenanceProfile
+      needsMaintenanceProfile,
+      emailVerified,
+      onboardingCompleted,
     };
   } catch (error) {
     console.error("Error checking profile completion:", error);
     return {
       isComplete: false,
       missingFields: ['error'],
-      needsMaintenanceProfile: false
+      needsMaintenanceProfile: false,
+      emailVerified: false,
+      onboardingCompleted: false,
     };
   }
 };
