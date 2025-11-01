@@ -10,110 +10,109 @@ export const SessionChecker = () => {
   const { user, isLoading } = useAuth();
   const hasRedirected = useRef(false);
 
-  const checkExistingSession = useCallback(async () => {
-    // Prevent multiple redirects
+  useEffect(() => {
+    // Prevent multiple checks
     if (!user || hasRedirected.current || isLoading) return;
+    
+    // Only check for existing session if not in test mode
+    const testMode = localStorage.getItem("testMode");
+    if (testMode) return;
     
     console.log("🔍 SessionChecker - checking existing session for user:", user.id);
     
-    try {
-      // Ensure user is properly set up first
-      const { data: setupResult, error: setupError } = await supabase.rpc('safe_user_setup', {
-        user_id_param: user.id
-      });
+    const checkSession = async () => {
+      try {
+        // Ensure user is properly set up first
+        const { data: setupResult, error: setupError } = await supabase.rpc('safe_user_setup', {
+          user_id_param: user.id
+        });
 
-      if (setupError) {
-        console.error("❌ User setup failed:", setupError);
-        // Continue with profile check anyway
-      } else {
-        console.log("✅ User setup result:", setupResult);
-      }
-
-      // Check if profile is complete
-      const completion = await checkProfileCompletion(user.id);
-      
-      // If email not verified or onboarding not complete, redirect to onboarding
-      if (!completion.emailVerified || !completion.onboardingCompleted) {
-        console.log("📧 Email verification or onboarding incomplete, redirecting to onboarding");
-        hasRedirected.current = true;
-        navigate('/onboarding', { replace: true });
-        return;
-      }
-      
-      // If profile has other missing fields, redirect to profile setup
-      if (!completion.isComplete) {
-        console.log("📝 Profile incomplete, redirecting to setup");
-        hasRedirected.current = true;
-        navigate('/setup-profile', { replace: true });
-        return;
-      }
-
-      // If profile is complete, look up user role to determine correct redirect
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-        
-      if (profileError) {
-        console.error("Profile fetch error:", profileError);
-        // Try to get role from setup result as fallback
-        const fallbackRole = typeof setupResult === 'object' && setupResult !== null && 'role' in setupResult 
-          ? setupResult.role as string 
-          : 'store';
-        console.log("📋 Using fallback role:", fallbackRole);
-        
-        // Use fallback role for redirect
-        if (fallbackRole === 'maintenance') {
-          hasRedirected.current = true;
-          navigate('/dashboard', { replace: true });
-        } else if (fallbackRole === 'admin') {
-          hasRedirected.current = true;
-          navigate('/admin', { replace: true });
+        if (setupError) {
+          console.error("❌ User setup failed:", setupError);
         } else {
+          console.log("✅ User setup result:", setupResult);
+        }
+
+        // Check if profile is complete
+        const completion = await checkProfileCompletion(user.id);
+        
+        // If email not verified or onboarding not complete, redirect to onboarding
+        if (!completion.emailVerified || !completion.onboardingCompleted) {
+          console.log("📧 Email verification or onboarding incomplete, redirecting to onboarding");
           hasRedirected.current = true;
-          navigate('/customer/dashboard', { replace: true });
+          navigate('/onboarding', { replace: true });
+          return;
         }
-        return;
-      }
         
-      const role = profile?.role;
-      console.log("👤 User role:", role);
-      
-      // Only redirect if we're on the root path to avoid redirect loops
-      const currentPath = window.location.pathname;
-      
-      if (currentPath === '/' || currentPath === '/login') {
-        hasRedirected.current = true;
+        // If profile has other missing fields, redirect to profile setup
+        if (!completion.isComplete) {
+          console.log("📝 Profile incomplete, redirecting to setup");
+          hasRedirected.current = true;
+          navigate('/setup-profile', { replace: true });
+          return;
+        }
+
+        // If profile is complete, look up user role to determine correct redirect
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          // Try to get role from setup result as fallback
+          const fallbackRole = typeof setupResult === 'object' && setupResult !== null && 'role' in setupResult 
+            ? setupResult.role as string 
+            : 'store';
+          console.log("📋 Using fallback role:", fallbackRole);
+          
+          // Use fallback role for redirect
+          if (fallbackRole === 'maintenance') {
+            hasRedirected.current = true;
+            navigate('/dashboard', { replace: true });
+          } else if (fallbackRole === 'admin') {
+            hasRedirected.current = true;
+            navigate('/admin', { replace: true });
+          } else {
+            hasRedirected.current = true;
+            navigate('/customer/dashboard', { replace: true });
+          }
+          return;
+        }
+          
+        const role = profile?.role;
+        console.log("👤 User role:", role);
         
-        if (role === 'maintenance') {
-          console.log("🔀 Redirecting maintenance user to dashboard");
-          navigate('/dashboard', { replace: true });
-        } else if (role === 'store') {
-          console.log("🔀 Redirecting store user to customer dashboard");
-          navigate('/customer/dashboard', { replace: true });
-        } else if (role === 'admin') {
-          console.log("🔀 Redirecting admin user to admin dashboard");
-          navigate('/admin', { replace: true });
+        // Only redirect if we're on the root path to avoid redirect loops
+        const currentPath = window.location.pathname;
+        
+        if (currentPath === '/' || currentPath === '/login') {
+          hasRedirected.current = true;
+          
+          if (role === 'maintenance') {
+            console.log("🔀 Redirecting maintenance user to dashboard");
+            navigate('/dashboard', { replace: true });
+          } else if (role === 'store') {
+            console.log("🔀 Redirecting store user to customer dashboard");
+            navigate('/customer/dashboard', { replace: true });
+          } else if (role === 'admin') {
+            console.log("🔀 Redirecting admin user to admin dashboard");
+            navigate('/admin', { replace: true });
+          }
+        }
+      } catch (err) {
+        console.error("Error checking profile:", err);
+        // Redirect to setup as safeguard
+        if (!hasRedirected.current) {
+          hasRedirected.current = true;
+          navigate('/setup-profile', { replace: true });
         }
       }
-    } catch (err) {
-      console.error("Error checking profile:", err);
-      // Redirect to setup as safeguard
-      if (!hasRedirected.current) {
-        hasRedirected.current = true;
-        navigate('/setup-profile', { replace: true });
-      }
-    }
-  }, [navigate, user, isLoading]);
-  
-  useEffect(() => {
-    // Only check for existing session if not in test mode
-    const testMode = localStorage.getItem("testMode");
-    if (!testMode && user && !hasRedirected.current && !isLoading) {
-      checkExistingSession();
-    }
-  }, [user, isLoading, checkExistingSession]);
+    };
+    
+    checkSession();
+  }, [user?.id, isLoading, navigate]);
 
   // This component doesn't render anything
   return null;
