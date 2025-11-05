@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,6 +29,8 @@ import {
 } from '@/components/ui/select';
 import { useCreateMaintenanceRequest } from '@/hooks/use-maintenance';
 import { Cart } from '@/types/cart';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const maintenanceRequestSchema = z.object({
   cart_id: z.string().min(1, 'Cart is required'),
@@ -57,6 +59,9 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
   carts,
 }) => {
   const createRequest = useCreateMaintenanceRequest();
+  const { toast } = useToast();
+  const [providers, setProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const form = useForm<MaintenanceRequestFormData>({
     resolver: zodResolver(maintenanceRequestSchema),
@@ -69,11 +74,46 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
     },
   });
 
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Get connected maintenance providers
+        const { data: connections } = await supabase
+          .from('store_provider_connections')
+          .select('provider_id, maintenance_providers(id, company_name)')
+          .eq('initiated_by', user.id)
+          .eq('status', 'accepted');
+
+        setProviders(connections || []);
+      } catch (error) {
+        console.error('Error fetching providers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (open) {
+      fetchProviders();
+    }
+  }, [open]);
+
   const onSubmit = async (data: MaintenanceRequestFormData) => {
     try {
+      if (providers.length === 0) {
+        toast({
+          title: "No Providers",
+          description: "Please connect to a maintenance provider first",
+          variant: "destructive"
+        });
+        return;
+      }
+
       await createRequest.mutateAsync({
         cart_id: data.cart_id!,
-        provider_id: 'placeholder-provider-id',
+        provider_id: data.provider_id!,
         store_id: data.store_id!,
         request_type: data.request_type,
         priority: data.priority,
@@ -119,6 +159,37 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
                           {cartOption.qr_code} - {cartOption.store}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="provider_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maintenance Provider *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a provider" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {loading ? (
+                        <SelectItem value="loading" disabled>Loading providers...</SelectItem>
+                      ) : providers.length === 0 ? (
+                        <SelectItem value="none" disabled>No connected providers</SelectItem>
+                      ) : (
+                        providers.map((conn: any) => (
+                          <SelectItem key={conn.provider_id} value={conn.provider_id}>
+                            {conn.maintenance_providers?.company_name || 'Unknown Provider'}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

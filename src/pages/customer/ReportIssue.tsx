@@ -12,6 +12,7 @@ import { ConnectionService } from "@/services/ConnectionService";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { supabase } from "@/integrations/supabase/client";
 
 const ReportIssue = () => {
   const { toast } = useToast();
@@ -51,42 +52,73 @@ const ReportIssue = () => {
     setIsSubmitting(true);
     
     try {
-      // Get current user (store)
-      const userId = profile?.id || '';
-      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       // Get connected maintenance providers
-      const connections = await ConnectionService.getStoreConnections(userId);
-      const activeConnections = connections.filter(conn => conn.status === "active");
-      
-      if (activeConnections.length === 0) {
+      const { data: connections } = await supabase
+        .from('store_provider_connections')
+        .select('provider_id')
+        .eq('store_id', user.id)
+        .eq('status', 'accepted');
+
+      if (!connections || connections.length === 0) {
         toast({
           title: "No Connected Maintenance Providers",
-          description: "You don't have any active maintenance connections. Please connect to a maintenance provider first.",
+          description: "Please connect to a maintenance provider first.",
           variant: "destructive"
         });
         return;
       }
-      
-      // Simulate sending the issue to all connected maintenance providers
-      for (const connection of activeConnections) {
-        console.log(`Sending issue report to maintenance provider ${connection.maintenanceId}`);
-        // In a real app, this would update the database and trigger a notification
+
+      // Find the cart
+      const { data: cart } = await supabase
+        .from('carts')
+        .select('id, store_id, qr_code')
+        .eq('qr_code', cartId)
+        .maybeSingle();
+
+      if (!cart) {
+        toast({
+          title: "Cart Not Found",
+          description: "The cart ID you entered could not be found.",
+          variant: "destructive"
+        });
+        return;
       }
-      
-      // Add to recent activity (this would be stored in a database in a real app)
-      const activity = {
-        id: Math.random().toString(36).substring(7),
-        type: "issue_report",
-        date: new Date().toISOString(),
-        description: `Reported issue with cart ${cartId}`,
-        status: "pending",
-      };
-      
-      console.log("New activity added:", activity);
+
+      // Create maintenance request for the first connected provider
+      const { error: requestError } = await supabase
+        .from('maintenance_requests')
+        .insert({
+          cart_id: cart.id,
+          provider_id: connections[0].provider_id,
+          store_id: cart.store_id,
+          request_type: 'repair',
+          priority: 'high',
+          status: 'pending',
+          description: description
+        });
+
+      if (requestError) throw requestError;
+
+      // Update cart issues
+      const { data: existingCart } = await supabase
+        .from('carts')
+        .select('issues')
+        .eq('id', cart.id)
+        .single();
+
+      const updatedIssues = [...(existingCart?.issues || []), description];
+
+      await supabase
+        .from('carts')
+        .update({ issues: updatedIssues, status: 'maintenance' })
+        .eq('id', cart.id);
       
       toast({
         title: "Issue Reported",
-        description: "Your issue has been successfully reported. We'll look into it.",
+        description: "Maintenance request created successfully.",
       });
       
       setCartId("");
@@ -95,7 +127,7 @@ const ReportIssue = () => {
       console.error("Error reporting issue:", error);
       toast({
         title: "Error",
-        description: "There was an error reporting your issue. Please try again.",
+        description: "Failed to report issue. Please try again.",
         variant: "destructive"
       });
     } finally {

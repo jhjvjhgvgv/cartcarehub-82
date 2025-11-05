@@ -88,19 +88,22 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
   useEffect(() => {
     fetchCarts();
     
-    // Set up real-time updates
-    const interval = setInterval(() => {
-      setCarts(prevCarts => 
-        prevCarts.map(cart => ({
-          ...cart,
-          battery_level: Math.max(0, cart.battery_level! + (Math.random() - 0.5) * 2),
-          is_connected: Math.random() > 0.05,
-          last_seen: cart.is_connected ? new Date().toISOString() : cart.last_seen
-        }))
-      );
-    }, 5000);
+    // Set up Supabase real-time subscription
+    const channel = supabase
+      .channel('cart-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'carts' },
+        (payload) => {
+          console.log('Cart update received:', payload);
+          fetchCarts(); // Refetch when changes occur
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [storeId]);
 
   useEffect(() => {

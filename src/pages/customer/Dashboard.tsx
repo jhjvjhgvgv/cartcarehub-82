@@ -1,13 +1,89 @@
 
+import { useState, useEffect } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
 import { CartStatsCards } from "@/components/customer/dashboard/CartStatsCards";
 import { QuickActions } from "@/components/customer/dashboard/QuickActions";
 import { RecentActivity } from "@/components/customer/dashboard/RecentActivity";
 import { UserWelcome } from "@/components/dashboard/UserWelcome";
 import { ErrorBoundary } from "@/components/auth/ErrorBoundary";
+import { RealTimeCartStatus } from "@/components/store/dashboard/RealTimeCartStatus";
+import { MaintenanceAlerts } from "@/components/store/dashboard/MaintenanceAlerts";
+import { ReportingCenter } from "@/components/store/dashboard/ReportingCenter";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export default function CustomerDashboard() {
-  console.log("📊 Customer dashboard rendering");
+  const { profile } = useUserProfile();
+  const [cartStats, setCartStats] = useState({
+    activeCarts: 0,
+    inactiveCarts: 0,
+    totalCarts: 0,
+    recentIssues: 0
+  });
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const { data: carts, error } = await supabase
+          .from('carts')
+          .select('*');
+
+        if (error) throw error;
+
+        const activeCarts = carts?.filter(c => c.status === 'active').length || 0;
+        const maintenanceCarts = carts?.filter(c => c.status === 'maintenance').length || 0;
+        const totalCarts = carts?.length || 0;
+        const recentIssues = carts?.reduce((sum, cart) => sum + (cart.issues?.length || 0), 0) || 0;
+
+        setCartStats({
+          activeCarts,
+          inactiveCarts: maintenanceCarts,
+          totalCarts,
+          recentIssues
+        });
+
+        // Fetch recent maintenance requests
+        const { data: requests } = await supabase
+          .from('maintenance_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const formattedActivities = requests?.map(req => ({
+          id: req.id,
+          type: 'maintenance_request',
+          date: req.created_at,
+          description: `${req.request_type} request - ${req.status}`,
+          status: req.status
+        })) || [];
+
+        setActivities(formattedActivities);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'carts' }, () => {
+        fetchDashboardData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'maintenance_requests' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   
   return (
     <ErrorBoundary>
@@ -21,9 +97,12 @@ export default function CustomerDashboard() {
           </div>
           
           <UserWelcome />
-          <CartStatsCards cartStats={{ activeCarts: 0, inactiveCarts: 0, totalCarts: 0, recentIssues: 0 }} />
+          <CartStatsCards cartStats={cartStats} />
+          <MaintenanceAlerts />
+          <RealTimeCartStatus />
+          <ReportingCenter />
           <QuickActions />
-          <RecentActivity recentActivities={[]} />
+          <RecentActivity recentActivities={activities} />
         </div>
       </CustomerLayout>
     </ErrorBoundary>

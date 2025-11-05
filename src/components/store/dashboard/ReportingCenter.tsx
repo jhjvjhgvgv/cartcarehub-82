@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -22,305 +19,266 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { 
-  FileText, 
-  Download, 
-  CalendarIcon, 
-  DollarSign, 
+  FileDown, 
+  Calendar, 
   TrendingUp, 
-  TrendingDown,
+  DollarSign,
   Clock,
-  Wrench,
-  AlertTriangle,
-  CheckCircle
+  AlertTriangle
 } from "lucide-react";
-
-import { DateRange } from "react-day-picker";
-import { addDays, format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format, subDays } from "date-fns";
 
-interface ReportData {
-  period: string;
-  total_carts: number;
-  active_carts: number;
-  maintenance_requests: number;
-  completed_maintenance: number;
-  total_cost: number;
-  downtime_hours: number;
-  satisfaction_score: number;
-}
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
-interface CostBreakdown {
-  category: string;
-  amount: number;
-  percentage: number;
-}
-
-interface PerformanceMetrics {
-  metric: string;
-  current: number;
-  previous: number;
-  change: number;
-  trend: 'up' | 'down' | 'stable';
-}
-
-interface ReportingCenterProps {
-  storeId?: string;
-}
-
-export function ReportingCenter({ storeId }: ReportingCenterProps) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
-  const [reportType, setReportType] = useState('overview');
-  const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState<ReportData[]>([]);
-  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown[]>([]);
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics[]>([]);
+export function ReportingCenter() {
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('30');
+  const [analytics, setAnalytics] = useState<{
+    summary: any;
+    statusBreakdown: Array<{ name: string; value: number }>;
+    timeSeriesData: Array<any>;
+  } | null>(null);
   const { toast } = useToast();
 
-  // Generate sample data
-  const generateReportData = () => {
-    const data: ReportData[] = [];
-    const days = 30;
-    
-    for (let i = days; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      data.push({
-        period: format(date, 'MMM dd'),
-        total_carts: 50 + Math.floor(Math.random() * 10),
-        active_carts: 40 + Math.floor(Math.random() * 8),
-        maintenance_requests: Math.floor(Math.random() * 5),
-        completed_maintenance: Math.floor(Math.random() * 4),
-        total_cost: Math.floor(Math.random() * 1000) + 500,
-        downtime_hours: Math.floor(Math.random() * 8),
-        satisfaction_score: 8.5 + Math.random() * 1.5
-      });
-    }
-    
-    return data;
-  };
-
-  const generateCostBreakdown = (): CostBreakdown[] => {
-    const total = 15000;
-    return [
-      { category: 'Routine Maintenance', amount: 6000, percentage: 40 },
-      { category: 'Repairs', amount: 4500, percentage: 30 },
-      { category: 'Parts Replacement', amount: 3000, percentage: 20 },
-      { category: 'Emergency Service', amount: 1500, percentage: 10 },
-    ];
-  };
-
-  const generatePerformanceMetrics = (): PerformanceMetrics[] => {
-    return [
-      {
-        metric: 'Cart Availability',
-        current: 94.5,
-        previous: 92.1,
-        change: 2.4,
-        trend: 'up'
-      },
-      {
-        metric: 'Maintenance Efficiency',
-        current: 87.3,
-        previous: 85.8,
-        change: 1.5,
-        trend: 'up'
-      },
-      {
-        metric: 'Average Repair Time',
-        current: 2.3,
-        previous: 2.8,
-        change: -0.5,
-        trend: 'up'
-      },
-      {
-        metric: 'Customer Satisfaction',
-        current: 4.7,
-        previous: 4.5,
-        change: 0.2,
-        trend: 'up'
-      },
-      {
-        metric: 'Cost Per Cart',
-        current: 245,
-        previous: 267,
-        change: -22,
-        trend: 'up'
-      },
-      {
-        metric: 'Preventive vs Reactive',
-        current: 75,
-        previous: 68,
-        change: 7,
-        trend: 'up'
-      }
-    ];
-  };
-
   useEffect(() => {
-    setReportData(generateReportData());
-    setCostBreakdown(generateCostBreakdown());
-    setPerformanceMetrics(generatePerformanceMetrics());
-  }, [dateRange, reportType]);
+    fetchAnalytics();
+  }, [timeRange]);
 
-  const exportReport = (format: 'csv' | 'pdf') => {
-    setLoading(true);
-    
-    // Simulate export process
-    setTimeout(() => {
-      setLoading(false);
-      toast({
-        title: "Export Successful",
-        description: `Report exported as ${format.toUpperCase()} format`,
+  const fetchAnalytics = async () => {
+    try {
+      const daysAgo = parseInt(timeRange);
+      const startDate = format(subDays(new Date(), daysAgo), 'yyyy-MM-dd');
+      const endDate = format(new Date(), 'yyyy-MM-dd');
+
+      const { data: summary, error: summaryError } = await supabase
+        .rpc('get_cart_analytics_summary', {
+          store_id_param: null,
+          date_from: startDate,
+          date_to: endDate
+        });
+
+      if (summaryError) throw summaryError;
+
+      const summaryData = summary as any;
+
+      // Fetch maintenance requests for time series
+      const { data: requests, error: requestsError } = await supabase
+        .from('maintenance_requests')
+        .select('created_at, status, cost, actual_duration')
+        .gte('created_at', new Date(startDate).toISOString())
+        .order('created_at', { ascending: true });
+
+      if (requestsError) throw requestsError;
+
+      // Process data for charts
+      const statusBreakdown = [
+        { name: 'Active', value: summaryData?.summary?.active_carts || 0 },
+        { name: 'Maintenance', value: summaryData?.summary?.maintenance_carts || 0 },
+        { name: 'Other', value: (summaryData?.summary?.total_carts || 0) - (summaryData?.summary?.active_carts || 0) - (summaryData?.summary?.maintenance_carts || 0) }
+      ];
+
+      // Group requests by date
+      const requestsByDate = requests?.reduce((acc: any, req: any) => {
+        const date = format(new Date(req.created_at), 'MM/dd');
+        if (!acc[date]) {
+          acc[date] = { date, requests: 0, cost: 0, duration: 0 };
+        }
+        acc[date].requests += 1;
+        acc[date].cost += req.cost || 0;
+        acc[date].duration += req.actual_duration || 0;
+        return acc;
+      }, {});
+
+      const timeSeriesData = Object.values(requestsByDate || {});
+
+      setAnalytics({
+        summary: summaryData,
+        statusBreakdown,
+        timeSeriesData
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch analytics data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getTrendIcon = (trend: string, change: number) => {
-    if (trend === 'up' && change > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (trend === 'up' && change < 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (change < 0) return <TrendingDown className="h-4 w-4 text-red-600" />;
-    return <TrendingUp className="h-4 w-4 text-green-600" />;
+  const exportReport = () => {
+    toast({
+      title: "Export Started",
+      description: "Your report is being prepared for download...",
+    });
+    
+    // Create CSV data
+    const csvData = [
+      ['Cart Analytics Report', ''],
+      ['Generated', new Date().toLocaleString()],
+      ['Time Range', `Last ${timeRange} days`],
+      [''],
+      ['Summary Metrics', ''],
+      ['Total Carts', analytics?.summary?.summary?.total_carts || 0],
+      ['Active Carts', analytics?.summary?.summary?.active_carts || 0],
+      ['Maintenance Carts', analytics?.summary?.summary?.maintenance_carts || 0],
+      ['Cart Utilization', `${analytics?.summary?.summary?.cart_utilization_rate || 0}%`],
+      [''],
+      ['Financial Metrics', ''],
+      ['Total Maintenance Cost', `$${analytics?.summary?.metrics?.total_maintenance_cost || 0}`],
+      ['Average Cost Per Cart', `$${analytics?.summary?.metrics?.avg_cost_per_cart || 0}`],
+      [''],
+      ['Operational Metrics', ''],
+      ['Total Issues', analytics?.summary?.metrics?.total_issues_reported || 0],
+      ['Avg Downtime (minutes)', analytics?.summary?.metrics?.avg_downtime_minutes || 0]
+    ];
+
+    const csv = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cart-analytics-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
   };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Analytics & Reporting</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Reporting Center
-        </CardTitle>
-        <CardDescription>
-          Comprehensive analytics and reports for cart maintenance operations
-        </CardDescription>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>Date Range</Label>
-            <Input
-              type="date"
-              value={dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : ''}
-              onChange={(e) => setDateRange({ from: new Date(e.target.value), to: dateRange?.to || new Date() })}
-            />
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Analytics & Reporting
+            </CardTitle>
+            <CardDescription>
+              Comprehensive insights into cart performance and maintenance
+            </CardDescription>
           </div>
-          
-          <div className="space-y-2">
-            <Label>Report Type</Label>
-            <Select value={reportType} onValueChange={setReportType}>
-              <SelectTrigger>
+          <div className="flex items-center gap-2">
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[180px]">
+                <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="overview">Overview</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-                <SelectItem value="financial">Financial</SelectItem>
-                <SelectItem value="performance">Performance</SelectItem>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="365">Last year</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Export</Label>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => exportReport('csv')}
-                disabled={loading}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                CSV
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => exportReport('pdf')}
-                disabled={loading}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                PDF
-              </Button>
-            </div>
+            <Button onClick={exportReport} variant="outline">
+              <FileDown className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
           </div>
         </div>
       </CardHeader>
-      
-      <CardContent>
-        <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
+      <CardContent className="space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Carts</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.summary?.total_carts || 0}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Utilization Rate</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.summary?.cart_utilization_rate || 0}%</p>
+                </div>
+                <Clock className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Cost</p>
+                  <p className="text-2xl font-bold">${analytics?.summary?.metrics?.total_maintenance_cost || 0}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Issues Reported</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.metrics?.total_issues_reported || 0}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <Tabs defaultValue="status" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="status">Cart Status</TabsTrigger>
+            <TabsTrigger value="trends">Maintenance Trends</TabsTrigger>
             <TabsTrigger value="costs">Cost Analysis</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard" className="space-y-4">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium">Active Carts</span>
-                  </div>
-                  <div className="text-2xl font-bold">47</div>
-                  <div className="text-xs text-muted-foreground">94% uptime</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Wrench className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium">Maintenance</span>
-                  </div>
-                  <div className="text-2xl font-bold">8</div>
-                  <div className="text-xs text-muted-foreground">This month</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium">Total Cost</span>
-                  </div>
-                  <div className="text-2xl font-bold">$12.5K</div>
-                  <div className="text-xs text-muted-foreground">This month</div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-medium">Avg. Downtime</span>
-                  </div>
-                  <div className="text-2xl font-bold">2.3h</div>
-                  <div className="text-xs text-muted-foreground">Per incident</div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Chart */}
+          <TabsContent value="status" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Cart Status Overview</CardTitle>
+                <CardTitle>Cart Status Distribution</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={reportData.slice(-7)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis />
+                  <PieChart>
+                    <Pie
+                      data={analytics?.statusBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={100}
+                      fill="hsl(var(--primary))"
+                      dataKey="value"
+                    >
+                      {analytics?.statusBreakdown?.map((_: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="active_carts" fill="#10b981" name="Active Carts" />
-                    <Bar dataKey="maintenance_requests" fill="#f59e0b" name="Maintenance" />
-                  </BarChart>
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -329,27 +287,22 @@ export function ReportingCenter({ storeId }: ReportingCenterProps) {
           <TabsContent value="trends" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Maintenance Trends</CardTitle>
+                <CardTitle>Maintenance Request Trends</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={reportData}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={analytics?.timeSeriesData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
                     <Line 
                       type="monotone" 
-                      dataKey="maintenance_requests" 
-                      stroke="#f59e0b" 
-                      name="Maintenance Requests"
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="completed_maintenance" 
-                      stroke="#10b981" 
-                      name="Completed"
+                      dataKey="requests" 
+                      stroke="hsl(var(--primary))" 
+                      name="Requests"
+                      strokeWidth={2}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -358,82 +311,23 @@ export function ReportingCenter({ storeId }: ReportingCenterProps) {
           </TabsContent>
           
           <TabsContent value="costs" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Cost Breakdown</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={costBreakdown}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="amount"
-                        label={({ category, percentage }) => `${category}: ${percentage}%`}
-                      >
-                        {costBreakdown.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => `$${value}`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Monthly Costs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={reportData.slice(-6)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="period" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `$${value}`} />
-                      <Bar dataKey="total_cost" fill="#3b82f6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="performance" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {performanceMetrics.map((metric) => (
-                <Card key={metric.metric}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{metric.metric}</div>
-                        <div className="text-2xl font-bold">
-                          {metric.current}
-                          {metric.metric.includes('Time') ? 'h' : 
-                           metric.metric.includes('Cost') ? '' : 
-                           metric.metric.includes('Satisfaction') ? '/5' : '%'}
-                        </div>
-                      </div>
-                      {getTrendIcon(metric.trend, metric.change)}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className={metric.change > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {metric.change > 0 ? '+' : ''}{metric.change}
-                        {metric.metric.includes('Time') ? 'h' : 
-                         metric.metric.includes('Cost') ? '' : 
-                         metric.metric.includes('Satisfaction') ? '' : '%'}
-                      </span>
-                      <span className="text-muted-foreground">vs last period</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Maintenance Costs Over Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics?.timeSeriesData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="cost" fill="hsl(var(--primary))" name="Cost ($)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </CardContent>
