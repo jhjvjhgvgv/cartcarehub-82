@@ -64,47 +64,67 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const [activeTab, setActiveTab] = useState('pending');
   const { toast } = useToast();
 
-  const generateSampleWorkOrders = (): WorkOrder[] => {
-    const statuses: WorkOrder['status'][] = ['pending', 'scheduled', 'in_progress', 'completed'];
-    const priorities: WorkOrder['priority'][] = ['low', 'medium', 'high', 'critical'];
-    const requestTypes = ['Routine Maintenance', 'Repair', 'Inspection', 'Battery Replacement', 'Wheel Alignment'];
-    const stores = ['Downtown Store', 'Mall Location', 'Suburb Branch', 'Airport Store'];
-    
-    return Array.from({ length: 20 }, (_, i) => {
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const priority = priorities[Math.floor(Math.random() * priorities.length)];
-      const scheduledDate = addDays(new Date(), Math.floor(Math.random() * 14) - 7);
-      
-      return {
-        id: `wo-${i + 1}`,
-        cart_id: `cart-${i + 1}`,
-        cart_qr_code: `CART-${String(i + 1).padStart(3, '0')}`,
-        store_id: `store-${Math.floor(i / 5) + 1}`,
-        store_name: stores[Math.floor(i / 5) % stores.length],
-        request_type: requestTypes[Math.floor(Math.random() * requestTypes.length)],
-        priority,
-        status,
-        description: `${requestTypes[Math.floor(Math.random() * requestTypes.length)]} required for cart ${i + 1}`,
-        assigned_technician: status !== 'pending' ? `Tech ${Math.floor(Math.random() * 5) + 1}` : undefined,
-        scheduled_date: status !== 'pending' ? scheduledDate.toISOString() : undefined,
-        estimated_duration: Math.floor(Math.random() * 4) + 1,
-        actual_duration: status === 'completed' ? Math.floor(Math.random() * 4) + 1 : undefined,
-        completion_notes: status === 'completed' ? 'Work completed successfully' : undefined,
-        parts_used: status === 'completed' ? ['Brake pads', 'Oil filter'] : undefined,
-        cost: status === 'completed' ? Math.floor(Math.random() * 500) + 100 : undefined,
-        created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-        location: `Aisle ${Math.floor(Math.random() * 20) + 1}`,
-      };
-    });
-  };
-
   useEffect(() => {
-    const orders = generateSampleWorkOrders();
-    setWorkOrders(orders);
-    setFilteredOrders(orders);
-    setLoading(false);
-  }, [providerId]);
+    const fetchWorkOrders = async () => {
+      try {
+        setLoading(true);
+        const { data: maintenanceProvider } = await supabase
+          .from('maintenance_providers')
+          .select('id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .single();
+
+        if (!maintenanceProvider) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: requests, error } = await supabase
+          .from('maintenance_requests')
+          .select(`
+            *,
+            carts!inner(qr_code, store_id, store)
+          `)
+          .eq('provider_id', maintenanceProvider.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mappedOrders: WorkOrder[] = (requests || []).map(req => ({
+          id: req.id,
+          cart_id: req.cart_id,
+          cart_qr_code: (req.carts as any)?.qr_code || 'N/A',
+          store_id: req.store_id,
+          store_name: (req.carts as any)?.store || req.store_id,
+          request_type: req.request_type,
+          priority: req.priority as WorkOrder['priority'],
+          status: req.status as WorkOrder['status'],
+          description: req.description || '',
+          scheduled_date: req.scheduled_date || undefined,
+          estimated_duration: req.estimated_duration || 1,
+          actual_duration: req.actual_duration || undefined,
+          completion_notes: (req.notes as any)?.[0]?.text || undefined,
+          cost: req.cost || undefined,
+          created_at: req.created_at,
+          updated_at: req.updated_at,
+        }));
+
+        setWorkOrders(mappedOrders);
+        setFilteredOrders(mappedOrders);
+      } catch (error) {
+        console.error('Error fetching work orders:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load work orders",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkOrders();
+  }, [providerId, toast]);
 
   useEffect(() => {
     let filtered = workOrders;
@@ -131,24 +151,41 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
     setFilteredOrders(filtered);
   }, [workOrders, searchTerm, statusFilter, priorityFilter]);
 
-  const updateWorkOrderStatus = (orderId: string, newStatus: WorkOrder['status']) => {
-    setWorkOrders(prev => 
-      prev.map(order => 
-        order.id === orderId 
-          ? { 
-              ...order, 
-              status: newStatus,
-              updated_at: new Date().toISOString(),
-              assigned_technician: newStatus !== 'pending' ? (order.assigned_technician || 'Current User') : order.assigned_technician
-            }
-          : order
-      )
-    );
-    
-    toast({
-      title: "Work Order Updated",
-      description: `Status changed to ${newStatus}`,
-    });
+  const updateWorkOrderStatus = async (orderId: string, newStatus: WorkOrder['status']) => {
+    try {
+      const updates: any = { status: newStatus };
+      
+      if (newStatus === 'completed') {
+        updates.completed_date = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('maintenance_requests')
+        .update(updates)
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setWorkOrders(prev => 
+        prev.map(order => 
+          order.id === orderId 
+            ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
+            : order
+        )
+      );
+      
+      toast({
+        title: "Work Order Updated",
+        description: `Status changed to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating work order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update work order",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {

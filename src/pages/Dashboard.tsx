@@ -1,48 +1,53 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
-import { AnalyticsChart } from "@/components/dashboard/AnalyticsChart";
 import { UserWelcome } from "@/components/dashboard/UserWelcome";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCarts } from "@/hooks/use-carts";
-import { ShoppingCart, Wrench, AlertTriangle, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WorkOrderManager } from "@/components/maintenance/dashboard/WorkOrderManager";
+import { MaintenanceCalendar } from "@/components/maintenance/MaintenanceCalendar";
+import { RouteOptimizer } from "@/components/maintenance/RouteOptimizer";
+import { useMaintenanceRequests } from "@/hooks/use-maintenance";
+import { ShoppingCart, Wrench, AlertTriangle, Clock } from "lucide-react";
 
 export default function Dashboard() {
-  const { carts, isLoading } = useCarts();
+  const { data: requests = [], isLoading } = useMaintenanceRequests();
 
-  const totalCarts = carts?.length || 0;
-  const activeCarts = carts?.filter(cart => cart.status === "active").length || 0;
-  const maintenanceCarts = carts?.filter(cart => cart.status === "maintenance").length || 0;
-  const retiredCarts = carts?.filter(cart => cart.status === "retired").length || 0;
+  const pendingRequests = requests.filter(r => r.status === 'pending').length;
+  const inProgressRequests = requests.filter(r => r.status === 'in_progress').length;
+  const scheduledRequests = requests.filter(r => r.status === 'scheduled').length;
+  const completedToday = requests.filter(r => 
+    r.status === 'completed' && 
+    new Date(r.completed_date || '').toDateString() === new Date().toDateString()
+  ).length;
 
   const stats = [
     {
-      title: "Total Carts",
-      value: totalCarts,
-      description: "All carts in system",
-      icon: ShoppingCart,
+      title: "Pending Requests",
+      value: pendingRequests,
+      description: "Awaiting assignment",
+      icon: AlertTriangle,
+      color: "text-amber-600",
+    },
+    {
+      title: "In Progress",
+      value: inProgressRequests,
+      description: "Active work orders",
+      icon: Wrench,
       color: "text-blue-600",
     },
     {
-      title: "Active Carts",
-      value: activeCarts,
-      description: "Currently in use",
-      icon: TrendingUp,
+      title: "Scheduled",
+      value: scheduledRequests,
+      description: "Upcoming work",
+      icon: Clock,
+      color: "text-purple-600",
+    },
+    {
+      title: "Completed Today",
+      value: completedToday,
+      description: "Work done today",
+      icon: ShoppingCart,
       color: "text-green-600",
-    },
-    {
-      title: "Maintenance",
-      value: maintenanceCarts,
-      description: "Needs attention",
-      icon: Wrench,
-      color: "text-yellow-600",
-    },
-    {
-      title: "Retired",
-      value: retiredCarts,
-      description: "Out of service",
-      icon: AlertTriangle,
-      color: "text-red-600",
     },
   ];
 
@@ -85,18 +90,14 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Analytics Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Cart Status Analytics</CardTitle>
-            <CardDescription>
-              Monthly trends for cart maintenance and status changes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AnalyticsChart />
-          </CardContent>
-          </Card>
+        {/* Work Order Manager */}
+        <WorkOrderManager />
+
+        {/* Maintenance Calendar */}
+        <MaintenanceCalendar />
+
+        {/* Route Optimizer */}
+        <RouteOptimizer />
         </div>
       </ConnectionStatusHandler>
     </DashboardLayout>
