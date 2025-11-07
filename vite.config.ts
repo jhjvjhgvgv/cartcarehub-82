@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 3000000, // 3MB limit to handle large bundles
+        maximumFileSizeToCacheInBytes: 5000000, // 5MB limit to handle large bundles
         clientsClaim: true,
         skipWaiting: false, // Don't force skip waiting to prevent refresh loops
         cleanupOutdatedCaches: true,
