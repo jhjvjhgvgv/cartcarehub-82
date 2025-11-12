@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkOrderManager } from "@/components/maintenance/dashboard/WorkOrderManager";
 import { MaintenanceCalendar } from "@/components/maintenance/MaintenanceCalendar";
 import { RouteOptimizer } from "@/components/maintenance/RouteOptimizer";
+import { PredictiveMaintenanceAlerts } from "@/components/analytics/PredictiveMaintenanceAlerts";
 import { useMaintenanceRequests } from "@/hooks/use-maintenance";
 import { ShoppingCart, Wrench, AlertTriangle, Clock } from "lucide-react";
 
@@ -58,7 +59,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold">Maintenance Dashboard</h1>
             <p className="text-muted-foreground mt-2">
-              Overview of all cart maintenance operations
+              AI-powered maintenance management and predictive analytics
             </p>
           </div>
 
@@ -90,14 +91,17 @@ export default function Dashboard() {
           })}
         </div>
 
+        {/* Predictive Maintenance Alerts */}
+        <PredictiveMaintenanceAlerts />
+
+        {/* Route Optimizer */}
+        <RouteOptimizer />
+
         {/* Work Order Manager */}
         <WorkOrderManager />
 
         {/* Maintenance Calendar */}
         <MaintenanceCalendar />
-
-        {/* Route Optimizer */}
-        <RouteOptimizer />
         </div>
       </ConnectionStatusHandler>
     </DashboardLayout>

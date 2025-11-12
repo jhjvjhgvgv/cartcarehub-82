@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,8 @@ import {
   Clock, 
   TrendingUp,
   Route as RouteIcon,
-  Calendar
+  AlertCircle
 } from "lucide-react";
-import { format } from "date-fns";
 
 interface RouteStop {
   id: string;
@@ -27,8 +26,17 @@ interface RouteStop {
   order: number;
 }
 
+interface StoreCluster {
+  store_id: string;
+  store_name: string;
+  stops: RouteStop[];
+  total_duration: number;
+  priority_score: number;
+}
+
 export function RouteOptimizer() {
   const [optimizedRoute, setOptimizedRoute] = useState<RouteStop[]>([]);
+  const [clusters, setClusters] = useState<StoreCluster[]>([]);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const { data: requests = [] } = useMaintenanceRequests();
@@ -62,34 +70,58 @@ export function RouteOptimizer() {
             priority: req.priority,
             estimated_duration: req.estimated_duration || 30,
             scheduled_date: req.scheduled_date,
+            order: 0 // Will be assigned during optimization
           };
         })
       );
 
-      // Simple optimization: group by store, then prioritize by priority
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      
-      const optimized = requestsWithDetails
-        .sort((a, b) => {
-          // First by store to minimize travel
-          if (a.store_id !== b.store_id) {
-            return a.store_id.localeCompare(b.store_id);
-          }
-          // Then by priority
-          return (priorityOrder[a.priority as keyof typeof priorityOrder] || 3) - 
-                 (priorityOrder[b.priority as keyof typeof priorityOrder] || 3);
-        })
-        .map((stop, index) => ({
+      // Advanced optimization: cluster by store, then prioritize
+      const storeGroups = requestsWithDetails.reduce((acc, stop) => {
+        if (!acc[stop.store_id]) {
+          acc[stop.store_id] = {
+            store_id: stop.store_id,
+            store_name: stop.store_name,
+            stops: [],
+            total_duration: 0,
+            priority_score: 0
+          };
+        }
+        acc[stop.store_id].stops.push(stop);
+        acc[stop.store_id].total_duration += stop.estimated_duration;
+        
+        // Priority scoring
+        const priorityValue = stop.priority === 'high' ? 3 : stop.priority === 'medium' ? 2 : 1;
+        acc[stop.store_id].priority_score += priorityValue;
+        
+        return acc;
+      }, {} as Record<string, StoreCluster>);
+
+      const clustersArray = Object.values(storeGroups);
+      clustersArray.sort((a, b) => b.priority_score - a.priority_score);
+
+      const priorityOrder = { high: 1, medium: 2, low: 3 };
+      clustersArray.forEach(cluster => {
+        cluster.stops.sort((a, b) => 
+          (priorityOrder[a.priority as keyof typeof priorityOrder] || 3) - 
+          (priorityOrder[b.priority as keyof typeof priorityOrder] || 3)
+        );
+      });
+
+      setClusters(clustersArray);
+
+      const optimized = clustersArray.flatMap((cluster, clusterIdx) => 
+        cluster.stops.map((stop, stopIdx) => ({
           ...stop,
-          order: index + 1,
-        }));
+          order: clusterIdx * 100 + stopIdx + 1
+        }))
+      );
 
       setOptimizedRoute(optimized);
       setTotalDuration(optimized.reduce((sum, stop) => sum + stop.estimated_duration, 0));
 
       toast({
         title: "Route Optimized",
-        description: `Optimized ${optimized.length} stops for minimal travel time`,
+        description: `Optimized ${optimized.length} stops across ${clustersArray.length} locations`,
       });
     } catch (error) {
       console.error('Error optimizing route:', error);
@@ -120,10 +152,10 @@ export function RouteOptimizer() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <RouteIcon className="h-5 w-5" />
-              Route Optimizer
+              Intelligent Route Optimizer
             </CardTitle>
             <CardDescription>
-              Optimize your daily route for maximum efficiency
+              AI-optimized route by priority & location clustering
             </CardDescription>
           </div>
           <Button 
@@ -166,10 +198,8 @@ export function RouteOptimizer() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Efficiency</p>
-                  <p className="text-2xl font-bold">
-                    {optimizedRoute.length > 0 ? '95%' : '--'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">Locations</p>
+                  <p className="text-2xl font-bold">{clusters.length}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
@@ -180,50 +210,53 @@ export function RouteOptimizer() {
         {/* Optimized Route */}
         {optimizedRoute.length > 0 ? (
           <div className="space-y-4">
-            <h3 className="font-semibold">Optimized Route</h3>
-            <div className="space-y-3">
-              {optimizedRoute.map((stop) => (
-                <div 
-                  key={stop.id}
-                  className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                    {stop.order}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{stop.cart_qr_code}</h4>
-                      <Badge className={getPriorityColor(stop.priority)}>
-                        {stop.priority}
-                      </Badge>
+            {clusters.map((cluster, clusterIndex) => (
+              <div key={cluster.store_id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                      {clusterIndex + 1}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {stop.store_name}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {stop.estimated_duration}m
-                      </span>
-                      <span>{stop.request_type}</span>
+                    <div>
+                      <div className="font-semibold">{cluster.store_name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {cluster.stops.length} stop{cluster.stops.length !== 1 ? 's' : ''} • {cluster.total_duration} min
+                      </div>
                     </div>
                   </div>
-
-                  {stop.scheduled_date && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {format(new Date(stop.scheduled_date), 'HH:mm')}
-                    </div>
-                  )}
+                  <Badge variant="outline">Cluster</Badge>
                 </div>
-              ))}
-            </div>
+
+                <div className="space-y-2 ml-10">
+                  {cluster.stops.map((stop, stopIndex) => (
+                    <div
+                      key={stop.id}
+                      className="flex items-center gap-3 p-2 rounded-md hover:bg-accent transition-colors"
+                    >
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
+                        {String.fromCharCode(65 + stopIndex)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{stop.cart_qr_code}</span>
+                          <Badge className={getPriorityColor(stop.priority)}>
+                            {stop.priority}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{stop.estimated_duration} min</span>
+                          <span className="capitalize">{stop.request_type}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
               {todaysRequests.length === 0 
                 ? "No scheduled requests for today"
