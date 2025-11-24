@@ -348,6 +348,274 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          customer_address: string | null
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          provider_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          provider_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          customer_address?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          provider_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          item_code: string | null
+          item_name: string
+          provider_id: string
+          quantity_on_hand: number
+          reorder_level: number | null
+          supplier_name: string | null
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_code?: string | null
+          item_name: string
+          provider_id: string
+          quantity_on_hand?: number
+          reorder_level?: number | null
+          supplier_name?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_code?: string | null
+          item_name?: string
+          provider_id?: string
+          quantity_on_hand?: number
+          reorder_level?: number | null
+          supplier_name?: string | null
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          provider_id: string
+          quantity: number
+          reference_id: string | null
+          reference_type: string | null
+          transaction_type: string
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          provider_id: string
+          quantity: number
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type: string
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          provider_id?: string
+          quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type?: string
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transactions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          maintenance_request_id: string | null
+          notes: string | null
+          provider_id: string
+          status: string
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          maintenance_request_id?: string | null
+          notes?: string | null
+          provider_id: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          maintenance_request_id?: string | null
+          notes?: string | null
+          provider_id?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_providers: {
         Row: {
           company_name: string
@@ -625,6 +893,124 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_analytics: {
+        Row: {
+          completed_work_orders: number | null
+          created_at: string
+          id: string
+          labor_hours: number | null
+          metrics: Json | null
+          outstanding_invoices: number | null
+          parts_used_count: number | null
+          parts_used_value: number | null
+          period_end: string
+          period_start: string
+          provider_id: string
+          total_revenue: number | null
+          total_work_orders: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_work_orders?: number | null
+          created_at?: string
+          id?: string
+          labor_hours?: number | null
+          metrics?: Json | null
+          outstanding_invoices?: number | null
+          parts_used_count?: number | null
+          parts_used_value?: number | null
+          period_end: string
+          period_start: string
+          provider_id: string
+          total_revenue?: number | null
+          total_work_orders?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_work_orders?: number | null
+          created_at?: string
+          id?: string
+          labor_hours?: number | null
+          metrics?: Json | null
+          outstanding_invoices?: number | null
+          parts_used_count?: number | null
+          parts_used_value?: number | null
+          period_end?: string
+          period_start?: string
+          provider_id?: string
+          total_revenue?: number | null
+          total_work_orders?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_analytics_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string | null
+          notification_type: string
+          provider_id: string
+          recipient_email: string | null
+          recipient_phone: string | null
+          reference_id: string | null
+          reference_type: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string | null
+          notification_type: string
+          provider_id: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string | null
+          notification_type?: string
+          provider_id?: string
+          recipient_email?: string | null
+          recipient_phone?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_notifications_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_provider_connections: {
         Row: {
           created_at: string
@@ -797,6 +1183,60 @@ export type Database = {
           },
         ]
       }
+      work_order_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          inventory_item_id: string | null
+          line_type: string
+          maintenance_request_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          inventory_item_id?: string | null
+          line_type: string
+          maintenance_request_id: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          inventory_item_id?: string | null
+          line_type?: string
+          maintenance_request_id?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_line_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_line_items_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -824,12 +1264,29 @@ export type Database = {
         Args: { cart_ids: string[]; new_status: string; updated_by?: string }
         Returns: Json
       }
+      calculate_provider_revenue: {
+        Args: {
+          p_end_date: string
+          p_provider_id: string
+          p_start_date: string
+        }
+        Returns: number
+      }
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_cart_analytics_summary: {
         Args: { date_from?: string; date_to?: string; store_id_param?: string }
         Returns: Json
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_low_inventory_items: {
+        Args: { p_provider_id: string }
+        Returns: {
+          id: string
+          item_name: string
+          quantity_on_hand: number
+          reorder_level: number
+        }[]
+      }
       get_user_primary_role: { Args: { _user_id: string }; Returns: string }
       get_user_role: { Args: { user_id: string }; Returns: string }
       has_admin_permission: {
