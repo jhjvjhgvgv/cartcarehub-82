@@ -2,7 +2,7 @@
 import { Cart } from "@/types/cart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Battery, MapPin, AlertTriangle, History, RotateCw } from "lucide-react";
+import { ShoppingCart, Calendar, MapPin, AlertTriangle, History, RotateCw } from "lucide-react";
 import { MaintenanceAction } from "@/components/carts/MaintenanceAction";
 import { ActivateAction } from "@/components/carts/ActivateAction";
 import { CartStatusBadge } from "@/components/carts/CartStatusBadge";
@@ -64,7 +64,7 @@ export function CartCard({ cart, onStatusChange }: CartCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-primary-50 rounded-full">
-              <Battery className="h-4 w-4 text-primary-700" />
+              <Calendar className="h-4 w-4 text-primary-700" />
             </div>
             <div>
               <p className="text-sm font-medium">Last Maintenance</p>

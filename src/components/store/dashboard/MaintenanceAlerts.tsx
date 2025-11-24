@@ -22,7 +22,7 @@ interface MaintenanceAlert {
   id: string;
   cart_id: string;
   cart_qr_code: string;
-  alert_type: 'overdue' | 'due_soon' | 'predictive' | 'battery_low' | 'usage_high';
+  alert_type: 'overdue' | 'due_soon' | 'predictive' | 'damage_reported' | 'usage_high';
   priority: 'low' | 'medium' | 'high' | 'critical';
   title: string;
   description: string;
@@ -105,18 +105,17 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
         });
       }
       
-      // Battery alerts (simulated)
-      const batteryLevel = Math.floor(Math.random() * 100);
-      if (batteryLevel < 20) {
+      // Damage alerts based on reported issues
+      if (cart.issues && cart.issues.length > 0) {
         alerts.push({
-          id: `battery-${cart.id}`,
+          id: `damage-${cart.id}`,
           cart_id: cart.id,
           cart_qr_code: cart.qr_code,
-          alert_type: 'battery_low',
-          priority: 'medium',
-          title: 'Low Battery Level',
-          description: `Cart battery at ${batteryLevel}% - charging recommended`,
-          recommended_action: 'Charge cart battery or replace if degraded',
+          alert_type: 'damage_reported',
+          priority: 'high',
+          title: 'Damage Reported',
+          description: `Cart has ${cart.issues.length} reported issue(s): ${cart.issues.slice(0, 2).join(', ')}`,
+          recommended_action: 'Inspect cart and schedule repair',
           created_at: new Date().toISOString(),
           is_acknowledged: false
         });
@@ -218,7 +217,7 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
       overdue: <AlertTriangle className="h-4 w-4 text-red-500" />,
       due_soon: <Clock className="h-4 w-4 text-orange-500" />,
       predictive: <TrendingUp className="h-4 w-4 text-purple-500" />,
-      battery_low: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
+      damage_reported: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
       usage_high: <Wrench className="h-4 w-4 text-blue-500" />
     };
     return icons[type as keyof typeof icons] || icons.predictive;

@@ -14,7 +14,7 @@ import {
   CheckCircle, 
   Clock,
   MapPin,
-  Battery,
+  CheckCircle2,
   Search,
   Filter
 } from "lucide-react";
@@ -27,7 +27,7 @@ interface CartStatus {
   status: 'active' | 'maintenance' | 'inactive' | 'retired';
   store_id: string;
   location?: string;
-  battery_level?: number;
+  condition_score?: number;
   last_seen: string;
   issues: string[];
   is_connected: boolean;
@@ -65,7 +65,7 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
         status: cart.status as 'active' | 'maintenance' | 'inactive' | 'retired',
         store_id: cart.store_id,
         location: `Aisle ${Math.floor(Math.random() * 20) + 1}`,
-        battery_level: Math.floor(Math.random() * 100),
+        condition_score: Math.floor(Math.random() * 40) + 60, // 60-100 condition score
         last_seen: new Date(Date.now() - Math.random() * 3600000).toISOString(),
         issues: cart.issues || [],
         is_connected: Math.random() > 0.1 // 90% connected
@@ -147,9 +147,9 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
     );
   };
 
-  const getBatteryColor = (level: number) => {
-    if (level > 50) return 'text-green-600';
-    if (level > 20) return 'text-yellow-600';
+  const getConditionColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
   };
 
@@ -176,7 +176,7 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
           Real-Time Cart Status
         </CardTitle>
         <CardDescription>
-          Live monitoring of cart locations, battery levels, and connection status
+          Live monitoring of cart locations, condition scores, and usage status
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -240,9 +240,9 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <Battery className={`h-3 w-3 ${getBatteryColor(cart.battery_level!)}`} />
-                        <span className={getBatteryColor(cart.battery_level!)}>
-                          {cart.battery_level}%
+                        <CheckCircle2 className={`h-3 w-3 ${getConditionColor(cart.condition_score!)}`} />
+                        <span className={getConditionColor(cart.condition_score!)}>
+                          {cart.condition_score}%
                         </span>
                       </div>
                       
@@ -296,11 +296,11 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
                       </div>
                     </div>
                     <div>
-                      <Label>Battery Level</Label>
+                      <Label>Condition Score</Label>
                       <div className="flex items-center gap-2">
-                        <Battery className={`h-4 w-4 ${getBatteryColor(cart.battery_level!)}`} />
-                        <span className={getBatteryColor(cart.battery_level!)}>
-                          {cart.battery_level}%
+                        <CheckCircle2 className={`h-4 w-4 ${getConditionColor(cart.condition_score!)}`} />
+                        <span className={getConditionColor(cart.condition_score!)}>
+                          {cart.condition_score}%
                         </span>
                       </div>
                     </div>
