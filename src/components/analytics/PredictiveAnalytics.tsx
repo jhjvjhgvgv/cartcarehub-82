@@ -128,7 +128,7 @@ export function PredictiveAnalytics({ storeId }: PredictiveAnalyticsProps) {
       cart_qr_code: `CART-${String(i + 1).padStart(3, '0')}`,
       failure_probability: Math.floor(Math.random() * 40) + 60, // 60-100% for high-risk carts
       predicted_failure_date: addDays(new Date(), Math.floor(Math.random() * 30) + 5).toISOString(),
-      failure_type: ['Wheel Assembly', 'Brake System', 'Electronics', 'Battery', 'Steering'][Math.floor(Math.random() * 5)],
+      failure_type: ['Wheel Assembly', 'Handle Damage', 'Basket Damage', 'Brake System', 'Frame Wear'][Math.floor(Math.random() * 5)],
       contributing_factors: [
         'High usage frequency',
         'Overdue maintenance',
@@ -149,7 +149,7 @@ export function PredictiveAnalytics({ storeId }: PredictiveAnalyticsProps) {
       cart_id: `cart-${i + 10}`,
       cart_qr_code: `CART-${String(i + 10).padStart(3, '0')}`,
       optimal_maintenance_date: addDays(new Date(), Math.floor(Math.random() * 14) + 1).toISOString(),
-      maintenance_type: ['Routine Service', 'Brake Inspection', 'Battery Check', 'Wheel Alignment', 'Deep Clean'][Math.floor(Math.random() * 5)],
+      maintenance_type: ['Routine Service', 'Wheel Inspection', 'Handle Replacement', 'Basket Repair', 'Deep Clean'][Math.floor(Math.random() * 5)],
       confidence_score: Math.floor(Math.random() * 20) + 80,
       cost_savings_potential: Math.floor(Math.random() * 300) + 50,
       reasoning: 'Based on usage patterns and historical data, optimal maintenance window identified'
