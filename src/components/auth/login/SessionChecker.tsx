@@ -1,9 +1,8 @@
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { checkProfileCompletion } from "@/services/profile/profile-completion";
 
 export const SessionChecker = () => {
   const navigate = useNavigate();
@@ -33,26 +32,7 @@ export const SessionChecker = () => {
           console.log("✅ User setup result:", setupResult);
         }
 
-        // Check if profile is complete
-        const completion = await checkProfileCompletion(user.id);
-        
-        // If email not verified or onboarding not complete, redirect to onboarding
-        if (!completion.emailVerified || !completion.onboardingCompleted) {
-          console.log("📧 Email verification or onboarding incomplete, redirecting to onboarding");
-          hasRedirected.current = true;
-          navigate('/onboarding', { replace: true });
-          return;
-        }
-        
-        // If profile has other missing fields, redirect to profile setup
-        if (!completion.isComplete) {
-          console.log("📝 Profile incomplete, redirecting to setup");
-          hasRedirected.current = true;
-          navigate('/setup-profile', { replace: true });
-          return;
-        }
-
-        // If profile is complete, look up user role to determine correct redirect
+        // Fetch user profile with role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
@@ -67,21 +47,26 @@ export const SessionChecker = () => {
             : 'store';
           console.log("📋 Using fallback role:", fallbackRole);
           
-          // Use fallback role for redirect
+          hasRedirected.current = true;
           if (fallbackRole === 'maintenance') {
-            hasRedirected.current = true;
             navigate('/dashboard', { replace: true });
           } else if (fallbackRole === 'admin') {
-            hasRedirected.current = true;
             navigate('/admin', { replace: true });
           } else {
-            hasRedirected.current = true;
             navigate('/customer/dashboard', { replace: true });
           }
           return;
         }
+        
+        // If user has no role set, they're a new user - redirect to onboarding
+        if (!profile?.role) {
+          console.log("📧 New user without role, redirecting to onboarding");
+          hasRedirected.current = true;
+          navigate('/onboarding', { replace: true });
+          return;
+        }
           
-        const role = profile?.role;
+        const role = profile.role;
         console.log("👤 User role:", role);
         
         // Only redirect if we're on the root path to avoid redirect loops
@@ -103,11 +88,8 @@ export const SessionChecker = () => {
         }
       } catch (err) {
         console.error("Error checking profile:", err);
-        // Redirect to setup as safeguard
-        if (!hasRedirected.current) {
-          hasRedirected.current = true;
-          navigate('/setup-profile', { replace: true });
-        }
+        // Don't redirect on error - let user stay on login page
+        console.log("⚠️ Error during session check, staying on current page");
       }
     };
     
