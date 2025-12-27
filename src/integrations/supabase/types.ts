@@ -252,54 +252,96 @@ export type Database = {
           updated_at?: string
           usage_hours?: number | null
         }
+        Relationships: []
+      }
+      cart_status_events: {
+        Row: {
+          cart_id: string
+          created_at: string
+          id: string
+          occurred_at: string
+          source: string | null
+          status: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          source?: string | null
+          status: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          source?: string | null
+          status?: Database["public"]["Enums"]["cart_status"]
+          store_org_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "cart_analytics_cart_id_fkey"
+            foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
       }
       carts: {
         Row: {
+          asset_tag: string | null
           created_at: string
           id: string
-          issues: string[]
-          last_maintenance: string
-          maintenance_history: Json | null
-          qr_code: string
-          status: string
-          store: string
-          store_id: string
+          model: string | null
+          notes: string | null
+          qr_token: string
+          status: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
           updated_at: string
         }
         Insert: {
+          asset_tag?: string | null
           created_at?: string
           id?: string
-          issues?: string[]
-          last_maintenance: string
-          maintenance_history?: Json | null
-          qr_code: string
-          status: string
-          store: string
-          store_id: string
+          model?: string | null
+          notes?: string | null
+          qr_token: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
           updated_at?: string
         }
         Update: {
+          asset_tag?: string | null
           created_at?: string
           id?: string
-          issues?: string[]
-          last_maintenance?: string
-          maintenance_history?: Json | null
-          qr_code?: string
-          status?: string
-          store?: string
-          store_id?: string
+          model?: string | null
+          notes?: string | null
+          qr_token?: string
+          status?: Database["public"]["Enums"]["cart_status"]
+          store_org_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_settings: {
         Row: {
@@ -391,6 +433,57 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspections: {
+        Row: {
+          cart_id: string
+          checklist: Json
+          created_at: string
+          health_score: number
+          id: string
+          notes: string | null
+          performed_by: string | null
+          reported_status: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
+        }
+        Insert: {
+          cart_id: string
+          checklist?: Json
+          created_at?: string
+          health_score?: number
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          reported_status?: Database["public"]["Enums"]["cart_status"]
+          store_org_id: string
+        }
+        Update: {
+          cart_id?: string
+          checklist?: Json
+          created_at?: string
+          health_score?: number
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          reported_status?: Database["public"]["Enums"]["cart_status"]
+          store_org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -501,6 +594,53 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          metadata: Json
+          org_id: string
+          role: Database["public"]["Enums"]["membership_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          metadata?: Json
+          org_id: string
+          role: Database["public"]["Enums"]["membership_role"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          metadata?: Json
+          org_id?: string
+          role?: Database["public"]["Enums"]["membership_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -616,6 +756,79 @@ export type Database = {
           },
         ]
       }
+      issues: {
+        Row: {
+          actual_cost: number | null
+          cart_id: string
+          category: string | null
+          created_at: string
+          description: string | null
+          detected_by: string | null
+          est_cost: number | null
+          id: string
+          inspection_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["issue_severity"]
+          status: string
+          store_org_id: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          cart_id: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          detected_by?: string | null
+          est_cost?: number | null
+          id?: string
+          inspection_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["issue_severity"]
+          status?: string
+          store_org_id: string
+        }
+        Update: {
+          actual_cost?: number | null
+          cart_id?: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          detected_by?: string | null
+          est_cost?: number | null
+          id?: string
+          inspection_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["issue_severity"]
+          status?: string
+          store_org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_providers: {
         Row: {
           company_name: string
@@ -717,13 +930,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maintenance_requests_cart_id_fkey"
-            columns: ["cart_id"]
-            isOneToOne: false
-            referencedRelation: "carts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "maintenance_requests_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
@@ -780,13 +986,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maintenance_schedules_cart_id_fkey"
-            columns: ["cart_id"]
-            isOneToOne: false
-            referencedRelation: "carts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "maintenance_schedules_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
@@ -835,6 +1034,82 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["membership_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role: Database["public"]["Enums"]["membership_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["membership_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          market: string | null
+          name: string
+          parent_org_id: string | null
+          region: string | null
+          settings: Json
+          type: Database["public"]["Enums"]["org_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market?: string | null
+          name: string
+          parent_org_id?: string | null
+          region?: string | null
+          settings?: Json
+          type: Database["public"]["Enums"]["org_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market?: string | null
+          name?: string
+          parent_org_id?: string | null
+          region?: string | null
+          settings?: Json
+          type?: Database["public"]["Enums"]["org_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_parent_org_id_fkey"
+            columns: ["parent_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -948,6 +1223,45 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "maintenance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_store_links: {
+        Row: {
+          created_at: string
+          id: string
+          provider_org_id: string
+          status: string
+          store_org_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          provider_org_id: string
+          status?: string
+          store_org_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          provider_org_id?: string
+          status?: string
+          store_org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_store_links_provider_org_id_fkey"
+            columns: ["provider_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_store_links_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1141,6 +1455,30 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1237,11 +1575,66 @@ export type Database = {
           },
         ]
       }
+      work_orders: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          provider_org_id: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          store_org_id: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_org_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          store_org_id: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_org_id?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["work_order_status"]
+          store_org_id?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_provider_org_id_fkey"
+            columns: ["provider_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { p_token: string }; Returns: string }
       admin_manage_user: {
         Args: {
           p_action: string
@@ -1272,6 +1665,21 @@ export type Database = {
         }
         Returns: number
       }
+      create_org_with_owner: {
+        Args: {
+          p_market?: string
+          p_name: string
+          p_owner_role?: Database["public"]["Enums"]["membership_role"]
+          p_parent_org_id?: string
+          p_region?: string
+          p_type: Database["public"]["Enums"]["org_type"]
+        }
+        Returns: string
+      }
+      current_user_can_access_store_as_provider: {
+        Args: { _store_org: string }
+        Returns: boolean
+      }
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_cart_analytics_summary: {
         Args: { date_from?: string; date_to?: string; store_id_param?: string }
@@ -1293,15 +1701,25 @@ export type Database = {
         Args: { permission_name: string }
         Returns: boolean
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              _org: string
+              _role: Database["public"]["Enums"]["membership_role"]
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       is_admin_user: { Args: never; Returns: boolean }
       is_maintenance_provider: { Args: { user_id: string }; Returns: boolean }
+      is_member: { Args: { _org: string }; Returns: boolean }
+      is_org_admin: { Args: { _org: string }; Returns: boolean }
       log_admin_activity: {
         Args: {
           p_action: string
@@ -1324,6 +1742,10 @@ export type Database = {
         Returns: undefined
       }
       logout_admin: { Args: { p_session_token: string }; Returns: Json }
+      provider_has_store_access: {
+        Args: { _provider_org: string; _store_org: string }
+        Returns: boolean
+      }
       safe_user_setup: { Args: { user_id_param: string }; Returns: Json }
       schedule_maintenance_requests: { Args: never; Returns: Json }
       sync_user_roles_from_metadata: { Args: never; Returns: undefined }
@@ -1335,7 +1757,23 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "maintenance" | "store"
+      cart_status: "in_service" | "out_of_service" | "retired"
       invitation_status: "pending" | "accepted" | "rejected"
+      issue_severity: "low" | "medium" | "high" | "critical"
+      membership_role:
+        | "corp_admin"
+        | "corp_viewer"
+        | "store_admin"
+        | "store_viewer"
+        | "provider_admin"
+        | "provider_tech"
+      org_type: "corporation" | "store" | "provider"
+      work_order_status:
+        | "new"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1464,7 +1902,25 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "maintenance", "store"],
+      cart_status: ["in_service", "out_of_service", "retired"],
       invitation_status: ["pending", "accepted", "rejected"],
+      issue_severity: ["low", "medium", "high", "critical"],
+      membership_role: [
+        "corp_admin",
+        "corp_viewer",
+        "store_admin",
+        "store_viewer",
+        "provider_admin",
+        "provider_tech",
+      ],
+      org_type: ["corporation", "store", "provider"],
+      work_order_status: [
+        "new",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "canceled",
+      ],
     },
   },
 } as const
