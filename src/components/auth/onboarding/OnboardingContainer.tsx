@@ -23,16 +23,24 @@ export const OnboardingContainer = () => {
     setLocalStep(currentStep);
   }, [currentStep]);
 
+  // Show loading while checking auth/profile status
   if (loading || profileLoading) {
     return <LoadingView onLoadingComplete={() => {}} />;
   }
 
-  if (!user || !profile) {
+  // If no user, redirect to login (but only after loading completes)
+  if (!user) {
     navigate('/');
     return null;
   }
 
-  const userRole = profile.role as 'store' | 'maintenance';
+  // If profile is still loading or missing, show loading (don't redirect - that causes loop)
+  if (!profile) {
+    return <LoadingView onLoadingComplete={() => {}} />;
+  }
+
+  // Default to 'store' role if role is not set (prevents crash on null role)
+  const userRole = (profile.role as 'store' | 'maintenance') || 'store';
 
   // Define steps based on user role
   const storeSteps = [
