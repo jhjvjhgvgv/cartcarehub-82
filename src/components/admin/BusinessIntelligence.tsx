@@ -89,10 +89,10 @@ export function BusinessIntelligence() {
       
       if (requestsError) throw requestsError;
 
-      // Calculate KPIs
+      // Calculate KPIs using new status values
       const totalCarts = carts?.length || 0;
-      const activeCarts = carts?.filter(c => c.status === 'active').length || 0;
-      const maintenanceCarts = carts?.filter(c => c.status === 'maintenance').length || 0;
+      const inServiceCarts = carts?.filter(c => c.status === 'in_service').length || 0;
+      const outOfServiceCarts = carts?.filter(c => c.status === 'out_of_service').length || 0;
       const totalRequests = requests?.length || 0;
       const completedRequests = requests?.filter(r => r.status === 'completed').length || 0;
       
@@ -108,8 +108,8 @@ export function BusinessIntelligence() {
           icon: ShoppingCart
         },
         {
-          label: 'Active Carts',
-          value: `${totalCarts > 0 ? ((activeCarts / totalCarts) * 100).toFixed(1) : 0}%`,
+          label: 'In Service',
+          value: `${totalCarts > 0 ? ((inServiceCarts / totalCarts) * 100).toFixed(1) : 0}%`,
           change: 5.2,
           trend: 'up',
           icon: Activity
@@ -129,8 +129,8 @@ export function BusinessIntelligence() {
           icon: TrendingDown
         },
         {
-          label: 'Maintenance Rate',
-          value: `${totalCarts > 0 ? ((maintenanceCarts / totalCarts) * 100).toFixed(1) : 0}%`,
+          label: 'Out of Service Rate',
+          value: `${totalCarts > 0 ? ((outOfServiceCarts / totalCarts) * 100).toFixed(1) : 0}%`,
           change: -7.5,
           trend: 'down',
           icon: AlertTriangle
@@ -373,10 +373,9 @@ export function BusinessIntelligence() {
                   <RechartsPieChart>
                     <Pie
                       data={[
-                        { name: 'Active', value: 65 },
-                        { name: 'Maintenance', value: 20 },
-                        { name: 'Inactive', value: 10 },
-                        { name: 'Retired', value: 5 }
+                        { name: 'In Service', value: 65 },
+                        { name: 'Out of Service', value: 20 },
+                        { name: 'Retired', value: 15 }
                       ]}
                       cx="50%"
                       cy="50%"

@@ -1,121 +1,102 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Cart } from "@/types/cart";
+import { updateCart, createCart } from "@/api/carts/cart-api";
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from "uuid";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Cart } from "@/types/cart"
-import { updateCart, createCart } from "@/api/carts"
-import { useToast } from "@/hooks/use-toast"
-import { CartMutationParams } from "@/types/cart-mutations"
+interface CartFormData {
+  qr_token?: string;
+  asset_tag?: string;
+  store_org_id: string;
+  status: "in_service" | "out_of_service" | "retired";
+  model?: string;
+  notes?: string;
+}
+
+interface CartMutationParams {
+  data: CartFormData | CartFormData[];
+  editingCart?: Cart | null;
+}
 
 export const useCartSubmit = () => {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { mutate: handleSubmit, isPending } = useMutation({
     mutationFn: async (params: CartMutationParams) => {
-      const { data, editingCart, managedStores } = params
+      const { data, editingCart } = params;
 
       try {
         if (Array.isArray(data)) {
-          const updatePromises = data.map(update => {
-            const cart = queryClient.getQueryData<Cart[]>(["carts"])?.find(c => c.id === update.id)
-            if (!cart) return null
-            
-            return updateCart({
-              ...cart,
-              ...update,
-              issues: Array.isArray(update.issues) ? update.issues : (update.issues ? update.issues.split('\n') : cart.issues),
-            })
-          })
+          // Bulk update
+          const updatePromises = data.map((update) => {
+            const cart = queryClient
+              .getQueryData<Cart[]>(["carts"])
+              ?.find((c) => c.id === (update as any).id);
+            if (!cart) return null;
 
-          await Promise.all(updatePromises.filter(Boolean))
-          return { success: true, message: "Carts have been updated successfully." }
-        }
+            return updateCart(cart.id, {
+              status: update.status,
+              model: update.model,
+              notes: update.notes,
+              asset_tag: update.asset_tag,
+            });
+          });
 
-        const store = managedStores.find(s => s.name === data.store)
-        if (!store) {
-          console.error("Store validation failed. Selected store:", data.store, "Available stores:", managedStores)
-          throw new Error(`Selected store "${data.store}" is not in your managed stores list`)
+          await Promise.all(updatePromises.filter(Boolean));
+          return { success: true, message: "Carts have been updated successfully." };
         }
 
         if (editingCart) {
-          if (editingCart.id.includes(',')) {
-            const cartIds = editingCart.id.split(',')
-            const updatePromises = cartIds.map(id => {
-              const cart = queryClient.getQueryData<Cart[]>(["carts"])?.find(c => c.id === id)
-              if (!cart) return null
-              
-              // Ensure we have lastMaintenance for each cart
-              const lastMaintenance = data.lastMaintenance || cart.lastMaintenance || new Date().toISOString();
-              
-              return updateCart({
-                ...cart,
-                store: data.store,
-                storeId: store.id,
-                store_id: store.id,
-                status: data.status,
-                issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-                lastMaintenance: lastMaintenance,
-                last_maintenance: lastMaintenance, // Include both versions for compatibility
-              })
-            })
-
-            await Promise.all(updatePromises.filter(Boolean))
-            return { success: true, message: "Multiple carts have been updated successfully." }
-          }
-
-          // Ensure we have lastMaintenance for single cart update
-          const lastMaintenance = data.lastMaintenance || editingCart.lastMaintenance || new Date().toISOString();
-          
-          await updateCart({
-            ...editingCart,
-            store: data.store,
-            storeId: store.id,
-            store_id: store.id,
+          // Single cart update
+          await updateCart(editingCart.id, {
             status: data.status,
-            issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-            lastMaintenance: lastMaintenance,
-            last_maintenance: lastMaintenance, // Include both versions for compatibility
-          })
-          return { success: true, message: "Cart has been updated successfully." }
+            model: data.model,
+            notes: data.notes,
+            asset_tag: data.asset_tag,
+          });
+          return { success: true, message: "Cart has been updated successfully." };
         }
 
-        const existingCart = queryClient.getQueryData<Cart[]>(["carts"])?.find(cart => cart.qr_code === data.qr_code)
-        if (existingCart) {
-          throw new Error("A cart with this QR code already exists")
+        // Check for duplicate qr_token
+        if (data.qr_token) {
+          const existingCart = queryClient
+            .getQueryData<Cart[]>(["carts"])
+            ?.find((cart) => cart.qr_token === data.qr_token);
+          if (existingCart) {
+            throw new Error("A cart with this QR token already exists");
+          }
         }
 
-        // Make sure we have a lastMaintenance date when creating a new cart
-        const now = new Date().toISOString();
-        
+        // Create new cart
         await createCart({
-          qr_code: data.qr_code,
-          store: data.store,
-          storeId: store.id,
-          store_id: store.id,
+          qr_token: data.qr_token || uuidv4(),
+          store_org_id: data.store_org_id,
           status: data.status,
-          issues: Array.isArray(data.issues) ? data.issues : (data.issues ? data.issues.split('\n') : []),
-          lastMaintenance: data.lastMaintenance || now,
-          last_maintenance: data.lastMaintenance || now, // Include both versions for compatibility
-        })
-        return { success: true, message: "New cart has been created successfully." }
+          model: data.model || null,
+          notes: data.notes || null,
+          asset_tag: data.asset_tag || null,
+        });
+        return { success: true, message: "New cart has been created successfully." };
       } catch (error) {
-        throw error
+        throw error;
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["carts"] })
+      queryClient.invalidateQueries({ queryKey: ["carts"] });
       toast({
         title: "Success",
         description: result.message,
-      })
+      });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "An error occurred while updating the cart.",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
-  return { handleSubmit, isPending }
-}
+  return { handleSubmit, isPending };
+};

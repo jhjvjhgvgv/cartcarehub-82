@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 const ReportIssue = () => {
   const { toast } = useToast();
   const { profile } = useUserProfile();
-  const [cartId, setCartId] = useState("");
+  const [cartIdentifier, setCartIdentifier] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasConnections, setHasConnections] = useState(true);
@@ -71,21 +70,34 @@ const ReportIssue = () => {
         return;
       }
 
-      // Find the cart
+      // Find the cart by qr_token or asset_tag
       const { data: cart } = await supabase
         .from('carts')
-        .select('id, store_id, qr_code')
-        .eq('qr_code', cartId)
+        .select('id, store_org_id, qr_token')
+        .or(`qr_token.eq.${cartIdentifier},asset_tag.eq.${cartIdentifier}`)
         .maybeSingle();
 
       if (!cart) {
         toast({
           title: "Cart Not Found",
-          description: "The cart ID you entered could not be found.",
+          description: "The cart identifier you entered could not be found.",
           variant: "destructive"
         });
         return;
       }
+
+      // Create issue record
+      const { error: issueError } = await supabase
+        .from('issues')
+        .insert({
+          cart_id: cart.id,
+          store_org_id: cart.store_org_id,
+          description: description,
+          severity: 'medium',
+          status: 'open'
+        });
+
+      if (issueError) throw issueError;
 
       // Create maintenance request for the first connected provider
       const { error: requestError } = await supabase
@@ -93,7 +105,7 @@ const ReportIssue = () => {
         .insert({
           cart_id: cart.id,
           provider_id: connections[0].provider_id,
-          store_id: cart.store_id,
+          store_id: cart.store_org_id,
           request_type: 'repair',
           priority: 'high',
           status: 'pending',
@@ -102,18 +114,10 @@ const ReportIssue = () => {
 
       if (requestError) throw requestError;
 
-      // Update cart issues
-      const { data: existingCart } = await supabase
-        .from('carts')
-        .select('issues')
-        .eq('id', cart.id)
-        .single();
-
-      const updatedIssues = [...(existingCart?.issues || []), description];
-
+      // Update cart status to out_of_service
       await supabase
         .from('carts')
-        .update({ issues: updatedIssues, status: 'maintenance' })
+        .update({ status: 'out_of_service' })
         .eq('id', cart.id);
       
       toast({
@@ -121,7 +125,7 @@ const ReportIssue = () => {
         description: "Maintenance request created successfully.",
       });
       
-      setCartId("");
+      setCartIdentifier("");
       setDescription("");
     } catch (error) {
       console.error("Error reporting issue:", error);
@@ -166,12 +170,12 @@ const ReportIssue = () => {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cartId">Cart ID</Label>
+                    <Label htmlFor="cartId">Cart ID or QR Token</Label>
                     <Input
                       id="cartId"
-                      placeholder="Enter cart ID (e.g., A12345)"
-                      value={cartId}
-                      onChange={(e) => setCartId(e.target.value)}
+                      placeholder="Enter cart ID or QR token"
+                      value={cartIdentifier}
+                      onChange={(e) => setCartIdentifier(e.target.value)}
                       required
                     />
                   </div>

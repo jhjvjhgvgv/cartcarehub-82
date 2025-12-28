@@ -1,22 +1,45 @@
+import type { Tables } from "@/integrations/supabase/types";
 
-export interface Cart {
-  id: string
-  qr_code: string
-  store: string
-  storeId: string // We'll keep this for backward compatibility with the UI
-  store_id: string // For direct database matches
-  status: "active" | "maintenance" | "retired"
-  lastMaintenance?: string // Keep camelCase in our app code for consistency
-  last_maintenance?: string // Added to match the database field
-  issues: string[]
-  originalCarts?: Cart[]
-  maintenancePrediction?: {
-    probability: number
-    daysUntilMaintenance: number
-    lastCalculated: string
-  }
-  maintenance_history?: Array<{
-    date: string;
-    description: string;
-  }>
+// Base Cart type matches the Supabase row shape exactly
+export type Cart = Tables<"carts">;
+
+// Cart status type from database enum
+export type CartStatus = 'in_service' | 'out_of_service' | 'retired';
+
+// Extended type with organization info when joined
+export interface CartWithStore extends Cart {
+  store?: {
+    id: string;
+    name: string;
+    market?: string | null;
+    region?: string | null;
+  } | null;
+}
+
+// Extended type with issues when fetched separately
+export interface CartWithIssues extends Cart {
+  issues?: Array<{
+    id: string;
+    description: string | null;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    status: string;
+    created_at: string;
+  }>;
+}
+
+// Full cart view with all related data
+export interface CartFullView extends CartWithStore {
+  issues?: Array<{
+    id: string;
+    description: string | null;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    status: string;
+    created_at: string;
+  }>;
+  inspections?: Array<{
+    id: string;
+    health_score: number;
+    created_at: string;
+    reported_status: CartStatus;
+  }>;
 }

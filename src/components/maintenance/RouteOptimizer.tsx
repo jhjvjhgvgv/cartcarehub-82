@@ -16,9 +16,9 @@ import {
 
 interface RouteStop {
   id: string;
-  cart_qr_code: string;
+  cart_qr_token: string;
   store_name: string;
-  store_id: string;
+  store_org_id: string;
   request_type: string;
   priority: string;
   estimated_duration: number;
@@ -27,7 +27,7 @@ interface RouteStop {
 }
 
 interface StoreCluster {
-  store_id: string;
+  store_org_id: string;
   store_name: string;
   stops: RouteStop[];
   total_duration: number;
@@ -55,17 +55,29 @@ export function RouteOptimizer() {
       // Fetch cart and store information
       const requestsWithDetails = await Promise.all(
         todaysRequests.map(async (req) => {
+          // Fetch cart with store organization
           const { data: cart } = await supabase
             .from('carts')
-            .select('qr_code, store, store_id')
+            .select('qr_token, store_org_id')
             .eq('id', req.cart_id)
-            .single();
+            .maybeSingle();
+
+          // Fetch store name from organizations
+          let storeName = req.store_id;
+          if (cart?.store_org_id) {
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('name')
+              .eq('id', cart.store_org_id)
+              .maybeSingle();
+            storeName = org?.name || req.store_id;
+          }
 
           return {
             id: req.id,
-            cart_qr_code: cart?.qr_code || 'N/A',
-            store_name: cart?.store || req.store_id,
-            store_id: req.store_id,
+            cart_qr_token: cart?.qr_token || 'N/A',
+            store_name: storeName,
+            store_org_id: cart?.store_org_id || req.store_id,
             request_type: req.request_type,
             priority: req.priority,
             estimated_duration: req.estimated_duration || 30,
@@ -77,21 +89,21 @@ export function RouteOptimizer() {
 
       // Advanced optimization: cluster by store, then prioritize
       const storeGroups = requestsWithDetails.reduce((acc, stop) => {
-        if (!acc[stop.store_id]) {
-          acc[stop.store_id] = {
-            store_id: stop.store_id,
+        if (!acc[stop.store_org_id]) {
+          acc[stop.store_org_id] = {
+            store_org_id: stop.store_org_id,
             store_name: stop.store_name,
             stops: [],
             total_duration: 0,
             priority_score: 0
           };
         }
-        acc[stop.store_id].stops.push(stop);
-        acc[stop.store_id].total_duration += stop.estimated_duration;
+        acc[stop.store_org_id].stops.push(stop);
+        acc[stop.store_org_id].total_duration += stop.estimated_duration;
         
         // Priority scoring
         const priorityValue = stop.priority === 'high' ? 3 : stop.priority === 'medium' ? 2 : 1;
-        acc[stop.store_id].priority_score += priorityValue;
+        acc[stop.store_org_id].priority_score += priorityValue;
         
         return acc;
       }, {} as Record<string, StoreCluster>);
@@ -211,7 +223,7 @@ export function RouteOptimizer() {
         {optimizedRoute.length > 0 ? (
           <div className="space-y-4">
             {clusters.map((cluster, clusterIndex) => (
-              <div key={cluster.store_id} className="border rounded-lg p-4 space-y-3">
+              <div key={cluster.store_org_id} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
@@ -238,7 +250,7 @@ export function RouteOptimizer() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{stop.cart_qr_code}</span>
+                          <span className="text-sm font-medium">{stop.cart_qr_token}</span>
                           <Badge className={getPriorityColor(stop.priority)}>
                             {stop.priority}
                           </Badge>

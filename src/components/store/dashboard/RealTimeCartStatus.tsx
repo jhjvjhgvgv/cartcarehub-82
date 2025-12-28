@@ -20,17 +20,14 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Cart } from "@/types/cart";
 
-interface CartStatus {
-  id: string;
-  qr_code: string;
-  status: 'active' | 'maintenance' | 'inactive' | 'retired';
-  store_id: string;
+interface CartStatusView extends Cart {
   location?: string;
   condition_score?: number;
   last_seen: string;
-  issues: string[];
   is_connected: boolean;
+  issue_count: number;
 }
 
 interface RealTimeCartStatusProps {
@@ -38,12 +35,11 @@ interface RealTimeCartStatusProps {
 }
 
 export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
-  const [carts, setCarts] = useState<CartStatus[]>([]);
-  const [filteredCarts, setFilteredCarts] = useState<CartStatus[]>([]);
+  const [carts, setCarts] = useState<CartStatusView[]>([]);
+  const [filteredCarts, setFilteredCarts] = useState<CartStatusView[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedCart, setSelectedCart] = useState<CartStatus | null>(null);
   const { toast } = useToast();
 
   const fetchCarts = async () => {
@@ -51,25 +47,32 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
       let query = supabase.from('carts').select('*');
       
       if (storeId) {
-        query = query.eq('store_id', storeId);
+        query = query.eq('store_org_id', storeId);
       }
       
       const { data, error } = await query;
       
       if (error) throw error;
       
-      // Transform data to include real-time status simulation
-      const cartsWithStatus: CartStatus[] = (data || []).map(cart => ({
-        id: cart.id,
-        qr_code: cart.qr_code,
-        status: cart.status as 'active' | 'maintenance' | 'inactive' | 'retired',
-        store_id: cart.store_id,
-        location: `Aisle ${Math.floor(Math.random() * 20) + 1}`,
-        condition_score: Math.floor(Math.random() * 40) + 60, // 60-100 condition score
-        last_seen: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-        issues: cart.issues || [],
-        is_connected: Math.random() > 0.1 // 90% connected
-      }));
+      // Fetch issue counts for each cart
+      const cartsWithStatus: CartStatusView[] = await Promise.all(
+        (data || []).map(async (cart) => {
+          const { count } = await supabase
+            .from('issues')
+            .select('*', { count: 'exact', head: true })
+            .eq('cart_id', cart.id)
+            .eq('status', 'open');
+
+          return {
+            ...cart,
+            location: `Aisle ${Math.floor(Math.random() * 20) + 1}`,
+            condition_score: Math.floor(Math.random() * 40) + 60, // 60-100 condition score
+            last_seen: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+            is_connected: Math.random() > 0.1, // 90% connected
+            issue_count: count || 0
+          };
+        })
+      );
       
       setCarts(cartsWithStatus);
       setFilteredCarts(cartsWithStatus);
@@ -112,7 +115,8 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(cart => 
-        cart.qr_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cart.qr_token.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cart.asset_tag?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cart.location?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -125,24 +129,29 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
     setFilteredCarts(filtered);
   }, [carts, searchTerm, statusFilter]);
 
-  const getStatusIcon = (cart: CartStatus) => {
+  const getStatusIcon = (cart: CartStatusView) => {
     if (!cart.is_connected) return <WifiOff className="h-4 w-4 text-red-500" />;
-    if (cart.issues.length > 0) return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    if (cart.status === 'active') return <CheckCircle className="h-4 w-4 text-green-500" />;
+    if (cart.issue_count > 0) return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    if (cart.status === 'in_service') return <CheckCircle className="h-4 w-4 text-green-500" />;
     return <Clock className="h-4 w-4 text-gray-500" />;
   };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, string> = {
-      'active': 'bg-green-100 text-green-800',
-      'maintenance': 'bg-yellow-100 text-yellow-800',
-      'inactive': 'bg-gray-100 text-gray-800',
+      'in_service': 'bg-green-100 text-green-800',
+      'out_of_service': 'bg-yellow-100 text-yellow-800',
       'retired': 'bg-red-100 text-red-800'
     };
     
+    const labels: Record<string, string> = {
+      'in_service': 'In Service',
+      'out_of_service': 'Out of Service',
+      'retired': 'Retired'
+    };
+    
     return (
-      <Badge className={variants[status] || variants.inactive}>
-        {status}
+      <Badge className={variants[status] || variants.retired}>
+        {labels[status] || status}
       </Badge>
     );
   };
@@ -188,7 +197,7 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="search"
-                placeholder="Search by QR code or location..."
+                placeholder="Search by QR token or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -204,9 +213,8 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="maintenance">Maintenance</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="in_service">In Service</SelectItem>
+                <SelectItem value="out_of_service">Out of Service</SelectItem>
                 <SelectItem value="retired">Retired</SelectItem>
               </SelectContent>
             </Select>
@@ -228,7 +236,7 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(cart)}
-                        <span className="font-medium">{cart.qr_code}</span>
+                        <span className="font-medium">{cart.asset_tag || cart.qr_token.slice(0, 8)}</span>
                       </div>
                       {getStatusBadge(cart.status)}
                     </div>
@@ -257,9 +265,9 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
                         </span>
                       </div>
                       
-                      {cart.issues.length > 0 && (
+                      {cart.issue_count > 0 && (
                         <div className="text-yellow-600">
-                          {cart.issues.length} issue(s) reported
+                          {cart.issue_count} issue(s) reported
                         </div>
                       )}
                     </div>
@@ -269,7 +277,7 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
               
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Cart Details - {cart.qr_code}</DialogTitle>
+                  <DialogTitle>Cart Details - {cart.asset_tag || cart.qr_token.slice(0, 8)}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -307,20 +315,21 @@ export function RealTimeCartStatus({ storeId }: RealTimeCartStatusProps) {
                   </div>
                   
                   <div>
+                    <Label>QR Token</Label>
+                    <p className="text-sm text-muted-foreground font-mono">{cart.qr_token}</p>
+                  </div>
+                  
+                  <div>
                     <Label>Last Seen</Label>
                     <p className="text-sm text-muted-foreground">
                       {new Date(cart.last_seen).toLocaleString()}
                     </p>
                   </div>
                   
-                  {cart.issues.length > 0 && (
+                  {cart.notes && (
                     <div>
-                      <Label>Current Issues</Label>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground">
-                        {cart.issues.map((issue, index) => (
-                          <li key={index}>{issue}</li>
-                        ))}
-                      </ul>
+                      <Label>Notes</Label>
+                      <p className="text-sm text-muted-foreground">{cart.notes}</p>
                     </div>
                   )}
                 </div>
