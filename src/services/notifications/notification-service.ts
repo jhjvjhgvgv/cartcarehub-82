@@ -61,7 +61,7 @@ class NotificationService {
       .from('maintenance_providers')
       .select('user_id, company_name')
       .eq('id', providerId)
-      .single();
+      .maybeSingle();
 
     if (!provider) return;
 
@@ -80,7 +80,7 @@ class NotificationService {
   async sendCriticalAlert(
     cartId: string,
     issue: string,
-    storeId: string
+    storeOrgId: string
   ): Promise<void> {
     // Get all users associated with the store
     const { data: profiles } = await supabase
@@ -96,7 +96,7 @@ class NotificationService {
         'critical_alert',
         'Critical Cart Issue',
         `Cart requires immediate attention: ${issue}`,
-        { cartId, storeId, issue }
+        { cartId, storeOrgId, issue }
       );
     }
   }
@@ -108,15 +108,17 @@ class NotificationService {
     cartId: string,
     oldStatus: string,
     newStatus: string,
-    storeId: string
+    storeOrgId: string
   ): Promise<void> {
     const { data: cart } = await supabase
       .from('carts')
-      .select('qr_code')
+      .select('qr_token, asset_tag')
       .eq('id', cartId)
-      .single();
+      .maybeSingle();
 
     if (!cart) return;
+
+    const cartIdentifier = cart.asset_tag || cart.qr_token.slice(0, 8);
 
     const { data: profiles } = await supabase
       .from('profiles')
@@ -130,8 +132,8 @@ class NotificationService {
         profile.id,
         'status_change',
         'Cart Status Updated',
-        `Cart ${cart.qr_code} status changed from ${oldStatus} to ${newStatus}`,
-        { cartId, oldStatus, newStatus, storeId }
+        `Cart ${cartIdentifier} status changed from ${oldStatus} to ${newStatus}`,
+        { cartId, oldStatus, newStatus, storeOrgId }
       );
     }
   }
@@ -146,11 +148,20 @@ class NotificationService {
   ): Promise<void> {
     const { data: request } = await supabase
       .from('maintenance_requests')
-      .select('*, carts(qr_code)')
+      .select('*')
       .eq('id', requestId)
-      .single();
+      .maybeSingle();
 
     if (!request) return;
+
+    // Get cart identifier
+    const { data: cart } = await supabase
+      .from('carts')
+      .select('qr_token, asset_tag')
+      .eq('id', cartId)
+      .maybeSingle();
+
+    const cartIdentifier = cart?.asset_tag || cart?.qr_token?.slice(0, 8) || 'Unknown';
 
     const { data: profiles } = await supabase
       .from('profiles')
@@ -164,7 +175,7 @@ class NotificationService {
         profile.id,
         'completion',
         'Maintenance Completed',
-        `Maintenance work on cart ${(request.carts as any)?.qr_code} has been completed`,
+        `Maintenance work on cart ${cartIdentifier} has been completed`,
         { requestId, cartId, cost: request.cost }
       );
     }
@@ -178,7 +189,7 @@ class NotificationService {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     // Default preferences if none exist
     return {

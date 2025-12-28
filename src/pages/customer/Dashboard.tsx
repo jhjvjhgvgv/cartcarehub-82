@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import CustomerLayout from "@/components/CustomerLayout";
 import { CartStatsCards } from "@/components/customer/dashboard/CartStatsCards";
@@ -26,22 +25,29 @@ export default function CustomerDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Fetch carts
         const { data: carts, error } = await supabase
           .from('carts')
           .select('*');
 
         if (error) throw error;
 
-        const activeCarts = carts?.filter(c => c.status === 'active').length || 0;
-        const maintenanceCarts = carts?.filter(c => c.status === 'maintenance').length || 0;
+        // Use new status values
+        const inServiceCarts = carts?.filter(c => c.status === 'in_service').length || 0;
+        const outOfServiceCarts = carts?.filter(c => c.status === 'out_of_service').length || 0;
         const totalCarts = carts?.length || 0;
-        const recentIssues = carts?.reduce((sum, cart) => sum + (cart.issues?.length || 0), 0) || 0;
+
+        // Fetch open issues count
+        const { count: issuesCount } = await supabase
+          .from('issues')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'open');
 
         setCartStats({
-          activeCarts,
-          inactiveCarts: maintenanceCarts,
+          activeCarts: inServiceCarts,
+          inactiveCarts: outOfServiceCarts,
           totalCarts,
-          recentIssues
+          recentIssues: issuesCount || 0
         });
 
         // Fetch recent maintenance requests

@@ -44,8 +44,8 @@ export function SystemOverview() {
       return {
         carts: {
           total: carts.length,
-          active: carts.filter(c => c.status === 'active').length,
-          maintenance: carts.filter(c => c.status === 'maintenance').length,
+          inService: carts.filter(c => c.status === 'in_service').length,
+          outOfService: carts.filter(c => c.status === 'out_of_service').length,
           retired: carts.filter(c => c.status === 'retired').length
         },
         users: {
@@ -81,7 +81,7 @@ export function SystemOverview() {
   }
 
   const stats = systemStats || {
-    carts: { total: 0, active: 0, maintenance: 0, retired: 0 },
+    carts: { total: 0, inService: 0, outOfService: 0, retired: 0 },
     users: { total: 0, admin: 0, store: 0, maintenance: 0, active: 0 },
     providers: { total: 0, verified: 0, pending: 0 },
     requests: { total: 0, pending: 0, inProgress: 0, completed: 0, urgent: 0 },
@@ -89,11 +89,11 @@ export function SystemOverview() {
   };
 
   const systemHealth = () => {
-    const activeCartPercentage = stats.carts.total > 0 ? (stats.carts.active / stats.carts.total) * 100 : 0;
+    const inServicePercentage = stats.carts.total > 0 ? (stats.carts.inService / stats.carts.total) * 100 : 0;
     const completedRequestPercentage = stats.requests.total > 0 ? (stats.requests.completed / stats.requests.total) * 100 : 0;
     const verifiedProviderPercentage = stats.providers.total > 0 ? (stats.providers.verified / stats.providers.total) * 100 : 0;
     
-    return Math.round((activeCartPercentage + completedRequestPercentage + verifiedProviderPercentage) / 3);
+    return Math.round((inServicePercentage + completedRequestPercentage + verifiedProviderPercentage) / 3);
   };
 
   return (
@@ -119,7 +119,7 @@ export function SystemOverview() {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Based on active carts, completed requests, and verified providers
+            Based on in-service carts, completed requests, and verified providers
           </p>
         </CardContent>
       </Card>
@@ -149,8 +149,8 @@ export function SystemOverview() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.carts.total}</div>
             <div className="flex gap-1 mt-2 flex-wrap">
-              <Badge variant="default" className="text-xs">{stats.carts.active} Active</Badge>
-              <Badge variant="secondary" className="text-xs">{stats.carts.maintenance} Maintenance</Badge>
+              <Badge variant="default" className="text-xs">{stats.carts.inService} In Service</Badge>
+              <Badge variant="secondary" className="text-xs">{stats.carts.outOfService} Out of Service</Badge>
               <Badge variant="destructive" className="text-xs">{stats.carts.retired} Retired</Badge>
             </div>
           </CardContent>

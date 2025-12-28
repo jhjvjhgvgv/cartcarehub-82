@@ -17,11 +17,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { addDays, format, differenceInDays } from "date-fns";
+import type { Cart } from "@/types/cart";
 
 interface MaintenanceAlert {
   id: string;
   cart_id: string;
-  cart_qr_code: string;
+  cart_identifier: string;
   alert_type: 'overdue' | 'due_soon' | 'predictive' | 'damage_reported' | 'usage_high';
   priority: 'low' | 'medium' | 'high' | 'critical';
   title: string;
@@ -44,58 +45,85 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
   const [filter, setFilter] = useState<'all' | 'unacknowledged'>('unacknowledged');
   const { toast } = useToast();
 
-  const generatePredictiveAlerts = (carts: any[]): MaintenanceAlert[] => {
+  const generatePredictiveAlerts = async (carts: Cart[]): Promise<MaintenanceAlert[]> => {
     const alerts: MaintenanceAlert[] = [];
     
+    // Fetch issues for all carts
+    const { data: allIssues } = await supabase
+      .from('issues')
+      .select('cart_id, severity, status')
+      .eq('status', 'open');
+
+    const issuesByCart = (allIssues || []).reduce((acc, issue) => {
+      if (!acc[issue.cart_id]) acc[issue.cart_id] = [];
+      acc[issue.cart_id].push(issue);
+      return acc;
+    }, {} as Record<string, typeof allIssues>);
+    
+    // Fetch latest inspection for each cart
+    const { data: inspections } = await supabase
+      .from('inspections')
+      .select('cart_id, created_at')
+      .order('created_at', { ascending: false });
+
+    const lastInspectionByCart = (inspections || []).reduce((acc, insp) => {
+      if (!acc[insp.cart_id]) acc[insp.cart_id] = insp.created_at;
+      return acc;
+    }, {} as Record<string, string>);
+
     carts.forEach(cart => {
-      const lastMaintenance = new Date(cart.last_maintenance);
-      const daysSinceLastMaintenance = differenceInDays(new Date(), lastMaintenance);
+      const cartIdentifier = cart.asset_tag || cart.qr_token.slice(0, 8);
+      const cartIssues = issuesByCart[cart.id] || [];
+      const lastInspection = lastInspectionByCart[cart.id];
+      const daysSinceInspection = lastInspection 
+        ? differenceInDays(new Date(), new Date(lastInspection))
+        : 999;
       
-      // Overdue maintenance
-      if (daysSinceLastMaintenance > 90) {
+      // Overdue inspection
+      if (daysSinceInspection > 90) {
         alerts.push({
           id: `overdue-${cart.id}`,
           cart_id: cart.id,
-          cart_qr_code: cart.qr_code,
+          cart_identifier: cartIdentifier,
           alert_type: 'overdue',
           priority: 'critical',
-          title: 'Maintenance Overdue',
-          description: `Cart maintenance is ${daysSinceLastMaintenance - 90} days overdue`,
-          recommended_action: 'Schedule immediate maintenance inspection',
-          days_until_due: -(daysSinceLastMaintenance - 90),
+          title: 'Inspection Overdue',
+          description: `Cart inspection is ${daysSinceInspection - 90} days overdue`,
+          recommended_action: 'Schedule immediate inspection',
+          days_until_due: -(daysSinceInspection - 90),
           created_at: new Date().toISOString(),
           is_acknowledged: false
         });
       }
       
       // Due soon
-      else if (daysSinceLastMaintenance > 75) {
+      else if (daysSinceInspection > 75) {
         alerts.push({
           id: `due-soon-${cart.id}`,
           cart_id: cart.id,
-          cart_qr_code: cart.qr_code,
+          cart_identifier: cartIdentifier,
           alert_type: 'due_soon',
           priority: 'high',
-          title: 'Maintenance Due Soon',
-          description: `Cart maintenance due in ${90 - daysSinceLastMaintenance} days`,
-          recommended_action: 'Schedule maintenance within the next week',
-          days_until_due: 90 - daysSinceLastMaintenance,
+          title: 'Inspection Due Soon',
+          description: `Cart inspection due in ${90 - daysSinceInspection} days`,
+          recommended_action: 'Schedule inspection within the next week',
+          days_until_due: 90 - daysSinceInspection,
           created_at: new Date().toISOString(),
           is_acknowledged: false
         });
       }
       
       // Predictive maintenance based on issues
-      if (cart.issues && cart.issues.length > 2) {
+      if (cartIssues.length > 2) {
         const failureDate = addDays(new Date(), Math.random() * 30 + 10);
         alerts.push({
           id: `predictive-${cart.id}`,
           cart_id: cart.id,
-          cart_qr_code: cart.qr_code,
+          cart_identifier: cartIdentifier,
           alert_type: 'predictive',
           priority: 'medium',
           title: 'Potential Failure Predicted',
-          description: `AI analysis suggests potential failure based on ${cart.issues.length} reported issues`,
+          description: `AI analysis suggests potential failure based on ${cartIssues.length} reported issues`,
           predicted_failure_date: failureDate.toISOString(),
           estimated_cost: Math.floor(Math.random() * 500) + 100,
           recommended_action: 'Perform preventive maintenance to avoid costly repairs',
@@ -106,32 +134,33 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
       }
       
       // Damage alerts based on reported issues
-      if (cart.issues && cart.issues.length > 0) {
+      const criticalIssues = cartIssues.filter(i => i.severity === 'critical' || i.severity === 'high');
+      if (criticalIssues.length > 0) {
         alerts.push({
           id: `damage-${cart.id}`,
           cart_id: cart.id,
-          cart_qr_code: cart.qr_code,
+          cart_identifier: cartIdentifier,
           alert_type: 'damage_reported',
           priority: 'high',
-          title: 'Damage Reported',
-          description: `Cart has ${cart.issues.length} reported issue(s): ${cart.issues.slice(0, 2).join(', ')}`,
-          recommended_action: 'Inspect cart and schedule repair',
+          title: 'Critical Issues Reported',
+          description: `Cart has ${criticalIssues.length} critical/high severity issue(s)`,
+          recommended_action: 'Inspect cart and schedule repair immediately',
           created_at: new Date().toISOString(),
           is_acknowledged: false
         });
       }
       
-      // High usage alert
-      if (Math.random() > 0.8) {
+      // Out of service alert
+      if (cart.status === 'out_of_service') {
         alerts.push({
-          id: `usage-${cart.id}`,
+          id: `out-of-service-${cart.id}`,
           cart_id: cart.id,
-          cart_qr_code: cart.qr_code,
+          cart_identifier: cartIdentifier,
           alert_type: 'usage_high',
-          priority: 'low',
-          title: 'High Usage Detected',
-          description: 'Cart showing higher than average usage patterns',
-          recommended_action: 'Monitor for wear and consider more frequent inspections',
+          priority: 'medium',
+          title: 'Cart Out of Service',
+          description: 'Cart is currently marked as out of service',
+          recommended_action: 'Review and resolve issues to return cart to service',
           created_at: new Date().toISOString(),
           is_acknowledged: false
         });
@@ -149,14 +178,14 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
       let query = supabase.from('carts').select('*');
       
       if (storeId) {
-        query = query.eq('store_id', storeId);
+        query = query.eq('store_org_id', storeId);
       }
       
       const { data: carts, error } = await query;
       
       if (error) throw error;
       
-      const generatedAlerts = generatePredictiveAlerts(carts || []);
+      const generatedAlerts = await generatePredictiveAlerts(carts || []);
       setAlerts(generatedAlerts);
     } catch (error) {
       console.error('Error fetching alerts data:', error);
@@ -299,7 +328,7 @@ export function MaintenanceAlerts({ storeId }: MaintenanceAlertsProps) {
                         </div>
                         
                         <p className="text-sm text-muted-foreground">
-                          Cart: {alert.cart_qr_code}
+                          Cart: {alert.cart_identifier}
                         </p>
                         
                         <p className="text-sm">{alert.description}</p>
