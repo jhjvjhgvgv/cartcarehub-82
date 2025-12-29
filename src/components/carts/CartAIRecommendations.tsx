@@ -1,19 +1,21 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Sparkles, Loader2, RefreshCw } from "lucide-react"
-import { Cart } from "@/types/cart"
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart"
 import { useGemini } from "@/hooks/use-gemini"
 import { cn } from "@/lib/utils"
 
 interface CartAIRecommendationsProps {
-  cart: Cart
+  cart: Cart | CartWithStore
 }
 
 export function CartAIRecommendations({ cart }: CartAIRecommendationsProps) {
   const { generateResponse, isLoading, error, result, clearResult } = useGemini()
   const [expanded, setExpanded] = useState(false)
+
+  // Get store name from CartWithStore if available
+  const storeName = 'store_name' in cart ? cart.store_name : null;
 
   const handleGenerateRecommendations = async () => {
     clearResult()
@@ -21,14 +23,13 @@ export function CartAIRecommendations({ cart }: CartAIRecommendationsProps) {
     // Format cart data for the prompt
     const cartData = `
       Cart ID: ${cart.id}
-      QR Code: ${cart.qr_code}
-      Store: ${cart.store}
-      Status: ${cart.status}
-      Last Maintenance: ${cart.lastMaintenance || "Unknown"}
-      Issues: ${cart.issues?.length > 0 ? cart.issues.join(", ") : "None reported"}
-      Maintenance Prediction: ${cart.maintenancePrediction?.probability 
-        ? `${Math.round(cart.maintenancePrediction.probability * 100)}% risk in ${cart.maintenancePrediction.daysUntilMaintenance} days` 
-        : "No prediction available"}
+      QR Token: ${cart.qr_token}
+      Asset Tag: ${cart.asset_tag || 'N/A'}
+      Store: ${storeName || cart.store_org_id}
+      Status: ${getStatusLabel(cart.status)}
+      Model: ${cart.model || 'Unknown'}
+      Notes: ${cart.notes || 'None'}
+      Last Updated: ${cart.updated_at}
     `
 
     const prompt = `Analyze the following shopping cart data and provide specific maintenance recommendations. 

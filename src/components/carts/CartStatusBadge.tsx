@@ -1,6 +1,5 @@
-
 import { Badge } from "@/components/ui/badge"
-import { Cart } from "@/types/cart"
+import { Cart, getStatusLabel } from "@/types/cart"
 import { CheckCircle, AlertTriangle, XCircle } from "lucide-react"
 
 interface CartStatusBadgeProps {
@@ -9,12 +8,12 @@ interface CartStatusBadgeProps {
 
 export function CartStatusBadge({ status }: CartStatusBadgeProps) {
   const statusConfig = {
-    active: {
+    in_service: {
       className: "bg-green-500 hover:bg-green-600",
       icon: <CheckCircle className="h-3.5 w-3.5 mr-1" />,
       text: "Active"
     },
-    maintenance: {
+    out_of_service: {
       className: "bg-yellow-500 hover:bg-yellow-600 text-black",
       icon: <AlertTriangle className="h-3.5 w-3.5 mr-1" />,
       text: "Maintenance"

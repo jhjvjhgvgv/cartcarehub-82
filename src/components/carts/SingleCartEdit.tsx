@@ -1,12 +1,11 @@
-
 import React from "react"
 import { CartForm } from "@/components/cart-form"
 import { Button } from "@/components/ui/button"
 import { Trash2Icon } from "lucide-react"
-import { Cart } from "@/types/cart"
+import { Cart, CartWithStore } from "@/types/cart"
 
 interface SingleCartEditProps {
-  cart: Cart
+  cart: Cart | CartWithStore
   onSubmit: (data: any) => void
   onCancel: () => void
   onDelete: (cartId: string) => void
@@ -33,15 +32,15 @@ export function SingleCartEdit({ cart, onSubmit, onCancel, onDelete, disabled = 
       </div>
       <CartForm
         initialData={{
-          qr_code: cart.qr_code || "", // Updated from rfidTag to qr_code
-          store: cart.store || "",
-          status: cart.status || "active",
-          issues: cart.issues ? cart.issues.join("\n") : "",
+          qr_token: cart.qr_token || "",
+          store_org_id: cart.store_org_id || "",
+          status: cart.status || "in_service",
+          notes: cart.notes || "",
+          asset_tag: cart.asset_tag || "",
+          model: cart.model || "",
         }}
         onSubmit={onSubmit}
         onCancel={onCancel}
-        disableRfidTag={false}
-        rfidPlaceholder={cart.qr_code} // Updated from rfidTag to qr_code
         disabled={disabled}
       />
     </div>

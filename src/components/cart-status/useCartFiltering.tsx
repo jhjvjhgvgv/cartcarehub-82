@@ -1,9 +1,8 @@
-
 import { useState, useMemo } from "react";
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore } from "@/types/cart";
 
-export function useCartFiltering(initialCarts: Cart[]) {
-  const [carts, setCarts] = useState<Cart[]>(initialCarts);
+export function useCartFiltering(initialCarts: (Cart | CartWithStore)[]) {
+  const [carts, setCarts] = useState<(Cart | CartWithStore)[]>(initialCarts);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("id");
@@ -14,10 +13,12 @@ export function useCartFiltering(initialCarts: Cart[]) {
   const filteredAndSortedCarts = useMemo(() => {
     // Filter by search query and status
     let result = carts.filter(cart => {
+      const storeName = 'store_name' in cart ? (cart.store_name || '') : '';
       const matchesSearch = 
         cart.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cart.qr_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cart.store.toLowerCase().includes(searchQuery.toLowerCase());
+        cart.qr_token.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (cart.asset_tag || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        storeName.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesStatus = statusFilter === "all" || cart.status === statusFilter;
       
@@ -34,10 +35,12 @@ export function useCartFiltering(initialCarts: Cart[]) {
           comparison = a.id.localeCompare(b.id);
           break;
         case "store":
-          comparison = a.store.localeCompare(b.store);
+          const storeA = 'store_name' in a ? (a.store_name || '') : '';
+          const storeB = 'store_name' in b ? (b.store_name || '') : '';
+          comparison = storeA.localeCompare(storeB);
           break;
-        case "lastMaintenance":
-          comparison = (a.lastMaintenance || "").localeCompare(b.lastMaintenance || "");
+        case "updated_at":
+          comparison = (a.updated_at || "").localeCompare(b.updated_at || "");
           break;
         case "status":
           comparison = a.status.localeCompare(b.status);

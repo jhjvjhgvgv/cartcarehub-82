@@ -2,17 +2,20 @@ import React, { useRef } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer, Download } from "lucide-react";
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart";
 import * as QRCodeReact from 'qrcode.react';
 import { generateCartQRCodeURL } from '@/utils/qr-generator';
 
 interface CartQRCodeProps {
-  cart: Cart;
+  cart: Cart | CartWithStore;
   showCartInfo?: boolean;
 }
 
 export const CartQRCode: React.FC<CartQRCodeProps> = ({ cart, showCartInfo = true }) => {
   const qrCardRef = useRef<HTMLDivElement>(null);
+
+  // Get store name from CartWithStore if available
+  const storeName = 'store_name' in cart ? cart.store_name : null;
 
   // Function to handle QR code printing
   const handlePrint = () => {
@@ -37,9 +40,11 @@ export const CartQRCode: React.FC<CartQRCodeProps> = ({ cart, showCartInfo = tru
       
       if (showCartInfo) {
         windowPrint.document.write(`<div class="cart-info">`);
-        windowPrint.document.write(`<p><strong>Store:</strong> ${cart.store || 'N/A'}</p>`);
-        windowPrint.document.write(`<p><strong>Status:</strong> ${cart.status || 'N/A'}</p>`);
-        windowPrint.document.write(`<p class="cart-id">ID: ${cart.qr_code || 'N/A'}</p>`);
+        if (storeName) {
+          windowPrint.document.write(`<p><strong>Store:</strong> ${storeName}</p>`);
+        }
+        windowPrint.document.write(`<p><strong>Status:</strong> ${getStatusLabel(cart.status)}</p>`);
+        windowPrint.document.write(`<p class="cart-id">QR Token: ${cart.qr_token}</p>`);
         windowPrint.document.write(`</div>`);
       }
       
@@ -65,7 +70,7 @@ export const CartQRCode: React.FC<CartQRCodeProps> = ({ cart, showCartInfo = tru
     }
   };
 
-  const qrCodeValue = generateCartQRCodeURL(cart.id);
+  const qrCodeValue = generateCartQRCodeURL(cart.qr_token);
 
   return (
     <Card className="w-full max-w-sm mx-auto">
@@ -88,9 +93,12 @@ export const CartQRCode: React.FC<CartQRCodeProps> = ({ cart, showCartInfo = tru
           </div>
           {showCartInfo && (
             <div className="text-center space-y-1">
-              <p className="text-sm font-medium">Store: {cart.store}</p>
-              <p className="text-sm">Status: {cart.status}</p>
-              <p className="text-xs text-muted-foreground mt-2">QR Code: {cart.qr_code}</p>
+              {storeName && <p className="text-sm font-medium">Store: {storeName}</p>}
+              <p className="text-sm">Status: {getStatusLabel(cart.status)}</p>
+              <p className="text-xs text-muted-foreground mt-2 font-mono">Token: {cart.qr_token}</p>
+              {cart.asset_tag && (
+                <p className="text-xs text-muted-foreground">Asset: {cart.asset_tag}</p>
+              )}
             </div>
           )}
         </div>

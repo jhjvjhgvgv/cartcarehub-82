@@ -1,4 +1,3 @@
-
 import { WrenchIcon } from "lucide-react"
 import { CartActionButton } from "./CartActionButton"
 import { Cart } from "@/types/cart"
@@ -18,35 +17,22 @@ export function MaintenanceAction({
   const { toast } = useToast()
 
   const handleMaintenanceClick = () => {
-    // Create a new maintenance record
-    const today = new Date().toISOString().split('T')[0]
-    const newMaintenanceRecord = {
-      date: today,
-      description: "Cart marked for maintenance"
-    }
-    
-    // Update the cart's status to maintenance and add the maintenance record
+    // Update the cart's status to out_of_service
     const updatedCart = {
       ...cart,
-      status: "maintenance" as const,
-      lastMaintenance: today,
-      last_maintenance: today,
-      maintenance_history: [
-        ...(cart.maintenance_history || []),
-        newMaintenanceRecord
-      ]
+      status: "out_of_service" as const,
     }
     
     onEdit(updatedCart)
     
     toast({
       title: "Cart Status Updated",
-      description: `Cart ${cart.qr_code} has been marked for maintenance.`,
+      description: `Cart ${cart.asset_tag || cart.qr_token} has been marked for maintenance.`,
     })
   }
 
-  // Only show if cart is not already in maintenance
-  if (cart.status === "maintenance") {
+  // Only show if cart is not already out_of_service
+  if (cart.status === "out_of_service") {
     return null
   }
 

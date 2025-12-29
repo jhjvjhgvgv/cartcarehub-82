@@ -1,10 +1,9 @@
-
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CartCard } from "./CartCard";
 
 interface CartListProps {
-  carts: Cart[];
+  carts: (Cart | CartWithStore)[];
   onStatusChange: (cart: Cart) => void;
 }
 
