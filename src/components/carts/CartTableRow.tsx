@@ -1,13 +1,11 @@
-
 import { TableCell, TableRow } from "@/components/ui/table"
-import { Cart } from "@/types/cart"
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart"
 import { CartStatusBadge } from "./CartStatusBadge"
 import { CartActions } from "./CartActions"
 import { Checkbox } from "@/components/ui/checkbox"
-import { CartPredictionBadge } from "./CartPredictionBadge"
 
 interface CartTableRowProps {
-  cart: Cart
+  cart: Cart | CartWithStore
   onEdit: (cart: Cart) => void
   onDelete: (cartId: string) => void
   onClick: (cartId: string, event: React.MouseEvent) => void
@@ -39,6 +37,9 @@ export function CartTableRow({
     onSelect(cart.id, checked)
   }
 
+  // Get store name from CartWithStore if available
+  const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id;
+
   return (
     <TableRow 
       onClick={handleRowClick}
@@ -53,27 +54,21 @@ export function CartTableRow({
       </TableCell>
       <TableCell className="w-1/5">
         <div className="grid gap-1">
-          <div className="font-medium">{cart.qr_code}</div>
-          <div className="sm:hidden text-sm text-muted-foreground">{cart.store}</div>
-          <div className="sm:hidden text-sm text-muted-foreground">Last Maintenance: {cart.lastMaintenance}</div>
+          <div className="font-medium font-mono">{cart.qr_token}</div>
+          {cart.asset_tag && (
+            <div className="text-sm text-muted-foreground">{cart.asset_tag}</div>
+          )}
+          <div className="sm:hidden text-sm text-muted-foreground">{storeName}</div>
         </div>
       </TableCell>
       <TableCell className="hidden sm:table-cell w-1/5">
-        <div>{cart.store}</div>
+        <div>{storeName}</div>
       </TableCell>
       <TableCell className="w-1/5">
-        <div className="flex flex-col gap-1">
-          <CartStatusBadge status={cart.status} />
-          {cart.maintenancePrediction && cart.status === "active" && (
-            <CartPredictionBadge 
-              probability={cart.maintenancePrediction.probability}
-              daysUntilMaintenance={cart.maintenancePrediction.daysUntilMaintenance}
-            />
-          )}
-        </div>
+        <CartStatusBadge status={cart.status} />
       </TableCell>
       <TableCell className="hidden sm:table-cell w-1/5">
-        <div>{cart.lastMaintenance}</div>
+        <div>{cart.model || '-'}</div>
       </TableCell>
       <TableCell className="w-[100px] text-right">
         <CartActions cart={cart} onEdit={onEdit} onDelete={onDelete} />
