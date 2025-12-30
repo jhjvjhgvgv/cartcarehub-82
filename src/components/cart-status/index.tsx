@@ -3,7 +3,7 @@ import { ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore } from "@/types/cart";
 
 // Import our new components
 import { CartFilterSort } from "./CartFilterSort";
@@ -12,7 +12,7 @@ import { QRScannerDialog } from "./QRScannerDialog";
 import { useCartFiltering } from "./useCartFiltering";
 
 // This will be exported and used in the main CartStatus.tsx page
-export function CartStatusContent({ initialCarts }: { initialCarts: Cart[] }) {
+export function CartStatusContent({ initialCarts }: { initialCarts: (Cart | CartWithStore)[] }) {
   const {
     carts,
     setCarts,
@@ -33,11 +33,12 @@ export function CartStatusContent({ initialCarts }: { initialCarts: Cart[] }) {
   const { toast } = useToast();
 
   const handleQRCodeDetected = (qrCode: string) => {
-    const cart = carts.find(c => c.qr_code === qrCode);
+    const cart = carts.find(c => c.qr_token === qrCode);
     if (cart) {
+      const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id;
       toast({
         title: "Cart Found",
-        description: `Found cart #${cart.id} at ${cart.store}`,
+        description: `Found cart #${cart.id} at ${storeName || 'Unknown Store'}`,
       });
     } else {
       toast({
@@ -51,10 +52,15 @@ export function CartStatusContent({ initialCarts }: { initialCarts: Cart[] }) {
 
   const handleSubmit = (data: any) => {
     const newCart: Cart = {
-      ...data,
-      storeId: "store1",
-      store_id: "store1",
-      issues: Array.isArray(data.issues) ? data.issues : [],
+      id: data.id || crypto.randomUUID(),
+      qr_token: data.qr_token || '',
+      store_org_id: data.store_org_id || '',
+      status: data.status || 'in_service',
+      asset_tag: data.asset_tag || null,
+      model: data.model || null,
+      notes: data.notes || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     setCarts([...carts, newCart]);
     toast({
@@ -72,7 +78,7 @@ export function CartStatusContent({ initialCarts }: { initialCarts: Cart[] }) {
     });
   };
 
-  const handleStatusChange = (updatedCart: Cart) => {
+  const handleStatusChange = (updatedCart: Cart | CartWithStore) => {
     setCarts(carts.map(cart => 
       cart.id === updatedCart.id ? updatedCart : cart
     ));

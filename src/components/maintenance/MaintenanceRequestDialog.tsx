@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateMaintenanceRequest } from '@/hooks/use-maintenance';
-import { Cart } from '@/types/cart';
+import { Cart, CartWithStore } from '@/types/cart';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,8 +48,8 @@ type MaintenanceRequestFormData = z.infer<typeof maintenanceRequestSchema>;
 interface MaintenanceRequestDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cart?: Cart;
-  carts: Cart[];
+  cart?: Cart | CartWithStore;
+  carts: (Cart | CartWithStore)[];
 }
 
 export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> = ({
@@ -67,7 +67,7 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
     resolver: zodResolver(maintenanceRequestSchema),
     defaultValues: {
       cart_id: cart?.id || '',
-      store_id: cart?.store_id || '',
+      store_id: cart?.store_org_id || '',
       request_type: 'routine',
       priority: 'medium',
       estimated_duration: 30,
@@ -129,6 +129,11 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
     }
   };
 
+  const getCartDisplayName = (cartOption: Cart | CartWithStore) => {
+    const storeName = 'store_name' in cartOption ? cartOption.store_name : cartOption.store_org_id;
+    return `${cartOption.asset_tag || cartOption.qr_token} - ${storeName || 'Unknown Store'}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -156,7 +161,7 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
                     <SelectContent>
                       {carts.map((cartOption) => (
                         <SelectItem key={cartOption.id} value={cartOption.id}>
-                          {cartOption.qr_code} - {cartOption.store}
+                          {getCartDisplayName(cartOption)}
                         </SelectItem>
                       ))}
                     </SelectContent>

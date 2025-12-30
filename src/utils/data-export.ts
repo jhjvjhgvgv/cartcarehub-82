@@ -1,4 +1,4 @@
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart";
 
 /**
  * Export data to CSV format
@@ -44,15 +44,20 @@ export function exportToJSON(data: any[], filename: string): void {
 /**
  * Export carts data with custom formatting
  */
-export function exportCartsData(carts: Cart[], format: 'csv' | 'json' = 'csv'): void {
-  const exportData = carts.map(cart => ({
-    'QR Code': cart.qr_code,
-    'Store': cart.store,
-    'Store ID': cart.store_id,
-    'Status': cart.status,
-    'Last Maintenance': cart.last_maintenance ? new Date(cart.last_maintenance).toLocaleDateString() : 'N/A',
-    'Issues': cart.issues.join('; ')
-  }));
+export function exportCartsData(carts: (Cart | CartWithStore)[], format: 'csv' | 'json' = 'csv'): void {
+  const exportData = carts.map(cart => {
+    const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id;
+    return {
+      'QR Token': cart.qr_token,
+      'Asset Tag': cart.asset_tag || '',
+      'Store': storeName || '',
+      'Store Org ID': cart.store_org_id,
+      'Status': getStatusLabel(cart.status),
+      'Model': cart.model || '',
+      'Notes': cart.notes || '',
+      'Updated At': cart.updated_at ? new Date(cart.updated_at).toLocaleDateString() : 'N/A',
+    };
+  });
 
   const filename = `carts-export-${new Date().toISOString().split('T')[0]}.${format}`;
   
@@ -118,7 +123,7 @@ export function exportAnalyticsData(analytics: any[], format: 'csv' | 'json' = '
  * Generate comprehensive business report
  */
 export function generateBusinessReport(data: {
-  carts: Cart[];
+  carts: (Cart | CartWithStore)[];
   requests: any[];
   analytics: any[];
 }): void {
@@ -126,7 +131,7 @@ export function generateBusinessReport(data: {
     generated_at: new Date().toISOString(),
     summary: {
       total_carts: data.carts.length,
-      active_carts: data.carts.filter(c => c.status === 'active').length,
+      active_carts: data.carts.filter(c => c.status === 'in_service').length,
       total_requests: data.requests.length,
       completed_requests: data.requests.filter(r => r.status === 'completed').length,
       total_cost: data.requests.reduce((sum, r) => sum + (Number(r.cost) || 0), 0),

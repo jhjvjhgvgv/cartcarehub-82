@@ -7,19 +7,19 @@ import { CartForm } from "@/components/cart-form";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreCartsTable } from "@/components/store/StoreCartsTable";
 import { useState } from "react";
+import { CartStatus } from "@/types/cart";
 
-interface Cart {
+interface LocalCart {
   id: number;
   cartNumber: string;
-  status: "active" | "maintenance" | "retired";
-  lastMaintenance: string;
-  issues: string[];
+  status: CartStatus;
+  notes: string;
 }
 
 const Store = () => {
   const { id } = useParams();
   const location = useLocation();
-  const [editingCart, setEditingCart] = useState<Cart | null>(null);
+  const [editingCart, setEditingCart] = useState<LocalCart | null>(null);
 
   // This would typically come from an API
   const storeData = {
@@ -30,16 +30,15 @@ const Store = () => {
     activeCarts: 45,
     maintenanceNeeded: 5,
     carts: [
-      { id: 1, cartNumber: "CART-001", status: "active", lastMaintenance: "2024-01-15", issues: [] },
+      { id: 1, cartNumber: "CART-001", status: "in_service" as CartStatus, notes: "" },
       {
         id: 2,
         cartNumber: "CART-002",
-        status: "maintenance",
-        lastMaintenance: "2024-01-10",
-        issues: ["Wheel alignment needed"],
+        status: "out_of_service" as CartStatus,
+        notes: "Wheel alignment needed",
       },
-      { id: 3, cartNumber: "CART-003", status: "active", lastMaintenance: "2024-01-20", issues: [] },
-    ] as Cart[],
+      { id: 3, cartNumber: "CART-003", status: "in_service" as CartStatus, notes: "" },
+    ] as LocalCart[],
   };
 
   const handleSaveCart = (data: any) => {
@@ -82,11 +81,12 @@ const Store = () => {
             {editingCart && (
               <CartForm
                 initialData={{
-                  qr_code: editingCart.cartNumber,
-                  store: storeData.name,
+                  qr_token: editingCart.cartNumber,
+                  store_org_id: storeData.id.toString(),
                   status: editingCart.status,
-                  lastMaintenance: editingCart.lastMaintenance,
-                  issues: editingCart.issues.join("\n"),
+                  asset_tag: "",
+                  model: "",
+                  notes: editingCart.notes,
                 }}
                 onSubmit={handleSaveCart}
                 onCancel={() => setEditingCart(null)}

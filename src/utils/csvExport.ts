@@ -1,18 +1,20 @@
 
-import { Cart } from "@/types/cart";
+import { Cart, CartWithStore, getStatusLabel } from "@/types/cart";
 
 /**
  * Convert cart data to CSV format and trigger download
  */
-export function exportCartsToCSV(carts: Cart[], filename = "carts-export.csv") {
+export function exportCartsToCSV(carts: (Cart | CartWithStore)[], filename = "carts-export.csv") {
   // Define the columns for the CSV
   const columns = [
     "ID",
-    "QR Code",
+    "QR Token",
+    "Asset Tag",
     "Store",
     "Status",
-    "Last Maintenance",
-    "Issues"
+    "Model",
+    "Notes",
+    "Updated At"
   ];
 
   // Create CSV header row
@@ -20,18 +22,17 @@ export function exportCartsToCSV(carts: Cart[], filename = "carts-export.csv") {
 
   // Add data rows
   carts.forEach(cart => {
-    // Format issues to avoid comma problems in CSV
-    const issuesFormatted = cart.issues && cart.issues.length 
-      ? `"${cart.issues.join("; ")}"`
-      : "";
+    const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id;
     
     const row = [
       cart.id,
-      cart.qr_code || "",
-      cart.store || "",
-      cart.status || "",
-      cart.lastMaintenance || "",
-      issuesFormatted
+      cart.qr_token || "",
+      cart.asset_tag || "",
+      storeName || "",
+      getStatusLabel(cart.status),
+      cart.model || "",
+      `"${(cart.notes || "").replace(/"/g, '""')}"`,
+      cart.updated_at || ""
     ];
     
     csvContent += row.join(",") + "\n";

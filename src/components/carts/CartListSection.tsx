@@ -1,20 +1,26 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CartFilters } from "@/components/cart-filters";
 import { CartList } from "@/components/carts/CartList";
 import { Cart } from "@/types/cart";
-import { CartFilters as CartFiltersType } from "@/components/cart-filters";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportCartsToCSV } from "@/utils/csvExport";
 import { useToast } from "@/hooks/use-toast";
+
+interface CartFilters {
+  qr_token?: string;
+  rfidTag?: string;
+  status?: string;
+  store?: string;
+  store_org_id?: string;
+}
 
 interface CartListSectionProps {
   filteredCarts: Cart[];
   onEditCart: (cart: Cart) => void;
   onDeleteCart: (cartId: string) => void;
   onEditMultiple: (carts: Cart[]) => void;
-  onFilterChange: (filters: CartFiltersType) => void;
+  onFilterChange: (filters: CartFilters) => void;
   managedStores: Array<{
     id: string;
     name: string;
@@ -62,7 +68,6 @@ export function CartListSection({
           Export CSV
         </Button>
       </CardHeader>
-      <CartFilters onFilterChange={onFilterChange} managedStores={managedStores} />
       <CardContent className="rounded-md bg-indigo-100 mt-2 p-5">
         <CartList 
           carts={filteredCarts} 

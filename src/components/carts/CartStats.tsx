@@ -2,28 +2,29 @@
 import React from "react"
 import { Card } from "@/components/ui/card"
 import { ShoppingCart, AlertTriangle, CheckCircle, Bell } from "lucide-react"
-import { Cart } from "@/types/cart"
+import { Cart, CartWithPrediction } from "@/types/cart"
 
 interface CartStatsProps {
   totalCarts: number
   activeCarts: number
   maintenanceNeeded: number
-  carts?: Cart[]
+  carts?: (Cart | CartWithPrediction)[]
 }
 
 export function CartStats({ totalCarts, activeCarts, maintenanceNeeded, carts = [] }: CartStatsProps) {
   // Find carts that need attention soon (high probability of needing maintenance)
   const cartsNeedingAttention = carts.filter(
-    cart => cart.maintenancePrediction && 
-    cart.maintenancePrediction.probability > 0.7 &&
-    cart.status === "active"
-  );
+    cart => 'maintenance_probability' in cart && 
+    cart.maintenance_probability && 
+    cart.maintenance_probability > 0.7 &&
+    cart.status === "in_service"
+  ) as CartWithPrediction[];
 
   // Get the cart that needs attention most urgently
   const urgentCart = cartsNeedingAttention.length > 0 
     ? cartsNeedingAttention.sort((a, b) => 
-        (a.maintenancePrediction?.daysUntilMaintenance || 999) - 
-        (b.maintenancePrediction?.daysUntilMaintenance || 999)
+        (a.days_until_maintenance || 999) - 
+        (b.days_until_maintenance || 999)
       )[0]
     : null;
 
@@ -76,8 +77,8 @@ export function CartStats({ totalCarts, activeCarts, maintenanceNeeded, carts = 
             <div>
               <p className="font-medium text-red-800">Preventive Maintenance Alert</p>
               <p className="text-sm text-red-700">
-                Cart #{urgentCart.qr_code} has a {Math.round(urgentCart.maintenancePrediction?.probability! * 100)}% chance 
-                of needing repairs in {urgentCart.maintenancePrediction?.daysUntilMaintenance} days.
+                Cart #{urgentCart.asset_tag || urgentCart.qr_token} has a {Math.round((urgentCart.maintenance_probability || 0) * 100)}% chance 
+                of needing repairs in {urgentCart.days_until_maintenance} days.
               </p>
             </div>
           </div>
