@@ -26,19 +26,15 @@ export interface CartWithIssues extends Cart {
 // Full cart view with store and issues
 export interface CartFullView extends CartWithStore, CartWithIssues {}
 
+// Maintenance prediction computed from inspections/issues
+export interface MaintenancePrediction {
+  maintenance_probability: number; // 0..1
+  days_until_maintenance: number | null; // null if insufficient data
+}
+
 // Cart with prediction data for predictive maintenance
 export interface CartWithPrediction extends Cart {
-  prediction?: {
-    risk_level: 'low' | 'medium' | 'high' | 'critical';
-    risk_score: number;
-    ai_prediction?: string;
-    metrics: {
-      total_usage_hours: number;
-      total_issues: number;
-      avg_downtime: number;
-      days_since_maintenance?: number;
-    };
-  };
+  prediction: MaintenancePrediction;
 }
 
 // Helper to map status to display label

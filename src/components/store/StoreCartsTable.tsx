@@ -1,25 +1,20 @@
-
 import React from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PencilIcon, Download } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { exportCartsToCSV } from "@/utils/csvExport";
 import { useToast } from "@/hooks/use-toast";
+import { CartStatus, getStatusLabel } from "@/types/cart";
 
-interface Cart {
+interface LocalCart {
   id: number;
   cartNumber: string;
-  status: "active" | "maintenance" | "retired";
-  lastMaintenance: string;
-  issues: string[];
-  qr_code?: string; // Added for CSV export compatibility
-  store?: string; // Added for CSV export compatibility
+  status: CartStatus;
+  notes: string;
 }
 
 interface StoreCartsTableProps {
-  carts: Cart[];
-  onEditCart: (cart: Cart) => void;
+  carts: LocalCart[];
+  onEditCart: (cart: LocalCart) => void;
 }
 
 export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
@@ -27,14 +22,26 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
 
   const handleExportCSV = () => {
     try {
-      // Ensure carts have the right format for CSV export
-      const exportableCarts = carts.map(cart => ({
-        ...cart,
-        qr_code: cart.qr_code || cart.cartNumber, // Use cartNumber if qr_code is not available
-        id: typeof cart.id === 'number' ? cart.id.toString() : cart.id,
-      }));
+      // Simple CSV export for local cart data
+      const headers = ["Cart Number", "Status", "Notes"];
+      const rows = carts.map(cart => [
+        cart.cartNumber,
+        getStatusLabel(cart.status),
+        cart.notes || ""
+      ]);
       
-      exportCartsToCSV(exportableCarts as any, `store-carts-${new Date().toISOString().split('T')[0]}.csv`);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+      ].join("\n");
+      
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `store-carts-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Export Successful",
@@ -47,6 +54,19 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
         description: "There was an error exporting your data",
         variant: "destructive",
       });
+    }
+  };
+
+  const getStatusColor = (status: CartStatus) => {
+    switch (status) {
+      case "in_service":
+        return "bg-green-100 text-green-800";
+      case "out_of_service":
+        return "bg-yellow-100 text-yellow-800";
+      case "retired":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -67,36 +87,26 @@ export function StoreCartsTable({ carts, onEditCart }: StoreCartsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-1/4">Cart Number</TableHead>
-            <TableHead className="w-1/4">Status</TableHead>
-            <TableHead className="w-1/4">Last Maintenance</TableHead>
-            <TableHead className="w-1/4 text-right">Actions</TableHead>
+            <TableHead className="w-1/3">Cart Number</TableHead>
+            <TableHead className="w-1/3">Status</TableHead>
+            <TableHead className="w-1/3 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {carts.map((cart) => (
             <TableRow key={cart.id}>
-              <TableCell className="w-1/4 font-medium">{cart.cartNumber}</TableCell>
-              <TableCell className="w-1/4">
-                <span
-                  className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    cart.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : cart.status === "maintenance"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {cart.status}
+              <TableCell className="font-medium">{cart.cartNumber}</TableCell>
+              <TableCell>
+                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(cart.status)}`}>
+                  {getStatusLabel(cart.status)}
                 </span>
               </TableCell>
-              <TableCell className="w-1/4">{cart.lastMaintenance}</TableCell>
-              <TableCell className="w-1/4 text-right">
+              <TableCell className="text-right">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => onEditCart(cart)}
-                  className="hover:bg-primary-50"
+                  className="hover:bg-primary/10"
                 >
                   <PencilIcon className="w-4 h-4" />
                 </Button>
