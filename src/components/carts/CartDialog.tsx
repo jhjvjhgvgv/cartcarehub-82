@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Cart } from "@/types/cart"
 import { useToast } from "@/hooks/use-toast"
 import { SingleCartEdit } from "./SingleCartEdit"
-import { BulkCartEdit } from "./BulkCartEdit"
 import { CartForm } from "../cart-form"
 import { useEffect } from "react"
 
@@ -38,7 +37,7 @@ export function CartDialog({
     console.log('Dialog handleSubmit called with:', data)
     console.log('Using managedStores:', managedStores)
     
-    if (!data.store) {
+    if (!data.store_org_id) {
       console.error("Missing store selection in form data:", data)
       toast({
         title: "Error",
@@ -49,18 +48,18 @@ export function CartDialog({
     }
     
     try {
-      const store = managedStores.find((s) => s.name === data.store)
+      const store = managedStores.find((s) => s.id === data.store_org_id)
       if (!store) {
-        console.error("Store validation failed in dialog. Selected store:", data.store, "Available stores:", managedStores)
+        console.error("Store validation failed in dialog. Selected store:", data.store_org_id, "Available stores:", managedStores)
         toast({
           title: "Error",
-          description: `Selected store "${data.store}" is not in your managed stores list.`,
+          description: `Selected store is not in your managed stores list.`,
           variant: "destructive",
         })
         return
       }
       
-      onSubmit({...data, managedStores})
+      onSubmit(data)
       
       // Close the dialog on successful submit
       if (!isSubmitting) {
@@ -100,16 +99,7 @@ export function CartDialog({
           </DialogDescription>
           
           <div className="mt-4">
-            {isMultipleEdit ? (
-              <BulkCartEdit
-                editingCart={editingCart}
-                cartIds={cartIds}
-                onSubmit={handleSubmit}
-                onCancel={() => onOpenChange(false)}
-                onDelete={handleDelete}
-                disabled={isSubmitting}
-              />
-            ) : editingCart ? (
+            {editingCart ? (
               <SingleCartEdit
                 cart={editingCart}
                 onSubmit={handleSubmit}
@@ -122,10 +112,12 @@ export function CartDialog({
                 onSubmit={handleSubmit}
                 onCancel={() => onOpenChange(false)}
                 initialData={{
-                  qr_code: "", // Updated from rfidTag to qr_code
-                  store: managedStores[0]?.name || "",
-                  status: "active",
-                  issues: "",
+                  qr_token: "",
+                  store_org_id: managedStores[0]?.id || "",
+                  status: "in_service",
+                  asset_tag: "",
+                  model: "",
+                  notes: "",
                 }}
                 disabled={isSubmitting}
               />

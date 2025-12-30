@@ -6,7 +6,6 @@ import { useState } from "react"
 import { QRScanner } from "@/components/cart-form/QRScanner"
 import { useToast } from "@/hooks/use-toast"
 import { useCarts } from "@/hooks/use-carts"
-import { Cart } from "@/types/cart"
 import { useNavigate } from "react-router-dom"
 
 interface CartHeaderProps {
@@ -20,12 +19,12 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
   const navigate = useNavigate()
 
   const handleQRCodeDetected = (qrCode: string) => {
-    const existingCart = carts.find(cart => cart.qr_code === qrCode)
+    const existingCart = carts.find(cart => cart.qr_token === qrCode)
     
     if (existingCart) {
       toast({
         title: "Cart Found",
-        description: `Found cart: ${existingCart.qr_code}`,
+        description: `Found cart: ${existingCart.qr_token}`,
       })
       // Navigate to the cart details page
       navigate(`/carts/${existingCart.id}`)
@@ -34,7 +33,6 @@ export function CartHeader({ onAddClick }: CartHeaderProps) {
       toast({
         title: "Cart Not Found",
         description: "No cart found with this QR code. You can add it as a new cart.",
-        // Fixed the variant type error by using a valid variant
         variant: "destructive"
       })
       // Close the scanner dialog

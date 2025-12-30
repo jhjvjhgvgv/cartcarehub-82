@@ -39,13 +39,14 @@ describe('CartDialog', () => {
   it('shows edit cart dialog when editing cart is provided', () => {
     const editingCart: Cart = {
       id: 'CART-001',
-      qr_code: 'QR-123',
-      store: 'SuperMart Downtown',
-      storeId: 'store1',
-      store_id: 'store1', // Added store_id
-      status: 'active',
-      lastMaintenance: '2024-02-21',
-      issues: [],
+      qr_token: 'QR-123',
+      store_org_id: 'store1',
+      status: 'in_service',
+      asset_tag: null,
+      model: null,
+      notes: null,
+      created_at: '2024-02-21',
+      updated_at: '2024-02-21',
     }
 
     const { container } = render(<CartDialog {...defaultProps} editingCart={editingCart} />)
@@ -55,13 +56,14 @@ describe('CartDialog', () => {
   it('shows multiple cart edit dialog when editing multiple carts', () => {
     const editingCart: Cart = {
       id: 'CART-001,CART-002',
-      qr_code: 'Multiple Carts',
-      store: 'SuperMart Downtown',
-      storeId: 'store1',
-      store_id: 'store1', // Added store_id
-      status: 'active',
-      lastMaintenance: '2024-02-21',
-      issues: [],
+      qr_token: 'Multiple Carts',
+      store_org_id: 'store1',
+      status: 'in_service',
+      asset_tag: null,
+      model: null,
+      notes: null,
+      created_at: '2024-02-21',
+      updated_at: '2024-02-21',
     }
 
     const { container } = render(<CartDialog {...defaultProps} editingCart={editingCart} />)

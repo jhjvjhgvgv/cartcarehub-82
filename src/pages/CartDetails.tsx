@@ -12,9 +12,9 @@ import { useFetchCartById } from "@/hooks/cart-hooks/use-fetch-cart-by-id"
 import { CartDetailView } from "@/components/carts/CartDetailView"
 import { CartLoading } from "@/components/carts/CartLoading"
 import { CartError } from "@/components/carts/CartError"
-import { managedStores } from "@/constants/stores"
 import { CartQRCode } from "@/components/carts/CartQRCode"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { getStatusLabel } from "@/types/cart"
 
 export default function CartDetails() {
   const { cartId } = useParams<{ cartId: string }>()
@@ -45,7 +45,6 @@ export default function CartDetails() {
     handleSubmit({
       data,
       editingCart: cart,
-      managedStores
     })
     setIsEditing(false)
   }
@@ -89,6 +88,9 @@ export default function CartDetails() {
     )
   }
 
+  // Get store name from cart (could be from a join or we use the ID)
+  const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id
+
   return (
     <DashboardLayout>
       <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
@@ -96,7 +98,7 @@ export default function CartDetails() {
           {/* Store name header */}
           <div className="bg-primary-50 text-primary-900 py-3 px-5 rounded-lg text-center mb-3">
             <p className="text-sm font-medium">Store</p>
-            <h2 className="text-xl font-bold">{cart.store}</h2>
+            <h2 className="text-xl font-bold">{storeName || 'Unknown Store'}</h2>
           </div>
           
           <div className="flex items-center justify-between gap-4">

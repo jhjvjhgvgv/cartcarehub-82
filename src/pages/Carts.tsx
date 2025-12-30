@@ -5,34 +5,56 @@ import { CartDialog } from "@/components/carts/CartDialog"
 import { CartHeader } from "@/components/carts/CartHeader"
 import { CartListSection } from "@/components/carts/CartListSection"
 import { useCarts } from "@/hooks/use-carts"
-import { Cart } from "@/types/cart"
-import { CartFilters as CartFiltersType } from "@/components/cart-filters"
+import { Cart, getStatusValue } from "@/types/cart"
 import { managedStores } from "@/constants/stores"
-import { filterCarts, prepareMultipleCartEdit } from "@/utils/cartUtils"
 import { AlertCircle, Loader2, WifiOff, RefreshCw } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface CartFilters {
+  qr_token: string
+  status: string
+  store_org_id: string
+}
+
+const filterCarts = (carts: Cart[], filters: CartFilters): Cart[] => {
+  return carts.filter(cart => {
+    if (filters.qr_token && !cart.qr_token.toLowerCase().includes(filters.qr_token.toLowerCase())) {
+      return false
+    }
+    if (filters.status && cart.status !== getStatusValue(filters.status)) {
+      return false
+    }
+    if (filters.store_org_id && cart.store_org_id !== filters.store_org_id) {
+      return false
+    }
+    return true
+  })
+}
 
 const Carts = () => {
   console.log("Available managed stores:", managedStores)
   const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart, isSubmitting } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
-  const [filters, setFilters] = useState<CartFiltersType>({
-    rfidTag: "",
+  const [filters, setFilters] = useState<CartFilters>({
+    qr_token: "",
     status: "",
-    store: "",
+    store_org_id: "",
   })
 
   // Use the filtered carts
   const filteredCarts = filterCarts(carts, filters)
-  const activeCarts = filteredCarts.filter((cart) => cart.status === "active").length
-  const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "maintenance").length
+  const activeCarts = filteredCarts.filter((cart) => cart.status === "in_service").length
+  const maintenanceNeeded = filteredCarts.filter((cart) => cart.status === "out_of_service").length
 
   const handleEditMultiple = (selectedCarts: Cart[]) => {
-    setEditingCart(prepareMultipleCartEdit(selectedCarts))
-    setIsAddDialogOpen(true)
+    // For multiple selection, just use the first cart for now
+    if (selectedCarts.length > 0) {
+      setEditingCart(selectedCarts[0])
+      setIsAddDialogOpen(true)
+    }
   }
 
   const handleDialogClose = (open: boolean) => {
@@ -49,7 +71,6 @@ const Carts = () => {
     handleSubmit({ 
       data, 
       editingCart, 
-      managedStores 
     })
     // The dialog will be closed in the CartDialog component
   }
@@ -57,6 +78,14 @@ const Carts = () => {
   const handleDeleteDialogCart = (cartId: string) => {
     handleDeleteCart(cartId)
     // The dialog will be closed in the CartDialog component
+  }
+
+  const handleFilterChange = (newFilters: any) => {
+    setFilters({
+      qr_token: newFilters.rfidTag || newFilters.qr_token || "",
+      status: newFilters.status || "",
+      store_org_id: newFilters.store || newFilters.store_org_id || "",
+    })
   }
 
   const getErrorMessage = (error: any) => {
@@ -167,7 +196,7 @@ const Carts = () => {
               onEditCart={setEditingCart}
               onDeleteCart={handleDeleteCart}
               onEditMultiple={handleEditMultiple}
-              onFilterChange={setFilters}
+              onFilterChange={handleFilterChange}
               managedStores={managedStores}
             />
           </>
