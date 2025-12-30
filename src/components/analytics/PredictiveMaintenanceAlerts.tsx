@@ -2,9 +2,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, TrendingUp, Wrench, Calendar, Sparkles } from "lucide-react";
-import { useAllCartsPredictive, useTriggerAutoSchedule } from "@/hooks/use-predictive-maintenance";
+import { useAllCartsPredictive, useTriggerAutoSchedule, PredictiveAnalysis } from "@/hooks/use-predictive-maintenance";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CartWithPrediction } from "@/types/cart";
+import { Cart } from "@/types/cart";
+
+// Local type for cart with edge function prediction (different from CartWithPrediction in types)
+interface CartWithEdgePrediction extends Cart {
+  prediction: PredictiveAnalysis | null;
+}
 
 export function PredictiveMaintenanceAlerts() {
   const { data: predictions, isLoading } = useAllCartsPredictive();
@@ -31,11 +36,11 @@ export function PredictiveMaintenanceAlerts() {
     }
   };
 
-  const highRiskCarts = predictions?.filter((p: CartWithPrediction) => 
+  const highRiskCarts = (predictions as CartWithEdgePrediction[] | undefined)?.filter((p) => 
     p.prediction && (p.prediction.risk_level === 'high' || p.prediction.risk_level === 'critical')
   ) || [];
 
-  const mediumRiskCarts = predictions?.filter((p: CartWithPrediction) => 
+  const mediumRiskCarts = (predictions as CartWithEdgePrediction[] | undefined)?.filter((p) => 
     p.prediction && p.prediction.risk_level === 'medium'
   ) || [];
 
@@ -92,7 +97,7 @@ export function PredictiveMaintenanceAlerts() {
                   <AlertTriangle className="h-4 w-4" />
                   High Priority Alerts ({highRiskCarts.length})
                 </div>
-                {highRiskCarts.map((cart: CartWithPrediction) => (
+                {highRiskCarts.map((cart) => (
                   <div
                     key={cart.id}
                     className="border-l-4 border-destructive bg-destructive/5 p-4 rounded-r-lg space-y-2"
@@ -156,7 +161,7 @@ export function PredictiveMaintenanceAlerts() {
                   <TrendingUp className="h-4 w-4" />
                   Monitor Closely ({mediumRiskCarts.length})
                 </div>
-                {mediumRiskCarts.map((cart: CartWithPrediction) => (
+                {mediumRiskCarts.map((cart) => (
                   <div
                     key={cart.id}
                     className="border-l-4 border-primary bg-primary/5 p-3 rounded-r-lg"

@@ -1,10 +1,8 @@
-
 import { useQuery } from "@tanstack/react-query"
 import { Cart } from "@/types/cart"
 import { fetchCarts } from "@/api/carts"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
-import { addMaintenancePredictions } from "@/utils/maintenance-prediction"
 
 export const useFetchCarts = () => {
   const { toast } = useToast()
@@ -22,9 +20,9 @@ export const useFetchCarts = () => {
     retryDelay: 1000,
   })
 
-  // Apply maintenance predictions to all carts
-  // Make sure we safely handle the cart data
-  const carts = Array.isArray(rawCarts) ? addMaintenancePredictions(rawCarts) : [];
+  // Return carts directly without adding predictions
+  // Predictions are computed separately when needed
+  const carts: Cart[] = Array.isArray(rawCarts) ? rawCarts : [];
 
   const retryFetchCarts = async () => {
     setIsRetrying(true)

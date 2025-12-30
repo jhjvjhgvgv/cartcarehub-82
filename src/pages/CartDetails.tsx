@@ -89,7 +89,9 @@ export default function CartDetails() {
   }
 
   // Get store name from cart (could be from a join or we use the ID)
-  const storeName = 'store_name' in cart ? cart.store_name : cart.store_org_id
+  const storeName: string = 'store_name' in cart && typeof cart.store_name === 'string' 
+    ? cart.store_name 
+    : cart.store_org_id
 
   return (
     <DashboardLayout>
