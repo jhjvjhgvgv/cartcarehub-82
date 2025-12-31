@@ -212,6 +212,39 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          store_org_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          store_org_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          store_org_id?: string | null
+        }
+        Relationships: []
+      }
       cart_analytics: {
         Row: {
           cart_id: string
@@ -294,7 +327,28 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -581,7 +635,28 @@ export type Database = {
             foreignKeyName: "inspections_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -1013,7 +1088,28 @@ export type Database = {
             foreignKeyName: "issues_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -2301,7 +2397,28 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -2382,7 +2499,28 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -2443,6 +2581,266 @@ export type Database = {
           },
         ]
       }
+      cart_issue_counts: {
+        Row: {
+          cart_id: string | null
+          high_sev_open_count: number | null
+          open_issue_count: number | null
+          store_org_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_alerts"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_with_store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
+      cart_last_inspection: {
+        Row: {
+          cart_id: string | null
+          last_inspected_at: string | null
+          store_org_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
+      cart_last_score: {
+        Row: {
+          cart_id: string | null
+          health_score: number | null
+          scored_at: string | null
+          store_org_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_alerts"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_with_store"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
       cart_mtbf_segments: {
         Row: {
           cart_id: string | null
@@ -2463,7 +2861,28 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -2517,6 +2936,136 @@ export type Database = {
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
+      cart_predictions: {
+        Row: {
+          cart_id: string | null
+          days_until_maintenance: number | null
+          maintenance_probability: number | null
+          store_org_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
+      carts_enriched: {
+        Row: {
+          asset_tag: string | null
+          created_at: string | null
+          high_sev_open_count: number | null
+          id: string | null
+          last_health_score: number | null
+          last_inspected_at: string | null
+          model: string | null
+          notes: string | null
+          open_issue_count: number | null
+          qr_token: string | null
+          status: Database["public"]["Enums"]["cart_status"] | null
+          store_market: string | null
+          store_name: string | null
+          store_org_id: string | null
+          store_region: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
@@ -2705,7 +3254,28 @@ export type Database = {
             foreignKeyName: "issues_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
             referencedColumns: ["id"]
           },
           {
@@ -3354,7 +3924,26 @@ export type Database = {
       rollup_store_day: { Args: { p_day: string }; Returns: undefined }
       safe_user_setup: { Args: { user_id_param: string }; Returns: Json }
       schedule_maintenance_requests: { Args: never; Returns: Json }
+      submit_inspection_by_qr: {
+        Args: {
+          p_checklist?: Json
+          p_health_score: number
+          p_issue_category?: string
+          p_issue_description?: string
+          p_issue_severity?: Database["public"]["Enums"]["issue_severity"]
+          p_notes?: string
+          p_qr_token: string
+          p_reported_status: Database["public"]["Enums"]["cart_status"]
+        }
+        Returns: {
+          cart_id: string
+          inspection_id: string
+          issue_id: string
+          store_org_id: string
+        }[]
+      }
       sync_user_roles_from_metadata: { Args: never; Returns: undefined }
+      user_can_access_store: { Args: { _store_org: string }; Returns: boolean }
       user_has_maintenance_profile: {
         Args: { user_id: string }
         Returns: boolean

@@ -1,20 +1,12 @@
-
 import { useParams, useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CartForm } from "@/components/cart-form";
 import { StoreHeader } from "@/components/store/StoreHeader";
-import { StoreCartsTable } from "@/components/store/StoreCartsTable";
+import { StoreCartsTable, type LocalCart } from "@/components/store/StoreCartsTable";
 import { useState } from "react";
 import { CartStatus } from "@/types/cart";
-
-interface LocalCart {
-  id: number;
-  cartNumber: string;
-  status: CartStatus;
-  notes: string;
-}
 
 const Store = () => {
   const { id } = useParams();
@@ -46,6 +38,10 @@ const Store = () => {
     setEditingCart(null);
   };
 
+  const handleEditCart = (cart: LocalCart) => {
+    setEditingCart(cart);
+  };
+
   return (
     <DashboardLayout>
       <div className="flex-1 h-screen overflow-y-auto">
@@ -63,7 +59,7 @@ const Store = () => {
               <h2 className="text-lg font-semibold mb-4">Carts Overview</h2>
               <div className="w-full overflow-x-auto">
                 <div className="min-w-[600px]">
-                  <StoreCartsTable carts={storeData.carts} onEditCart={setEditingCart} />
+                  <StoreCartsTable carts={storeData.carts} onEditCart={handleEditCart} />
                 </div>
               </div>
             </div>
