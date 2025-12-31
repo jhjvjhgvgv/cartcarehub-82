@@ -5,11 +5,11 @@ import { PencilIcon, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CartStatus, getStatusLabel } from "@/types/cart";
 
-interface LocalCart {
+export interface LocalCart {
   id: number;
   cartNumber: string;
   status: CartStatus;
-  notes: string;
+  notes?: string;
 }
 
 interface StoreCartsTableProps {
