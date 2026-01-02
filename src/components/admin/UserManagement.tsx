@@ -4,45 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { 
   Search, 
   UserPlus, 
   Mail, 
-  Phone, 
-  Building, 
-  Calendar,
-  MoreHorizontal,
   Edit,
   Ban,
-  CheckCircle,
-  AlertTriangle
+  CheckCircle
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance } from "date-fns";
 
-interface User {
+interface UserWithMemberships {
   id: string;
-  email: string;
-  role: string;
-  display_name?: string;
-  company_name?: string;
-  contact_phone?: string;
-  is_active: boolean;
-  last_sign_in?: string;
+  full_name: string | null;
+  phone: string | null;
   created_at: string;
+  email?: string;
+  memberships: Array<{
+    id: string;
+    role: string;
+    org_id: string;
+    org_name?: string;
+    org_type?: string;
+  }>;
 }
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithMemberships | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -50,20 +46,46 @@ export function UserManagement() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
+      // Fetch user profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as User[];
+      if (profilesError) throw profilesError;
+
+      // Fetch all org memberships with org info
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('org_memberships')
+        .select('id, user_id, role, org_id, organizations(name, type)');
+      
+      if (membershipsError) throw membershipsError;
+
+      // Combine profiles with memberships
+      const usersWithMemberships: UserWithMemberships[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        phone: profile.phone,
+        created_at: profile.created_at,
+        memberships: (memberships || [])
+          .filter(m => m.user_id === profile.id)
+          .map(m => ({
+            id: m.id,
+            role: m.role,
+            org_id: m.org_id,
+            org_name: (m.organizations as any)?.name,
+            org_type: (m.organizations as any)?.type
+          }))
+      }));
+
+      return usersWithMemberships;
     }
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, updates }: { userId: string; updates: Partial<User> }) => {
+    mutationFn: async ({ userId, updates }: { userId: string; updates: { full_name?: string; phone?: string } }) => {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update(updates)
         .eq('id', userId)
         .select()
@@ -89,45 +111,36 @@ export function UserManagement() {
     }
   });
 
+  const getPrimaryRole = (user: UserWithMemberships): string => {
+    if (user.memberships.length === 0) return 'none';
+    // Priority: corp_admin > provider_admin > store_admin > others
+    const roleOrder = ['corp_admin', 'provider_admin', 'store_admin', 'corp_viewer', 'provider_tech', 'store_staff'];
+    for (const role of roleOrder) {
+      const membership = user.memberships.find(m => m.role === role);
+      if (membership) return role;
+    }
+    return user.memberships[0]?.role || 'none';
+  };
+
   const filteredUsers = users?.filter(user => {
-    const matchesSearch = user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.company_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === "all" || user.role === filterRole;
+    const matchesSearch = 
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.memberships.some(m => m.org_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+    const primaryRole = getPrimaryRole(user);
+    const matchesRole = filterRole === "all" || primaryRole.includes(filterRole);
     return matchesSearch && matchesRole;
   }) || [];
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: UserWithMemberships) => {
     setSelectedUser(user);
     setIsEditDialogOpen(true);
   };
 
-  const handleToggleUserStatus = (user: User) => {
-    updateUserMutation.mutate({
-      userId: user.id,
-      updates: { is_active: !user.is_active }
-    });
-  };
-
-  const getUserStatusBadge = (user: User) => {
-    if (!user.is_active) {
-      return <Badge variant="destructive">Inactive</Badge>;
-    }
-    
-    if (user.last_sign_in) {
-      const lastSignIn = new Date(user.last_sign_in);
-      const daysSinceLastSignIn = (Date.now() - lastSignIn.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (daysSinceLastSignIn > 30) {
-        return <Badge variant="secondary">Inactive (30+ days)</Badge>;
-      } else if (daysSinceLastSignIn > 7) {
-        return <Badge variant="outline">Recently Active</Badge>;
-      } else {
-        return <Badge variant="default">Active</Badge>;
-      }
-    }
-    
-    return <Badge variant="secondary">Never Signed In</Badge>;
+  const getRoleBadgeVariant = (role: string) => {
+    if (role.includes('admin')) return 'destructive' as const;
+    if (role.includes('provider')) return 'default' as const;
+    return 'secondary' as const;
   };
 
   return (
@@ -156,7 +169,7 @@ export function UserManagement() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by email, name, or company..."
+                  placeholder="Search by name, phone, or organization..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -171,9 +184,10 @@ export function UserManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
                   <SelectItem value="store">Store</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="provider">Provider</SelectItem>
+                  <SelectItem value="corp">Corporation</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -191,17 +205,17 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div>Loading users...</div>
+            <div className="flex items-center justify-center p-8">Loading users...</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground">No users found</div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Sign In</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Organizations</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -212,45 +226,41 @@ export function UserManagement() {
                       <TableCell>
                         <div>
                           <div className="font-medium">
-                            {user.display_name || user.email}
+                            {user.full_name || 'No name set'}
                           </div>
-                          <div className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {user.email}
-                          </div>
-                          {user.contact_phone && (
-                            <div className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {user.contact_phone}
+                          {user.phone && (
+                            <div className="text-sm text-muted-foreground">
+                              {user.phone}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={
-                          user.role === 'admin' ? 'destructive' : 
-                          user.role === 'maintenance' ? 'default' : 'secondary'
-                        }>
-                          {user.role}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {user.memberships.length > 0 ? (
+                            user.memberships.map(m => (
+                              <Badge key={m.id} variant={getRoleBadgeVariant(m.role)} className="text-xs">
+                                {m.role.replace('_', ' ')}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Badge variant="outline">No roles</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
-                        {user.company_name && (
-                          <div className="flex items-center gap-1">
-                            <Building className="h-3 w-3" />
-                            {user.company_name}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>{getUserStatusBadge(user)}</TableCell>
-                      <TableCell>
-                        {user.last_sign_in ? (
-                          <div className="text-sm">
-                            {formatDistance(new Date(user.last_sign_in), new Date(), { addSuffix: true })}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Never</span>
-                        )}
+                        <div className="flex flex-wrap gap-1">
+                          {user.memberships.map(m => m.org_name).filter(Boolean).slice(0, 2).map((name, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">
+                              {name}
+                            </Badge>
+                          ))}
+                          {user.memberships.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{user.memberships.length - 2} more
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
@@ -258,22 +268,13 @@ export function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditUser(user)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant={user.is_active ? "destructive" : "default"}
-                            size="sm"
-                            onClick={() => handleToggleUserStatus(user)}
-                          >
-                            {user.is_active ? <Ban className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-                          </Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -290,64 +291,40 @@ export function UserManagement() {
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information and settings
+              Update user profile information
             </DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="display_name">Display Name</Label>
+                <Label htmlFor="full_name">Full Name</Label>
                 <Input
-                  id="display_name"
-                  defaultValue={selectedUser.display_name || ""}
+                  id="full_name"
+                  defaultValue={selectedUser.full_name || ""}
                   onChange={(e) => setSelectedUser({
                     ...selectedUser,
-                    display_name: e.target.value
+                    full_name: e.target.value
                   })}
                 />
               </div>
               <div>
-                <Label htmlFor="company_name">Company Name</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
-                  id="company_name"
-                  defaultValue={selectedUser.company_name || ""}
+                  id="phone"
+                  defaultValue={selectedUser.phone || ""}
                   onChange={(e) => setSelectedUser({
                     ...selectedUser,
-                    company_name: e.target.value
+                    phone: e.target.value
                   })}
                 />
-              </div>
-              <div>
-                <Label htmlFor="contact_phone">Phone</Label>
-                <Input
-                  id="contact_phone"
-                  defaultValue={selectedUser.contact_phone || ""}
-                  onChange={(e) => setSelectedUser({
-                    ...selectedUser,
-                    contact_phone: e.target.value
-                  })}
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={selectedUser.is_active}
-                  onCheckedChange={(checked) => setSelectedUser({
-                    ...selectedUser,
-                    is_active: checked
-                  })}
-                />
-                <Label htmlFor="is_active">Active Account</Label>
               </div>
               <div className="flex gap-2 pt-4">
                 <Button
                   onClick={() => updateUserMutation.mutate({
                     userId: selectedUser.id,
                     updates: {
-                      display_name: selectedUser.display_name,
-                      company_name: selectedUser.company_name,
-                      contact_phone: selectedUser.contact_phone,
-                      is_active: selectedUser.is_active
+                      full_name: selectedUser.full_name || undefined,
+                      phone: selectedUser.phone || undefined
                     }
                   })}
                   disabled={updateUserMutation.isPending}

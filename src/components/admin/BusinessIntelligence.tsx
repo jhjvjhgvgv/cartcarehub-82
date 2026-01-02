@@ -8,17 +8,11 @@ import {
   TrendingDown,
   DollarSign,
   ShoppingCart,
-  Users,
   AlertTriangle,
   Download,
-  Calendar,
-  BarChart3,
-  PieChart,
   Activity
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart as RechartsPieChart,
@@ -42,7 +36,7 @@ interface KPIMetric {
   value: string | number;
   change: number;
   trend: 'up' | 'down';
-  icon: any;
+  icon: React.ElementType;
 }
 
 interface RevenueData {
@@ -82,22 +76,27 @@ export function BusinessIntelligence() {
       
       if (cartsError) throw cartsError;
 
-      // Fetch maintenance requests
-      const { data: requests, error: requestsError } = await supabase
-        .from('maintenance_requests')
+      // Fetch work orders (replacement for maintenance_requests in analytics)
+      const { data: workOrders, error: workOrdersError } = await supabase
+        .from('work_orders')
         .select('*');
-      
-      if (requestsError) throw requestsError;
 
-      // Calculate KPIs using new status values
+      // Fetch issues for cost analysis
+      const { data: issues, error: issuesError } = await supabase
+        .from('issues')
+        .select('*');
+
+      // Calculate KPIs using canonical status values
       const totalCarts = carts?.length || 0;
       const inServiceCarts = carts?.filter(c => c.status === 'in_service').length || 0;
       const outOfServiceCarts = carts?.filter(c => c.status === 'out_of_service').length || 0;
-      const totalRequests = requests?.length || 0;
-      const completedRequests = requests?.filter(r => r.status === 'completed').length || 0;
       
-      const totalRevenue = requests?.reduce((sum, r) => sum + (Number(r.cost) || 0), 0) || 0;
-      const avgCost = totalRequests > 0 ? totalRevenue / totalRequests : 0;
+      const totalWorkOrders = workOrders?.length || 0;
+      const completedWorkOrders = workOrders?.filter(w => w.status === 'completed').length || 0;
+      
+      // Calculate cost from issues (actual_cost)
+      const totalCost = issues?.reduce((sum, issue) => sum + (Number(issue.actual_cost) || Number(issue.est_cost) || 0), 0) || 0;
+      const avgCost = totalWorkOrders > 0 ? totalCost / totalWorkOrders : 0;
 
       setKpiMetrics([
         {
@@ -115,8 +114,8 @@ export function BusinessIntelligence() {
           icon: Activity
         },
         {
-          label: 'Total Revenue',
-          value: `$${totalRevenue.toLocaleString()}`,
+          label: 'Total Maintenance Cost',
+          value: `$${totalCost.toLocaleString()}`,
           change: 18.3,
           trend: 'up',
           icon: DollarSign
@@ -137,14 +136,14 @@ export function BusinessIntelligence() {
         },
         {
           label: 'Completion Rate',
-          value: `${totalRequests > 0 ? ((completedRequests / totalRequests) * 100).toFixed(1) : 0}%`,
+          value: `${totalWorkOrders > 0 ? ((completedWorkOrders / totalWorkOrders) * 100).toFixed(1) : 0}%`,
           change: 15.8,
           trend: 'up',
           icon: TrendingUp
         }
       ]);
 
-      // Generate revenue trend data
+      // Generate mock revenue trend data (would come from aggregated DB data in production)
       const monthlyData: RevenueData[] = [
         { month: 'Jan', revenue: 45000, costs: 28000, profit: 17000 },
         { month: 'Feb', revenue: 52000, costs: 31000, profit: 21000 },
@@ -155,18 +154,30 @@ export function BusinessIntelligence() {
       ];
       setRevenueData(monthlyData);
 
-      // Fetch provider performance
-      const { data: providers, error: providerError } = await supabase
-        .from('maintenance_providers')
-        .select('*, maintenance_requests(*)');
+      // Fetch provider organizations for performance data
+      const { data: providerOrgs, error: providerError } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .eq('type', 'provider');
       
-      if (!providerError && providers) {
-        const performanceData = providers.map(p => ({
-          name: p.company_name || 'Unknown',
-          completedJobs: (p.maintenance_requests as any[])?.filter(r => r.status === 'completed').length || 0,
-          avgRating: 4.2 + Math.random() * 0.8,
-          revenue: (p.maintenance_requests as any[])?.reduce((sum, r) => sum + (Number(r.cost) || 0), 0) || 0
-        }));
+      if (!providerError && providerOrgs) {
+        // Get work order counts per provider
+        const performanceData = await Promise.all(
+          providerOrgs.map(async (org) => {
+            const { count: completedCount } = await supabase
+              .from('work_orders')
+              .select('*', { count: 'exact', head: true })
+              .eq('provider_org_id', org.id)
+              .eq('status', 'completed');
+            
+            return {
+              name: org.name || 'Unknown',
+              completedJobs: completedCount || 0,
+              avgRating: 4.2 + Math.random() * 0.8,
+              revenue: (completedCount || 0) * 250 // Estimated revenue per job
+            };
+          })
+        );
         setProviderData(performanceData);
       }
 
@@ -271,11 +282,11 @@ export function BusinessIntelligence() {
             Revenue Analysis
           </TabsTrigger>
           <TabsTrigger value="performance">
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <Activity className="h-4 w-4 mr-2" />
             Provider Performance
           </TabsTrigger>
           <TabsTrigger value="trends">
-            <Activity className="h-4 w-4 mr-2" />
+            <TrendingUp className="h-4 w-4 mr-2" />
             Market Trends
           </TabsTrigger>
         </TabsList>

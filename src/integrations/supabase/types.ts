@@ -14,204 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_accounts: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          display_name: string | null
-          email: string
-          id: string
-          is_active: boolean
-          last_login: string | null
-          locked_until: string | null
-          login_attempts: number
-          password_hash: string
-          permissions: Json
-          updated_at: string
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          display_name?: string | null
-          email: string
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          locked_until?: string | null
-          login_attempts?: number
-          password_hash: string
-          permissions?: Json
-          updated_at?: string
-          username: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          display_name?: string | null
-          email?: string
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          locked_until?: string | null
-          login_attempts?: number
-          password_hash?: string
-          permissions?: Json
-          updated_at?: string
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_accounts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "admin_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      admin_activities: {
-        Row: {
-          action: string
-          admin_user_id: string
-          created_at: string
-          details: Json | null
-          error_message: string | null
-          id: string
-          ip_address: unknown
-          success: boolean
-          target_id: string | null
-          target_type: string
-          user_agent: string | null
-        }
-        Insert: {
-          action: string
-          admin_user_id: string
-          created_at?: string
-          details?: Json | null
-          error_message?: string | null
-          id?: string
-          ip_address?: unknown
-          success?: boolean
-          target_id?: string | null
-          target_type: string
-          user_agent?: string | null
-        }
-        Update: {
-          action?: string
-          admin_user_id?: string
-          created_at?: string
-          details?: Json | null
-          error_message?: string | null
-          id?: string
-          ip_address?: unknown
-          success?: boolean
-          target_id?: string | null
-          target_type?: string
-          user_agent?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_activities_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      admin_permissions: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          granted_at: string
-          granted_by: string | null
-          id: string
-          is_active: boolean
-          permissions: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_active?: boolean
-          permissions?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          is_active?: boolean
-          permissions?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_permissions_granted_by_fkey"
-            columns: ["granted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admin_permissions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      admin_sessions: {
-        Row: {
-          admin_id: string
-          created_at: string
-          expires_at: string
-          id: string
-          ip_address: unknown
-          is_active: boolean
-          session_token: string
-          user_agent: string | null
-        }
-        Insert: {
-          admin_id: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          ip_address?: unknown
-          is_active?: boolean
-          session_token: string
-          user_agent?: string | null
-        }
-        Update: {
-          admin_id?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          ip_address?: unknown
-          is_active?: boolean
-          session_token?: string
-          user_agent?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_sessions_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "admin_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       audit_log: {
         Row: {
           action: string
@@ -242,48 +44,6 @@ export type Database = {
           entity_type?: string | null
           id?: string
           store_org_id?: string | null
-        }
-        Relationships: []
-      }
-      cart_analytics: {
-        Row: {
-          cart_id: string
-          created_at: string
-          customer_satisfaction: number | null
-          distance_traveled: number | null
-          downtime_minutes: number | null
-          id: string
-          issues_reported: number | null
-          maintenance_cost: number | null
-          metric_date: string
-          updated_at: string
-          usage_hours: number | null
-        }
-        Insert: {
-          cart_id: string
-          created_at?: string
-          customer_satisfaction?: number | null
-          distance_traveled?: number | null
-          downtime_minutes?: number | null
-          id?: string
-          issues_reported?: number | null
-          maintenance_cost?: number | null
-          metric_date?: string
-          updated_at?: string
-          usage_hours?: number | null
-        }
-        Update: {
-          cart_id?: string
-          created_at?: string
-          customer_satisfaction?: number | null
-          distance_traveled?: number | null
-          downtime_minutes?: number | null
-          id?: string
-          issues_reported?: number | null
-          maintenance_cost?: number | null
-          metric_date?: string
-          updated_at?: string
-          usage_hours?: number | null
         }
         Relationships: []
       }
@@ -355,6 +115,13 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -378,6 +145,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
@@ -469,6 +243,13 @@ export type Database = {
             foreignKeyName: "carts_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -492,100 +273,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      company_settings: {
-        Row: {
-          branding: Json | null
-          company_name: string
-          company_type: string
-          created_at: string | null
-          created_by: string | null
-          id: string
-          is_active: boolean | null
-          settings: Json | null
-          subscription_tier: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          branding?: Json | null
-          company_name: string
-          company_type: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          is_active?: boolean | null
-          settings?: Json | null
-          subscription_tier?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          branding?: Json | null
-          company_name?: string
-          company_type?: string
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          is_active?: boolean | null
-          settings?: Json | null
-          subscription_tier?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_settings_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customers: {
-        Row: {
-          company_name: string | null
-          created_at: string
-          customer_address: string | null
-          customer_email: string | null
-          customer_name: string
-          customer_phone: string | null
-          id: string
-          notes: string | null
-          provider_id: string
-          updated_at: string
-        }
-        Insert: {
-          company_name?: string | null
-          created_at?: string
-          customer_address?: string | null
-          customer_email?: string | null
-          customer_name: string
-          customer_phone?: string | null
-          id?: string
-          notes?: string | null
-          provider_id: string
-          updated_at?: string
-        }
-        Update: {
-          company_name?: string | null
-          created_at?: string
-          customer_address?: string | null
-          customer_email?: string | null
-          customer_name?: string
-          customer_phone?: string | null
-          id?: string
-          notes?: string | null
-          provider_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -663,6 +350,13 @@ export type Database = {
             foreignKeyName: "inspections_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -691,6 +385,13 @@ export type Database = {
             foreignKeyName: "inspections_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -714,116 +415,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      inventory_items: {
-        Row: {
-          category: string | null
-          created_at: string
-          description: string | null
-          id: string
-          item_code: string | null
-          item_name: string
-          provider_id: string
-          quantity_on_hand: number
-          reorder_level: number | null
-          supplier_name: string | null
-          unit_cost: number
-          updated_at: string
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_code?: string | null
-          item_name: string
-          provider_id: string
-          quantity_on_hand?: number
-          reorder_level?: number | null
-          supplier_name?: string | null
-          unit_cost?: number
-          updated_at?: string
-        }
-        Update: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_code?: string | null
-          item_name?: string
-          provider_id?: string
-          quantity_on_hand?: number
-          reorder_level?: number | null
-          supplier_name?: string | null
-          unit_cost?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_items_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      inventory_transactions: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          item_id: string
-          notes: string | null
-          provider_id: string
-          quantity: number
-          reference_id: string | null
-          reference_type: string | null
-          transaction_type: string
-          unit_cost: number | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          item_id: string
-          notes?: string | null
-          provider_id: string
-          quantity: number
-          reference_id?: string | null
-          reference_type?: string | null
-          transaction_type: string
-          unit_cost?: number | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          item_id?: string
-          notes?: string | null
-          provider_id?: string
-          quantity?: number
-          reference_id?: string | null
-          reference_type?: string | null
-          transaction_type?: string
-          unit_cost?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_transactions_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_transactions_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -890,6 +481,13 @@ export type Database = {
             foreignKeyName: "invitations_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -913,117 +511,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      invoice_line_items: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          invoice_id: string
-          quantity: number
-          total_price: number
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          id?: string
-          invoice_id: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          invoice_id?: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoice_line_items_invoice_id_fkey"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invoices: {
-        Row: {
-          created_at: string
-          customer_id: string | null
-          due_date: string | null
-          id: string
-          invoice_date: string
-          invoice_number: string
-          maintenance_request_id: string | null
-          notes: string | null
-          provider_id: string
-          status: string
-          subtotal: number
-          tax_amount: number
-          total_amount: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          customer_id?: string | null
-          due_date?: string | null
-          id?: string
-          invoice_date?: string
-          invoice_number: string
-          maintenance_request_id?: string | null
-          notes?: string | null
-          provider_id: string
-          status?: string
-          subtotal?: number
-          tax_amount?: number
-          total_amount?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          customer_id?: string | null
-          due_date?: string | null
-          id?: string
-          invoice_date?: string
-          invoice_number?: string
-          maintenance_request_id?: string | null
-          notes?: string | null
-          provider_id?: string
-          status?: string
-          subtotal?: number
-          tax_amount?: number
-          total_amount?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_maintenance_request_id_fkey"
-            columns: ["maintenance_request_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invoices_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1116,6 +603,13 @@ export type Database = {
             foreignKeyName: "issues_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -1151,6 +645,13 @@ export type Database = {
             foreignKeyName: "issues_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -1174,215 +675,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      maintenance_providers: {
-        Row: {
-          company_name: string
-          contact_email: string
-          contact_phone: string | null
-          created_at: string
-          id: string
-          is_verified: boolean | null
-          updated_at: string
-          user_id: string
-          verification_date: string | null
-        }
-        Insert: {
-          company_name: string
-          contact_email: string
-          contact_phone?: string | null
-          created_at?: string
-          id?: string
-          is_verified?: boolean | null
-          updated_at?: string
-          user_id: string
-          verification_date?: string | null
-        }
-        Update: {
-          company_name?: string
-          contact_email?: string
-          contact_phone?: string | null
-          created_at?: string
-          id?: string
-          is_verified?: boolean | null
-          updated_at?: string
-          user_id?: string
-          verification_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenance_providers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      maintenance_requests: {
-        Row: {
-          actual_duration: number | null
-          cart_id: string
-          completed_date: string | null
-          cost: number | null
-          created_at: string
-          description: string | null
-          estimated_duration: number | null
-          id: string
-          notes: Json | null
-          priority: string
-          provider_id: string
-          request_type: string
-          scheduled_date: string | null
-          status: string
-          store_id: string
-          updated_at: string
-        }
-        Insert: {
-          actual_duration?: number | null
-          cart_id: string
-          completed_date?: string | null
-          cost?: number | null
-          created_at?: string
-          description?: string | null
-          estimated_duration?: number | null
-          id?: string
-          notes?: Json | null
-          priority?: string
-          provider_id: string
-          request_type: string
-          scheduled_date?: string | null
-          status?: string
-          store_id: string
-          updated_at?: string
-        }
-        Update: {
-          actual_duration?: number | null
-          cart_id?: string
-          completed_date?: string | null
-          cost?: number | null
-          created_at?: string
-          description?: string | null
-          estimated_duration?: number | null
-          id?: string
-          notes?: Json | null
-          priority?: string
-          provider_id?: string
-          request_type?: string
-          scheduled_date?: string | null
-          status?: string
-          store_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenance_requests_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      maintenance_schedules: {
-        Row: {
-          cart_id: string
-          created_at: string
-          estimated_duration: number
-          frequency: number
-          id: string
-          is_active: boolean
-          last_completed: string | null
-          maintenance_type: string
-          next_due_date: string
-          notes: string | null
-          provider_id: string
-          schedule_type: string
-          updated_at: string
-        }
-        Insert: {
-          cart_id: string
-          created_at?: string
-          estimated_duration?: number
-          frequency?: number
-          id?: string
-          is_active?: boolean
-          last_completed?: string | null
-          maintenance_type: string
-          next_due_date: string
-          notes?: string | null
-          provider_id: string
-          schedule_type: string
-          updated_at?: string
-        }
-        Update: {
-          cart_id?: string
-          created_at?: string
-          estimated_duration?: number
-          frequency?: number
-          id?: string
-          is_active?: boolean
-          last_completed?: string | null
-          maintenance_type?: string
-          next_due_date?: string
-          notes?: string | null
-          provider_id?: string
-          schedule_type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "maintenance_schedules_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_progress: {
-        Row: {
-          completed_at: string | null
-          completed_steps: Json | null
-          created_at: string | null
-          current_step: number | null
-          id: string
-          is_completed: boolean | null
-          onboarding_data: Json | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          completed_steps?: Json | null
-          created_at?: string | null
-          current_step?: number | null
-          id?: string
-          is_completed?: boolean | null
-          onboarding_data?: Json | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          completed_steps?: Json | null
-          created_at?: string | null
-          current_step?: number | null
-          id?: string
-          is_completed?: boolean | null
-          onboarding_data?: Json | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1429,6 +721,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_memberships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "org_memberships_org_id_fkey"
@@ -1520,6 +819,13 @@ export type Database = {
             foreignKeyName: "organizations_parent_org_id_fkey"
             columns: ["parent_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "organizations_parent_org_id_fkey"
+            columns: ["parent_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -1543,119 +849,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          company_name: string | null
-          contact_phone: string | null
-          created_at: string
-          display_name: string | null
-          email: string | null
-          email_verified: boolean | null
-          email_verified_at: string | null
-          id: string
-          is_active: boolean | null
-          last_sign_in: string | null
-          onboarding_completed: boolean | null
-          onboarding_completed_at: string | null
-          onboarding_step: number | null
-          role: string | null
-          updated_at: string
-        }
-        Insert: {
-          company_name?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
-          id: string
-          is_active?: boolean | null
-          last_sign_in?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_completed_at?: string | null
-          onboarding_step?: number | null
-          role?: string | null
-          updated_at?: string
-        }
-        Update: {
-          company_name?: string | null
-          contact_phone?: string | null
-          created_at?: string
-          display_name?: string | null
-          email?: string | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_sign_in?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_completed_at?: string | null
-          onboarding_step?: number | null
-          role?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      provider_analytics: {
-        Row: {
-          completed_work_orders: number | null
-          created_at: string
-          id: string
-          labor_hours: number | null
-          metrics: Json | null
-          outstanding_invoices: number | null
-          parts_used_count: number | null
-          parts_used_value: number | null
-          period_end: string
-          period_start: string
-          provider_id: string
-          total_revenue: number | null
-          total_work_orders: number | null
-          updated_at: string
-        }
-        Insert: {
-          completed_work_orders?: number | null
-          created_at?: string
-          id?: string
-          labor_hours?: number | null
-          metrics?: Json | null
-          outstanding_invoices?: number | null
-          parts_used_count?: number | null
-          parts_used_value?: number | null
-          period_end: string
-          period_start: string
-          provider_id: string
-          total_revenue?: number | null
-          total_work_orders?: number | null
-          updated_at?: string
-        }
-        Update: {
-          completed_work_orders?: number | null
-          created_at?: string
-          id?: string
-          labor_hours?: number | null
-          metrics?: Json | null
-          outstanding_invoices?: number | null
-          parts_used_count?: number | null
-          parts_used_value?: number | null
-          period_end?: string
-          period_start?: string
-          provider_id?: string
-          total_revenue?: number | null
-          total_work_orders?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "provider_analytics_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1707,6 +900,13 @@ export type Database = {
             foreignKeyName: "provider_store_links_provider_org_id_fkey"
             columns: ["provider_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_store_links_provider_org_id_fkey"
+            columns: ["provider_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -1756,6 +956,13 @@ export type Database = {
             foreignKeyName: "provider_store_links_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_store_links_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -1779,65 +986,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
-          },
-        ]
-      }
-      scheduled_notifications: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          id: string
-          message: string | null
-          notification_type: string
-          provider_id: string
-          recipient_email: string | null
-          recipient_phone: string | null
-          reference_id: string | null
-          reference_type: string | null
-          scheduled_for: string
-          sent_at: string | null
-          status: string
-          subject: string | null
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message?: string | null
-          notification_type: string
-          provider_id: string
-          recipient_email?: string | null
-          recipient_phone?: string | null
-          reference_id?: string | null
-          reference_type?: string | null
-          scheduled_for: string
-          sent_at?: string | null
-          status?: string
-          subject?: string | null
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message?: string | null
-          notification_type?: string
-          provider_id?: string
-          recipient_email?: string | null
-          recipient_phone?: string | null
-          reference_id?: string | null
-          reference_type?: string | null
-          scheduled_for?: string
-          sent_at?: string | null
-          status?: string
-          subject?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_notifications_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1892,6 +1040,13 @@ export type Database = {
             foreignKeyName: "store_daily_rollups_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "store_daily_rollups_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -1918,136 +1073,6 @@ export type Database = {
           },
         ]
       }
-      store_provider_connections: {
-        Row: {
-          created_at: string
-          id: string
-          initiated_by: string
-          provider_id: string
-          status: Database["public"]["Enums"]["invitation_status"] | null
-          store_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          initiated_by: string
-          provider_id: string
-          status?: Database["public"]["Enums"]["invitation_status"] | null
-          store_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          initiated_by?: string
-          provider_id?: string
-          status?: Database["public"]["Enums"]["invitation_status"] | null
-          store_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_provider_connections_initiated_by_fkey"
-            columns: ["initiated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "store_provider_connections_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_providers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      system_configuration: {
-        Row: {
-          config_key: string
-          config_value: Json
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          is_public: boolean
-          updated_at: string
-        }
-        Insert: {
-          config_key: string
-          config_value: Json
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          updated_at?: string
-        }
-        Update: {
-          config_key?: string
-          config_value?: Json
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "system_configuration_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      system_logs: {
-        Row: {
-          action: string
-          created_at: string | null
-          details: Json | null
-          id: string
-          ip_address: unknown
-          resource_id: string | null
-          resource_type: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          resource_id?: string | null
-          resource_type: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          ip_address?: unknown
-          resource_id?: string | null
-          resource_type?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "system_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_profiles: {
         Row: {
           created_at: string
@@ -2071,102 +1096,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          granted_at: string
-          granted_by: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_granted_by_fkey"
-            columns: ["granted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      work_order_line_items: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          inventory_item_id: string | null
-          line_type: string
-          maintenance_request_id: string
-          quantity: number
-          total_price: number
-          unit_price: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          id?: string
-          inventory_item_id?: string | null
-          line_type: string
-          maintenance_request_id: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          inventory_item_id?: string | null
-          line_type?: string
-          maintenance_request_id?: string
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "work_order_line_items_inventory_item_id_fkey"
-            columns: ["inventory_item_id"]
-            isOneToOne: false
-            referencedRelation: "inventory_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_order_line_items_maintenance_request_id_fkey"
-            columns: ["maintenance_request_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_requests"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       work_orders: {
         Row: {
@@ -2231,6 +1160,13 @@ export type Database = {
             foreignKeyName: "work_orders_provider_org_id_fkey"
             columns: ["provider_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "work_orders_provider_org_id_fkey"
+            columns: ["provider_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -2275,6 +1211,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "work_orders_store_org_id_fkey"
@@ -2346,6 +1289,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "carts_store_org_id_fkey"
@@ -2425,6 +1375,13 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -2448,6 +1405,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
@@ -2527,6 +1491,13 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -2550,6 +1521,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
@@ -2628,6 +1606,13 @@ export type Database = {
             foreignKeyName: "issues_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -2651,6 +1636,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "issues_store_org_id_fkey"
@@ -2709,6 +1701,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "carts_store_org_id_fkey"
@@ -2787,6 +1786,13 @@ export type Database = {
             foreignKeyName: "inspections_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -2810,6 +1816,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspections_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "inspections_store_org_id_fkey"
@@ -2889,6 +1902,13 @@ export type Database = {
             foreignKeyName: "cart_status_events_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -2912,6 +1932,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
@@ -2971,6 +1998,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "carts_store_org_id_fkey"
@@ -3047,6 +2081,93 @@ export type Database = {
             foreignKeyName: "carts_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
+      carts_with_predictions: {
+        Row: {
+          asset_tag: string | null
+          created_at: string | null
+          days_until_maintenance: number | null
+          high_sev_open_count: number | null
+          id: string | null
+          last_health_score: number | null
+          last_inspected_at: string | null
+          maintenance_probability: number | null
+          model: string | null
+          notes: string | null
+          open_issue_count: number | null
+          qr_token: string | null
+          status: Database["public"]["Enums"]["cart_status"] | null
+          store_market: string | null
+          store_name: string | null
+          store_org_id: string | null
+          store_region: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -3115,6 +2236,13 @@ export type Database = {
             foreignKeyName: "carts_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -3159,6 +2287,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_parent_org_id_fkey"
+            columns: ["corp_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "organizations_parent_org_id_fkey"
@@ -3282,6 +2417,13 @@ export type Database = {
             foreignKeyName: "issues_cart_id_fkey"
             columns: ["cart_id"]
             isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
             referencedRelation: "carts_with_store"
             referencedColumns: ["id"]
           },
@@ -3312,6 +2454,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issues_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "issues_store_org_id_fkey"
@@ -3377,6 +2526,13 @@ export type Database = {
             foreignKeyName: "carts_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -3402,6 +2558,29 @@ export type Database = {
             referencedColumns: ["store_org_id"]
           },
         ]
+      }
+      store_dashboard_snapshot: {
+        Row: {
+          active_carts: number | null
+          at_risk_carts: number | null
+          downtime_minutes_30d: number | null
+          estimated_downtime_cost_30d: number | null
+          high_sev_issue_carts: number | null
+          in_service_now: number | null
+          in_service_pct_now: number | null
+          inspection_coverage_pct_30d: number | null
+          low_health_carts: number | null
+          mtbf_minutes_30d: number | null
+          mttr_minutes_30d: number | null
+          out_of_service_now: number | null
+          overdue_inspection_carts: number | null
+          repeat_issue_carts: number | null
+          store_name: string | null
+          store_org_id: string | null
+          uptime_minutes_30d: number | null
+          uptime_pct_30d: number | null
+        }
+        Relationships: []
       }
       store_downtime_cost_30d: {
         Row: {
@@ -3442,6 +2621,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "carts_store_org_id_fkey"
@@ -3501,6 +2687,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "carts_store_org_id_fkey"
@@ -3574,6 +2767,13 @@ export type Database = {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
             columns: ["store_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -3626,6 +2826,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_status_events_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "cart_status_events_store_org_id_fkey"
@@ -3732,6 +2939,13 @@ export type Database = {
             foreignKeyName: "work_orders_provider_org_id_fkey"
             columns: ["provider_org_id"]
             isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "work_orders_provider_org_id_fkey"
+            columns: ["provider_org_id"]
+            isOneToOne: false
             referencedRelation: "store_downtime_cost_30d"
             referencedColumns: ["store_org_id"]
           },
@@ -3776,6 +2990,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_store_org_id_fkey"
+            columns: ["store_org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
           },
           {
             foreignKeyName: "work_orders_store_org_id_fkey"
@@ -3860,7 +3081,6 @@ export type Database = {
         Args: { date_from?: string; date_to?: string; store_id_param?: string }
         Returns: Json
       }
-      get_current_user_role: { Args: never; Returns: string }
       get_low_inventory_items: {
         Args: { p_provider_id: string }
         Returns: {
@@ -3870,28 +3090,28 @@ export type Database = {
           reorder_level: number
         }[]
       }
+      get_my_portal_context: { Args: never; Returns: Json }
       get_user_primary_role: { Args: { _user_id: string }; Returns: string }
-      get_user_role: { Args: { user_id: string }; Returns: string }
       has_admin_permission: {
         Args: { permission_name: string }
         Returns: boolean
       }
-      has_role:
-        | {
-            Args: {
-              _org: string
-              _role: Database["public"]["Enums"]["membership_role"]
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              _role: Database["public"]["Enums"]["app_role"]
-              _user_id: string
-            }
-            Returns: boolean
-          }
-      is_admin_user: { Args: never; Returns: boolean }
+      has_role: {
+        Args: {
+          _org: string
+          _role: Database["public"]["Enums"]["membership_role"]
+        }
+        Returns: boolean
+      }
+      invite_user_to_org: {
+        Args: {
+          p_email: string
+          p_org_id: string
+          p_provider_org_id?: string
+          p_role: Database["public"]["Enums"]["membership_role"]
+        }
+        Returns: Json
+      }
       is_maintenance_provider: { Args: { user_id: string }; Returns: boolean }
       is_member: { Args: { _org: string }; Returns: boolean }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
@@ -3917,6 +3137,10 @@ export type Database = {
         Returns: undefined
       }
       logout_admin: { Args: { p_session_token: string }; Returns: Json }
+      normalize_cart_status: {
+        Args: { p: string }
+        Returns: Database["public"]["Enums"]["cart_status"]
+      }
       provider_has_store_access: {
         Args: { _provider_org: string; _store_org: string }
         Returns: boolean
@@ -3951,7 +3175,6 @@ export type Database = {
       verify_admin_session: { Args: { p_session_token: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "maintenance" | "store"
       cart_status: "in_service" | "out_of_service" | "retired"
       invitation_status: "pending" | "accepted" | "rejected"
       issue_severity: "low" | "medium" | "high" | "critical"
@@ -4096,7 +3319,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "maintenance", "store"],
       cart_status: ["in_service", "out_of_service", "retired"],
       invitation_status: ["pending", "accepted", "rejected"],
       issue_severity: ["low", "medium", "high", "critical"],

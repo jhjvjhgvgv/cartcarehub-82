@@ -28,24 +28,6 @@ export const useEmailVerification = () => {
 
       const verified = !!authUser?.email_confirmed_at;
       setIsVerified(verified);
-      
-      // Also check profiles table
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email_verified')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile && !profile.email_verified && verified) {
-        // Sync verification status to profiles
-        await supabase
-          .from('profiles')
-          .update({ 
-            email_verified: true, 
-            email_verified_at: new Date().toISOString() 
-          })
-          .eq('id', user.id);
-      }
     } catch (err) {
       console.error('Verification check error:', err);
     } finally {

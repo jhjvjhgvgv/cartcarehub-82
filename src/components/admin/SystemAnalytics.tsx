@@ -21,8 +21,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  TrendingUp, 
-  TrendingDown, 
   DollarSign, 
   Clock, 
   Users, 
@@ -40,37 +38,47 @@ export function SystemAnalytics() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      // Get cart analytics
-      const { data: cartAnalytics, error: cartError } = await supabase
-        .from('cart_analytics')
+      // Get store daily rollups for metrics
+      const { data: rollups, error: rollupsError } = await supabase
+        .from('store_daily_rollups')
         .select('*')
-        .gte('metric_date', startDate.toISOString().split('T')[0])
-        .lte('metric_date', endDate.toISOString().split('T')[0]);
+        .gte('day', startDate.toISOString().split('T')[0])
+        .lte('day', endDate.toISOString().split('T')[0]);
 
-      if (cartError) throw cartError;
+      if (rollupsError) throw rollupsError;
 
-      // Get maintenance requests
-      const { data: requests, error: requestError } = await supabase
-        .from('maintenance_requests')
-        .select('*')
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
-
-      if (requestError) throw requestError;
-
-      // Get user registrations
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
+      // Get work orders
+      const { data: workOrders, error: ordersError } = await supabase
+        .from('work_orders')
         .select('*')
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
-      if (profileError) throw profileError;
+      if (ordersError) throw ordersError;
+
+      // Get issues for cost data
+      const { data: issues, error: issuesError } = await supabase
+        .from('issues')
+        .select('*')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (issuesError) throw issuesError;
+
+      // Get organizations
+      const { data: orgs, error: orgsError } = await supabase
+        .from('organizations')
+        .select('id, type, created_at')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (orgsError) throw orgsError;
 
       return {
-        cartAnalytics: cartAnalytics || [],
-        requests: requests || [],
-        profiles: profiles || []
+        rollups: rollups || [],
+        workOrders: workOrders || [],
+        issues: issues || [],
+        orgs: orgs || []
       };
     }
   });
@@ -78,15 +86,15 @@ export function SystemAnalytics() {
   // Process data for charts
   const processedData = analyticsData ? {
     dailyMetrics: processTimeSeriesData(analyticsData, parseInt(timeRange)),
-    requestsByStatus: processRequestsByStatus(analyticsData.requests),
-    costAnalysis: processCostAnalysis(analyticsData.cartAnalytics),
-    userGrowth: processUserGrowth(analyticsData.profiles, parseInt(timeRange))
+    ordersByStatus: processOrdersByStatus(analyticsData.workOrders),
+    costAnalysis: processCostAnalysis(analyticsData.issues, analyticsData.rollups),
+    orgGrowth: processOrgGrowth(analyticsData.orgs, parseInt(timeRange))
   } : null;
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
   if (isLoading) {
-    return <div>Loading analytics...</div>;
+    return <div className="flex items-center justify-center p-8">Loading analytics...</div>;
   }
 
   return (
@@ -112,9 +120,9 @@ export function SystemAnalytics() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+          <TabsTrigger value="maintenance">Work Orders</TabsTrigger>
           <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="orgs">Organizations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -122,56 +130,60 @@ export function SystemAnalytics() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${processedData?.costAnalysis.totalRevenue.toLocaleString() || 0}
+                  ${processedData?.costAnalysis.totalCost.toLocaleString() || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +12% from last period
+                  Maintenance costs this period
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                <CardTitle className="text-sm font-medium">New Orgs</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {processedData?.userGrowth.totalUsers || 0}
+                  {processedData?.orgGrowth.newOrgs || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  +{processedData?.userGrowth.newUsers || 0} this period
+                  Organizations added this period
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Downtime</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2.4h</div>
+                <div className="text-2xl font-bold">
+                  {processedData?.costAnalysis.totalDowntime.toLocaleString() || 0}m
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  -15 min from last period
+                  Minutes of cart downtime
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Cart Utilization</CardTitle>
+                <CardTitle className="text-sm font-medium">Inspections</CardTitle>
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">89%</div>
+                <div className="text-2xl font-bold">
+                  {processedData?.costAnalysis.totalInspections || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +2% from last period
+                  Inspections this period
                 </p>
               </CardContent>
             </Card>
@@ -182,7 +194,7 @@ export function SystemAnalytics() {
             <CardHeader>
               <CardTitle>Daily Activity</CardTitle>
               <CardDescription>
-                Maintenance requests and cart usage over time
+                Work orders and issues over time
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -192,8 +204,8 @@ export function SystemAnalytics() {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="requests" stroke="#8884d8" strokeWidth={2} />
-                  <Line type="monotone" dataKey="cost" stroke="#82ca9d" strokeWidth={2} />
+                  <Line type="monotone" dataKey="workOrders" stroke="hsl(var(--primary))" strokeWidth={2} name="Work Orders" />
+                  <Line type="monotone" dataKey="issues" stroke="hsl(var(--destructive))" strokeWidth={2} name="Issues" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -202,28 +214,28 @@ export function SystemAnalytics() {
 
         <TabsContent value="maintenance" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Request Status Distribution */}
+            {/* Work Order Status Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Request Status Distribution</CardTitle>
+                <CardTitle>Work Order Status Distribution</CardTitle>
                 <CardDescription>
-                  Breakdown of maintenance request statuses
+                  Breakdown of work order statuses
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={processedData?.requestsByStatus || []}
+                      data={processedData?.ordersByStatus || []}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="hsl(var(--primary))"
                       dataKey="value"
                     >
-                      {(processedData?.requestsByStatus || []).map((entry, index) => (
+                      {(processedData?.ordersByStatus || []).map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -233,29 +245,24 @@ export function SystemAnalytics() {
               </CardContent>
             </Card>
 
-            {/* Request Priority */}
+            {/* Work Order Summary */}
             <Card>
               <CardHeader>
-                <CardTitle>Request Priority Levels</CardTitle>
+                <CardTitle>Work Order Summary</CardTitle>
                 <CardDescription>
-                  Distribution of maintenance request priorities
+                  Status breakdown
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { priority: 'urgent', count: 5, color: 'destructive' },
-                    { priority: 'high', count: 12, color: 'secondary' },
-                    { priority: 'medium', count: 28, color: 'default' },
-                    { priority: 'low', count: 15, color: 'outline' }
-                  ].map((item) => (
-                    <div key={item.priority} className="flex items-center justify-between">
+                  {(processedData?.ordersByStatus || []).map((item) => (
+                    <div key={item.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Badge variant={item.color as any}>{item.priority}</Badge>
+                        <Badge variant="outline">{item.name}</Badge>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Progress value={(item.count / 60) * 100} className="w-20" />
-                        <span className="text-sm font-medium">{item.count}</span>
+                        <Progress value={item.value / (analyticsData?.workOrders.length || 1) * 100} className="w-20" />
+                        <span className="text-sm font-medium">{item.value}</span>
                       </div>
                     </div>
                   ))}
@@ -268,45 +275,43 @@ export function SystemAnalytics() {
         <TabsContent value="financial" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Revenue Analysis</CardTitle>
+              <CardTitle>Cost Analysis</CardTitle>
               <CardDescription>
                 Financial performance and cost breakdown
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={processedData?.costAnalysis.monthly || []}>
+                <BarChart data={processedData?.dailyMetrics || []}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="revenue" fill="#8884d8" />
-                  <Bar dataKey="cost" fill="#82ca9d" />
+                  <Bar dataKey="cost" fill="hsl(var(--primary))" name="Cost ($)" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-6">
+        <TabsContent value="orgs" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>User Growth</CardTitle>
+              <CardTitle>Organization Growth</CardTitle>
               <CardDescription>
-                User registration and activity trends
+                New organization registrations
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={processedData?.userGrowth.daily || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="newUsers" stroke="#8884d8" strokeWidth={2} />
-                  <Line type="monotone" dataKey="totalUsers" stroke="#82ca9d" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="text-center py-8">
+                <div className="text-4xl font-bold">{processedData?.orgGrowth.newOrgs || 0}</div>
+                <p className="text-muted-foreground mt-2">New organizations this period</p>
+                <div className="flex justify-center gap-4 mt-4">
+                  <Badge variant="outline">{processedData?.orgGrowth.stores || 0} Stores</Badge>
+                  <Badge variant="outline">{processedData?.orgGrowth.providers || 0} Providers</Badge>
+                  <Badge variant="outline">{processedData?.orgGrowth.corps || 0} Corporations</Badge>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -317,60 +322,64 @@ export function SystemAnalytics() {
 
 // Helper functions for data processing
 function processTimeSeriesData(data: any, days: number) {
-  // Process daily metrics for charts
   const dailyData = [];
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     
-    const dayRequests = data.requests.filter((r: any) => 
-      r.created_at.split('T')[0] === dateStr
+    const dayOrders = data.workOrders.filter((w: any) => 
+      w.created_at.split('T')[0] === dateStr
     ).length;
     
-    const dayCost = data.cartAnalytics
-      .filter((a: any) => a.metric_date === dateStr)
-      .reduce((sum: number, a: any) => sum + (Number(a.maintenance_cost) || 0), 0);
+    const dayIssues = data.issues.filter((i: any) => 
+      i.created_at.split('T')[0] === dateStr
+    ).length;
+    
+    const dayCost = data.issues
+      .filter((i: any) => i.created_at.split('T')[0] === dateStr)
+      .reduce((sum: number, i: any) => sum + (Number(i.actual_cost) || Number(i.est_cost) || 0), 0);
     
     dailyData.push({
-      date: date.toLocaleDateString(),
-      requests: dayRequests,
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      workOrders: dayOrders,
+      issues: dayIssues,
       cost: dayCost
     });
   }
   return dailyData;
 }
 
-function processRequestsByStatus(requests: any[]) {
-  const statusCounts = requests.reduce((acc, req) => {
-    acc[req.status] = (acc[req.status] || 0) + 1;
+function processOrdersByStatus(workOrders: any[]) {
+  const statusCounts = workOrders.reduce((acc, order) => {
+    const status = order.status || 'unknown';
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, number>);
   
   return Object.entries(statusCounts).map(([status, count]) => ({
-    name: status,
-    value: count
+    name: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
+    value: count as number
   }));
 }
 
-function processCostAnalysis(analytics: any[]) {
-  const totalRevenue = analytics.reduce((sum, a) => sum + (Number(a.maintenance_cost) || 0), 0);
+function processCostAnalysis(issues: any[], rollups: any[]) {
+  const totalCost = issues.reduce((sum, i) => sum + (Number(i.actual_cost) || Number(i.est_cost) || 0), 0);
+  const totalDowntime = rollups.reduce((sum, r) => sum + (r.downtime_minutes || 0), 0);
+  const totalInspections = rollups.reduce((sum, r) => sum + (r.inspections_count || 0), 0);
   
   return {
-    totalRevenue,
-    monthly: [] // Would process monthly data here
+    totalCost,
+    totalDowntime,
+    totalInspections
   };
 }
 
-function processUserGrowth(profiles: any[], days: number) {
+function processOrgGrowth(orgs: any[], _days: number) {
   return {
-    totalUsers: profiles.length,
-    newUsers: profiles.filter(p => {
-      const createdDate = new Date(p.created_at);
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - days);
-      return createdDate >= cutoff;
-    }).length,
-    daily: [] // Would process daily growth data here
+    newOrgs: orgs.length,
+    stores: orgs.filter(o => o.type === 'store').length,
+    providers: orgs.filter(o => o.type === 'provider').length,
+    corps: orgs.filter(o => o.type === 'corporation').length
   };
 }

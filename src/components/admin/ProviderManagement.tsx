@@ -4,110 +4,101 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { 
   Search, 
-  UserCheck, 
   Mail, 
   Phone, 
   Building, 
-  Calendar,
   CheckCircle,
   XCircle,
   Clock,
-  Star,
-  Award,
-  AlertTriangle
+  Star
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistance } from "date-fns";
 
-interface Provider {
+interface ProviderOrg {
   id: string;
-  user_id: string;
-  company_name: string;
-  contact_email: string;
-  contact_phone?: string;
-  is_verified: boolean;
-  verification_date?: string;
+  name: string;
   created_at: string;
-  updated_at: string;
+  settings: any;
 }
 
 export function ProviderManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderOrg | null>(null);
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false);
   const [verificationNotes, setVerificationNotes] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch provider organizations
   const { data: providers, isLoading } = useQuery({
-    queryKey: ['admin-providers'],
+    queryKey: ['admin-provider-orgs'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('maintenance_providers')
-        .select(`
-          *,
-          profiles!maintenance_providers_user_id_fkey(email, display_name, last_sign_in)
-        `)
+        .from('organizations')
+        .select('*')
+        .eq('type', 'provider')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as ProviderOrg[];
     }
   });
 
+  // Fetch work order stats per provider
   const { data: providerStats } = useQuery({
-    queryKey: ['admin-provider-stats'],
+    queryKey: ['admin-provider-work-stats'],
     queryFn: async () => {
-      // Get provider performance statistics
-      const { data: requests, error } = await supabase
-        .from('maintenance_requests')
-        .select('provider_id, status, completed_date, created_at, cost');
+      const { data: workOrders, error } = await supabase
+        .from('work_orders')
+        .select('provider_org_id, status');
       
       if (error) throw error;
 
-      const stats = requests?.reduce((acc, request) => {
-        if (!acc[request.provider_id]) {
-          acc[request.provider_id] = {
-            total: 0,
-            completed: 0,
-            totalCost: 0,
-            avgCompletionTime: 0
-          };
+      const stats = (workOrders || []).reduce((acc, order) => {
+        const providerId = order.provider_org_id;
+        if (!providerId) return acc;
+        
+        if (!acc[providerId]) {
+          acc[providerId] = { total: 0, completed: 0 };
         }
         
-        acc[request.provider_id].total++;
-        
-        if (request.status === 'completed') {
-          acc[request.provider_id].completed++;
-          if (request.cost) {
-            acc[request.provider_id].totalCost += Number(request.cost);
-          }
+        acc[providerId].total++;
+        if (order.status === 'completed') {
+          acc[providerId].completed++;
         }
         
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, { total: number; completed: number }>);
 
-      return stats || {};
+      return stats;
     }
   });
 
+  // Update provider verification (stored in settings JSON)
   const verifyProviderMutation = useMutation({
     mutationFn: async ({ providerId, isVerified }: { providerId: string; isVerified: boolean }) => {
+      const provider = providers?.find(p => p.id === providerId);
+      const currentSettings = provider?.settings || {};
+      
       const { data, error } = await supabase
-        .from('maintenance_providers')
+        .from('organizations')
         .update({
-          is_verified: isVerified,
-          verification_date: isVerified ? new Date().toISOString() : null
+          settings: {
+            ...currentSettings,
+            is_verified: isVerified,
+            verification_date: isVerified ? new Date().toISOString() : null,
+            verification_notes: verificationNotes
+          }
         })
         .eq('id', providerId)
         .select()
@@ -116,13 +107,14 @@ export function ProviderManagement() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-providers'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-provider-orgs'] });
       toast({
         title: "Success",
         description: `Provider ${variables.isVerified ? 'verified' : 'unverified'} successfully.`,
       });
       setIsVerificationDialogOpen(false);
+      setVerificationNotes("");
     },
     onError: (error: any) => {
       toast({
@@ -134,11 +126,11 @@ export function ProviderManagement() {
   });
 
   const filteredProviders = providers?.filter(provider => {
-    const matchesSearch = provider.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         provider.contact_email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = provider.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const isVerified = (provider.settings as any)?.is_verified === true;
     const matchesStatus = filterStatus === "all" || 
-                         (filterStatus === "verified" && provider.is_verified) ||
-                         (filterStatus === "unverified" && !provider.is_verified);
+                         (filterStatus === "verified" && isVerified) ||
+                         (filterStatus === "unverified" && !isVerified);
     return matchesSearch && matchesStatus;
   }) || [];
 
@@ -154,7 +146,7 @@ export function ProviderManagement() {
     return 1;
   };
 
-  const handleVerifyProvider = (provider: Provider) => {
+  const handleVerifyProvider = (provider: ProviderOrg) => {
     setSelectedProvider(provider);
     setIsVerificationDialogOpen(true);
   };
@@ -181,7 +173,7 @@ export function ProviderManagement() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by company name or email..."
+                  placeholder="Search by provider name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -210,19 +202,22 @@ export function ProviderManagement() {
         <CardHeader>
           <CardTitle>Maintenance Providers ({filteredProviders.length})</CardTitle>
           <CardDescription>
-            All registered maintenance providers in the system
+            All registered maintenance provider organizations
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div>Loading providers...</div>
+            <div className="flex items-center justify-center p-8">Loading providers...</div>
+          ) : filteredProviders.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground">
+              No providers found
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Contact</TableHead>
+                    <TableHead>Organization</TableHead>
                     <TableHead>Performance</TableHead>
                     <TableHead>Verification</TableHead>
                     <TableHead>Joined</TableHead>
@@ -233,6 +228,8 @@ export function ProviderManagement() {
                   {filteredProviders.map((provider) => {
                     const stats = providerStats?.[provider.id];
                     const rating = getProviderRating(provider.id);
+                    const isVerified = (provider.settings as any)?.is_verified === true;
+                    const verificationDate = (provider.settings as any)?.verification_date;
                     
                     return (
                       <TableRow key={provider.id}>
@@ -240,7 +237,7 @@ export function ProviderManagement() {
                           <div>
                             <div className="font-medium flex items-center gap-2">
                               <Building className="h-4 w-4" />
-                              {provider.company_name}
+                              {provider.name}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {[...Array(5)].map((_, i) => (
@@ -257,27 +254,10 @@ export function ProviderManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-sm flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {provider.contact_email}
-                            </div>
-                            {provider.contact_phone && (
-                              <div className="text-sm flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {provider.contact_phone}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {stats ? (
+                            {stats && stats.total > 0 ? (
                               <>
                                 <div className="text-sm">
                                   {stats.completed}/{stats.total} completed
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  ${stats.totalCost?.toLocaleString() || 0} total
                                 </div>
                                 <Badge variant={
                                   stats.completed / stats.total >= 0.9 ? "default" : 
@@ -293,20 +273,20 @@ export function ProviderManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            {provider.is_verified ? (
+                            {isVerified ? (
                               <>
-                                <Badge variant="default" className="flex items-center gap-1">
+                                <Badge variant="default" className="flex items-center gap-1 w-fit">
                                   <CheckCircle className="h-3 w-3" />
                                   Verified
                                 </Badge>
-                                {provider.verification_date && (
+                                {verificationDate && (
                                   <div className="text-xs text-muted-foreground">
-                                    {formatDistance(new Date(provider.verification_date), new Date(), { addSuffix: true })}
+                                    {formatDistance(new Date(verificationDate), new Date(), { addSuffix: true })}
                                   </div>
                                 )}
                               </>
                             ) : (
-                              <Badge variant="secondary" className="flex items-center gap-1">
+                              <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                                 <Clock className="h-3 w-3" />
                                 Pending
                               </Badge>
@@ -319,25 +299,23 @@ export function ProviderManagement() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant={provider.is_verified ? "destructive" : "default"}
-                              size="sm"
-                              onClick={() => handleVerifyProvider(provider)}
-                            >
-                              {provider.is_verified ? (
-                                <>
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Revoke
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Verify
-                                </>
-                              )}
-                            </Button>
-                          </div>
+                          <Button
+                            variant={isVerified ? "destructive" : "default"}
+                            size="sm"
+                            onClick={() => handleVerifyProvider(provider)}
+                          >
+                            {isVerified ? (
+                              <>
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Revoke
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verify
+                              </>
+                            )}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -354,10 +332,10 @@ export function ProviderManagement() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedProvider?.is_verified ? 'Revoke Verification' : 'Verify Provider'}
+              {(selectedProvider?.settings as any)?.is_verified ? 'Revoke Verification' : 'Verify Provider'}
             </DialogTitle>
             <DialogDescription>
-              {selectedProvider?.is_verified 
+              {(selectedProvider?.settings as any)?.is_verified 
                 ? 'Are you sure you want to revoke verification for this provider?'
                 : 'Verify this maintenance provider to allow them to accept requests.'
               }
@@ -365,9 +343,9 @@ export function ProviderManagement() {
           </DialogHeader>
           {selectedProvider && (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium">{selectedProvider.company_name}</h4>
-                <p className="text-sm text-muted-foreground">{selectedProvider.contact_email}</p>
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium">{selectedProvider.name}</h4>
+                <p className="text-sm text-muted-foreground">Provider Organization</p>
               </div>
               
               <div>
@@ -384,12 +362,12 @@ export function ProviderManagement() {
                 <Button
                   onClick={() => verifyProviderMutation.mutate({
                     providerId: selectedProvider.id,
-                    isVerified: !selectedProvider.is_verified
+                    isVerified: !(selectedProvider.settings as any)?.is_verified
                   })}
                   disabled={verifyProviderMutation.isPending}
-                  variant={selectedProvider.is_verified ? "destructive" : "default"}
+                  variant={(selectedProvider.settings as any)?.is_verified ? "destructive" : "default"}
                 >
-                  {selectedProvider.is_verified ? 'Revoke Verification' : 'Verify Provider'}
+                  {(selectedProvider.settings as any)?.is_verified ? 'Revoke Verification' : 'Verify Provider'}
                 </Button>
                 <Button variant="outline" onClick={() => setIsVerificationDialogOpen(false)}>
                   Cancel

@@ -1,98 +1,103 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Clock, 
   DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
   AlertTriangle,
-  CheckCircle,
   Calendar,
-  Target,
-  BarChart3
+  Target
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistance } from "date-fns";
-import { useMaintenanceRequests, useOverdueMaintenance, useUpcomingMaintenance } from "@/hooks/use-maintenance";
+
+interface WorkOrderWithProvider {
+  id: string;
+  status: string;
+  summary: string | null;
+  notes: string | null;
+  scheduled_at: string | null;
+  created_at: string;
+  provider_org_id: string | null;
+  store_org_id: string;
+}
 
 export function MaintenanceMetrics() {
-  const { data: allRequests, isLoading: requestsLoading } = useMaintenanceRequests();
-  const { data: overdueItems, isLoading: overdueLoading } = useOverdueMaintenance();
-  const { data: upcomingItems, isLoading: upcomingLoading } = useUpcomingMaintenance(30);
-
-  const { data: performanceMetrics, isLoading: metricsLoading } = useQuery({
-    queryKey: ['admin-maintenance-metrics'],
+  // Fetch work orders instead of legacy maintenance_requests
+  const { data: workOrders, isLoading: ordersLoading } = useQuery({
+    queryKey: ['admin-work-orders'],
     queryFn: async () => {
-      // Get detailed maintenance performance metrics
-      const { data: requests, error: requestError } = await supabase
-        .from('maintenance_requests')
-        .select(`
-          *,
-          maintenance_providers!maintenance_requests_provider_id_fkey(company_name)
-        `);
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as WorkOrderWithProvider[];
+    }
+  });
 
-      if (requestError) throw requestError;
+  // Fetch store daily rollups for downtime metrics
+  const { data: rollups, isLoading: rollupsLoading } = useQuery({
+    queryKey: ['admin-store-rollups'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_daily_rollups')
+        .select('*')
+        .order('day', { ascending: false })
+        .limit(30);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
-      const { data: analytics, error: analyticsError } = await supabase
-        .from('cart_analytics')
+  // Fetch issues for cost data
+  const { data: issues, isLoading: issuesLoading } = useQuery({
+    queryKey: ['admin-issues'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('issues')
         .select('*');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
-      if (analyticsError) throw analyticsError;
+  // Fetch overdue maintenance (work orders past scheduled date)
+  const { data: overdueOrders } = useQuery({
+    queryKey: ['admin-overdue-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select('*, organizations!work_orders_store_org_id_fkey(name)')
+        .lt('scheduled_at', new Date().toISOString())
+        .in('status', ['new', 'scheduled']);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
-      // Calculate performance metrics
-      const totalCost = analytics.reduce((sum, a) => sum + (Number(a.maintenance_cost) || 0), 0);
-      const totalDowntime = analytics.reduce((sum, a) => sum + (a.downtime_minutes || 0), 0);
-      const totalIssues = analytics.reduce((sum, a) => sum + (a.issues_reported || 0), 0);
-
-      // Provider performance
-      const providerStats = requests.reduce((acc, req) => {
-        const providerId = req.provider_id;
-        if (!acc[providerId]) {
-          acc[providerId] = {
-            company_name: req.maintenance_providers?.company_name || 'Unknown',
-            total: 0,
-            completed: 0,
-            avgCost: 0,
-            avgDuration: 0,
-            totalCost: 0,
-            totalDuration: 0
-          };
-        }
-        
-        acc[providerId].total++;
-        
-        if (req.status === 'completed') {
-          acc[providerId].completed++;
-          if (req.cost) acc[providerId].totalCost += Number(req.cost);
-          if (req.actual_duration) acc[providerId].totalDuration += req.actual_duration;
-        }
-        
-        return acc;
-      }, {} as Record<string, any>);
-
-      // Calculate averages
-      Object.keys(providerStats).forEach(providerId => {
-        const stats = providerStats[providerId];
-        if (stats.completed > 0) {
-          stats.avgCost = stats.totalCost / stats.completed;
-          stats.avgDuration = stats.totalDuration / stats.completed;
-        }
-      });
-
-      return {
-        totalCost,
-        totalDowntime,
-        totalIssues,
-        requests: requests || [],
-        providerStats: Object.entries(providerStats).map(([id, stats]) => ({
-          id,
-          ...stats
-        }))
-      };
+  // Fetch upcoming maintenance
+  const { data: upcomingOrders } = useQuery({
+    queryKey: ['admin-upcoming-orders'],
+    queryFn: async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30);
+      
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select('*, organizations!work_orders_store_org_id_fkey(name)')
+        .gte('scheduled_at', new Date().toISOString())
+        .lte('scheduled_at', futureDate.toISOString())
+        .in('status', ['new', 'scheduled', 'in_progress']);
+      
+      if (error) throw error;
+      return data;
     }
   });
 
@@ -104,6 +109,8 @@ export function MaintenanceMetrics() {
         return <Badge variant="secondary">In Progress</Badge>;
       case 'pending':
         return <Badge variant="outline">Pending</Badge>;
+      case 'assigned':
+        return <Badge variant="outline">Assigned</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
@@ -111,33 +118,25 @@ export function MaintenanceMetrics() {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return <Badge variant="destructive">Urgent</Badge>;
-      case 'high':
-        return <Badge variant="secondary">High</Badge>;
-      case 'medium':
-        return <Badge variant="outline">Medium</Badge>;
-      case 'low':
-        return <Badge variant="outline">Low</Badge>;
-      default:
-        return <Badge variant="outline">{priority}</Badge>;
-    }
-  };
-
-  if (requestsLoading || metricsLoading) {
-    return <div>Loading maintenance metrics...</div>;
+  if (ordersLoading || rollupsLoading || issuesLoading) {
+    return <div className="flex items-center justify-center p-8">Loading maintenance metrics...</div>;
   }
 
-  const completedRequests = allRequests?.filter(r => r.status === 'completed') || [];
-  const avgCompletionTime = completedRequests.length > 0 
-    ? completedRequests.reduce((sum, r) => sum + (r.actual_duration || 0), 0) / completedRequests.length 
+  const completedOrders = workOrders?.filter(o => o.status === 'completed') || [];
+  const totalOrders = workOrders?.length || 0;
+  
+  const completionRate = totalOrders > 0 
+    ? (completedOrders.length / totalOrders) * 100 
     : 0;
 
-  const completionRate = allRequests && allRequests.length > 0 
-    ? (completedRequests.length / allRequests.length) * 100 
-    : 0;
+  // Calculate costs from issues
+  const totalCost = issues?.reduce((sum, issue) => sum + (Number(issue.actual_cost) || Number(issue.est_cost) || 0), 0) || 0;
+  
+  // Calculate downtime from rollups
+  const totalDowntime = rollups?.reduce((sum, r) => sum + (r.downtime_minutes || 0), 0) || 0;
+  
+  // Calculate total issues
+  const totalIssues = issues?.length || 0;
 
   return (
     <div className="space-y-6">
@@ -157,20 +156,20 @@ export function MaintenanceMetrics() {
             <div className="text-2xl font-bold">{completionRate.toFixed(1)}%</div>
             <Progress value={completionRate} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {completedRequests.length} of {allRequests?.length || 0} requests
+              {completedOrders.length} of {totalOrders} work orders
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Completion Time</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgCompletionTime.toFixed(1)}h</div>
+            <div className="text-2xl font-bold">{totalIssues}</div>
             <p className="text-xs text-muted-foreground">
-              Average across all completed requests
+              Total reported issues
             </p>
           </CardContent>
         </Card>
@@ -182,7 +181,7 @@ export function MaintenanceMetrics() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${performanceMetrics?.totalCost?.toLocaleString() || 0}
+              ${totalCost.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               All maintenance expenses
@@ -193,14 +192,14 @@ export function MaintenanceMetrics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Downtime</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {performanceMetrics?.totalDowntime?.toLocaleString() || 0}m
+              {totalDowntime.toLocaleString()}m
             </div>
             <p className="text-xs text-muted-foreground">
-              Minutes of cart downtime
+              Minutes of cart downtime (30d)
             </p>
           </CardContent>
         </Card>
@@ -212,36 +211,32 @@ export function MaintenanceMetrics() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Overdue Maintenance
+              Overdue Work Orders
             </CardTitle>
             <CardDescription>
-              Maintenance schedules that are past due
+              Work orders that are past their scheduled date
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {overdueLoading ? (
-              <div>Loading overdue items...</div>
-            ) : (
-              <div className="space-y-3">
-                {overdueItems && overdueItems.length > 0 ? (
-                  overdueItems.slice(0, 5).map((item: any) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
-                      <div>
-                        <div className="font-medium">{item.carts?.qr_code}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.maintenance_type} - {item.carts?.store}
-                        </div>
+            <div className="space-y-3">
+              {overdueOrders && overdueOrders.length > 0 ? (
+                overdueOrders.slice(0, 5).map((order: any) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
+                    <div>
+                      <div className="font-medium">#{order.id.slice(0, 8)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.summary || 'No summary'} - {order.organizations?.name || 'Unknown Store'}
                       </div>
-                      <Badge variant="destructive">
-                        {formatDistance(new Date(item.next_due_date), new Date(), { addSuffix: true })}
-                      </Badge>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No overdue maintenance items</p>
-                )}
-              </div>
-            )}
+                    <Badge variant="destructive">
+                      {order.scheduled_at ? formatDistance(new Date(order.scheduled_at), new Date(), { addSuffix: true }) : 'Not scheduled'}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No overdue work orders</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -249,100 +244,40 @@ export function MaintenanceMetrics() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Upcoming Maintenance
+              Upcoming Work Orders
             </CardTitle>
             <CardDescription>
-              Maintenance scheduled for the next 30 days
+              Work orders scheduled for the next 30 days
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {upcomingLoading ? (
-              <div>Loading upcoming items...</div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingItems && upcomingItems.length > 0 ? (
-                  upcomingItems.slice(0, 5).map((item: any) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
-                      <div>
-                        <div className="font-medium">{item.carts?.qr_code}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.maintenance_type} - {item.carts?.store}
-                        </div>
+            <div className="space-y-3">
+              {upcomingOrders && upcomingOrders.length > 0 ? (
+                upcomingOrders.slice(0, 5).map((order: any) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
+                    <div>
+                      <div className="font-medium">#{order.id.slice(0, 8)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {order.summary || 'No summary'} - {order.organizations?.name || 'Unknown Store'}
                       </div>
-                      <Badge variant="secondary">
-                        {formatDistance(new Date(item.next_due_date), new Date(), { addSuffix: true })}
-                      </Badge>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No upcoming maintenance scheduled</p>
-                )}
-              </div>
-            )}
+                    <Badge variant="secondary">
+                      {order.scheduled_at ? formatDistance(new Date(order.scheduled_at), new Date(), { addSuffix: true }) : 'Not scheduled'}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">No upcoming work orders scheduled</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Provider Performance */}
+      {/* Recent Work Orders */}
       <Card>
         <CardHeader>
-          <CardTitle>Provider Performance</CardTitle>
-          <CardDescription>
-            Performance metrics for all maintenance providers
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Completion Rate</TableHead>
-                  <TableHead>Avg Cost</TableHead>
-                  <TableHead>Avg Duration</TableHead>
-                  <TableHead>Total Jobs</TableHead>
-                  <TableHead>Performance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {performanceMetrics?.providerStats?.map((provider: any) => {
-                  const completionRate = provider.total > 0 ? (provider.completed / provider.total) * 100 : 0;
-                  return (
-                    <TableRow key={provider.id}>
-                      <TableCell className="font-medium">
-                        {provider.company_name}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {completionRate.toFixed(1)}%
-                          <Progress value={completionRate} className="w-16" />
-                        </div>
-                      </TableCell>
-                      <TableCell>${provider.avgCost.toFixed(2)}</TableCell>
-                      <TableCell>{provider.avgDuration.toFixed(1)}h</TableCell>
-                      <TableCell>{provider.total}</TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          completionRate >= 90 ? "default" : 
-                          completionRate >= 70 ? "secondary" : "destructive"
-                        }>
-                          {completionRate >= 90 ? "Excellent" : 
-                           completionRate >= 70 ? "Good" : "Needs Improvement"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Requests */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Maintenance Requests</CardTitle>
+          <CardTitle>Recent Work Orders</CardTitle>
           <CardDescription>
             Latest maintenance activities across the system
           </CardDescription>
@@ -352,33 +287,33 @@ export function MaintenanceMetrics() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Request</TableHead>
-                  <TableHead>Cart</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Priority</TableHead>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Summary</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Scheduled</TableHead>
                   <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allRequests?.slice(0, 10).map((request) => (
-                  <TableRow key={request.id}>
+                {workOrders?.slice(0, 10).map((order) => (
+                  <TableRow key={order.id}>
                     <TableCell>
-                      <div className="font-medium">#{request.id.slice(0, 8)}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {request.description?.slice(0, 50)}...
+                      <div className="font-medium font-mono">#{order.id.slice(0, 8)}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs truncate">
+                        {order.summary || order.notes || 'No description'}
                       </div>
                     </TableCell>
+                    <TableCell>{getStatusBadge(order.status)}</TableCell>
                     <TableCell>
-                      Cart #{request.cart_id.slice(0, 8)}
+                      {order.scheduled_at 
+                        ? formatDistance(new Date(order.scheduled_at), new Date(), { addSuffix: true })
+                        : 'Not scheduled'
+                      }
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{request.request_type}</Badge>
-                    </TableCell>
-                    <TableCell>{getPriorityBadge(request.priority)}</TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>
-                      {formatDistance(new Date(request.created_at), new Date(), { addSuffix: true })}
+                      {formatDistance(new Date(order.created_at), new Date(), { addSuffix: true })}
                     </TableCell>
                   </TableRow>
                 ))}
