@@ -5,11 +5,9 @@ import {
   Users, 
   ShoppingCart, 
   Wrench, 
-  TrendingUp, 
   AlertTriangle, 
   CheckCircle,
   UserCheck,
-  Building,
   DollarSign,
   Clock
 } from "lucide-react";
@@ -20,26 +18,35 @@ export function SystemOverview() {
   const { data: systemStats, isLoading } = useQuery({
     queryKey: ['admin-system-stats'],
     queryFn: async () => {
-      // Fetch system-wide statistics
+      // Fetch system-wide statistics using actual tables
       const [
         cartsResult,
-        usersResult,
-        providersResult,
-        requestsResult,
-        analyticsResult
+        orgsResult,
+        workOrdersResult,
+        issuesResult,
+        rollupsResult
       ] = await Promise.all([
-        supabase.from('carts').select('*'),
-        supabase.from('profiles').select('*'),
-        supabase.from('maintenance_providers').select('*'),
-        supabase.from('maintenance_requests').select('*'),
-        supabase.from('cart_analytics').select('*')
+        supabase.from('carts').select('id, status'),
+        supabase.from('organizations').select('id, type, settings'),
+        supabase.from('work_orders').select('id, status'),
+        supabase.from('issues').select('id, severity, status, actual_cost, est_cost'),
+        supabase.from('store_daily_rollups').select('downtime_minutes').limit(30)
       ]);
 
       const carts = cartsResult.data || [];
-      const users = usersResult.data || [];
-      const providers = providersResult.data || [];
-      const requests = requestsResult.data || [];
-      const analytics = analyticsResult.data || [];
+      const orgs = orgsResult.data || [];
+      const workOrders = workOrdersResult.data || [];
+      const issues = issuesResult.data || [];
+      const rollups = rollupsResult.data || [];
+
+      // Count providers from organizations
+      const providerOrgs = orgs.filter(o => o.type === 'provider');
+      const storeOrgs = orgs.filter(o => o.type === 'store');
+      const corpOrgs = orgs.filter(o => o.type === 'corporation');
+
+      // Calculate costs from issues
+      const totalCost = issues.reduce((sum, i) => sum + (Number(i.actual_cost) || Number(i.est_cost) || 0), 0);
+      const totalDowntime = rollups.reduce((sum, r) => sum + (r.downtime_minutes || 0), 0);
 
       return {
         carts: {
@@ -48,52 +55,52 @@ export function SystemOverview() {
           outOfService: carts.filter(c => c.status === 'out_of_service').length,
           retired: carts.filter(c => c.status === 'retired').length
         },
-        users: {
-          total: users.length,
-          admin: users.filter(u => u.role === 'admin').length,
-          store: users.filter(u => u.role === 'store').length,
-          maintenance: users.filter(u => u.role === 'maintenance').length,
-          active: users.filter(u => u.is_active).length
+        organizations: {
+          total: orgs.length,
+          stores: storeOrgs.length,
+          providers: providerOrgs.length,
+          corporations: corpOrgs.length,
+          verifiedProviders: providerOrgs.filter(p => (p.settings as any)?.is_verified === true).length
         },
-        providers: {
-          total: providers.length,
-          verified: providers.filter(p => p.is_verified).length,
-          pending: providers.filter(p => !p.is_verified).length
+        workOrders: {
+          total: workOrders.length,
+          new: workOrders.filter(w => w.status === 'new').length,
+          scheduled: workOrders.filter(w => w.status === 'scheduled').length,
+          inProgress: workOrders.filter(w => w.status === 'in_progress').length,
+          completed: workOrders.filter(w => w.status === 'completed').length
         },
-        requests: {
-          total: requests.length,
-          pending: requests.filter(r => r.status === 'pending').length,
-          inProgress: requests.filter(r => r.status === 'in_progress').length,
-          completed: requests.filter(r => r.status === 'completed').length,
-          urgent: requests.filter(r => r.priority === 'urgent').length
+        issues: {
+          total: issues.length,
+          open: issues.filter(i => i.status === 'open').length,
+          highSeverity: issues.filter(i => i.severity === 'high' || i.severity === 'critical').length
         },
         analytics: {
-          totalCost: analytics.reduce((sum, a) => sum + (Number(a.maintenance_cost) || 0), 0),
-          totalDowntime: analytics.reduce((sum, a) => sum + (a.downtime_minutes || 0), 0),
-          totalIssues: analytics.reduce((sum, a) => sum + (a.issues_reported || 0), 0)
+          totalCost,
+          totalDowntime,
+          totalIssues: issues.length
         }
       };
     }
   });
 
   if (isLoading) {
-    return <div>Loading system overview...</div>;
+    return <div className="flex items-center justify-center p-8">Loading system overview...</div>;
   }
 
   const stats = systemStats || {
     carts: { total: 0, inService: 0, outOfService: 0, retired: 0 },
-    users: { total: 0, admin: 0, store: 0, maintenance: 0, active: 0 },
-    providers: { total: 0, verified: 0, pending: 0 },
-    requests: { total: 0, pending: 0, inProgress: 0, completed: 0, urgent: 0 },
+    organizations: { total: 0, stores: 0, providers: 0, corporations: 0, verifiedProviders: 0 },
+    workOrders: { total: 0, new: 0, scheduled: 0, inProgress: 0, completed: 0 },
+    issues: { total: 0, open: 0, highSeverity: 0 },
     analytics: { totalCost: 0, totalDowntime: 0, totalIssues: 0 }
   };
 
   const systemHealth = () => {
-    const inServicePercentage = stats.carts.total > 0 ? (stats.carts.inService / stats.carts.total) * 100 : 0;
-    const completedRequestPercentage = stats.requests.total > 0 ? (stats.requests.completed / stats.requests.total) * 100 : 0;
-    const verifiedProviderPercentage = stats.providers.total > 0 ? (stats.providers.verified / stats.providers.total) * 100 : 0;
+    const inServicePercentage = stats.carts.total > 0 ? (stats.carts.inService / stats.carts.total) * 100 : 100;
+    const completedPercentage = stats.workOrders.total > 0 ? (stats.workOrders.completed / stats.workOrders.total) * 100 : 100;
+    const lowIssuePercentage = stats.issues.total > 0 ? ((stats.issues.total - stats.issues.highSeverity) / stats.issues.total) * 100 : 100;
     
-    return Math.round((inServicePercentage + completedRequestPercentage + verifiedProviderPercentage) / 3);
+    return Math.round((inServicePercentage + completedPercentage + lowIssuePercentage) / 3);
   };
 
   return (
@@ -119,7 +126,7 @@ export function SystemOverview() {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Based on in-service carts, completed requests, and verified providers
+            Based on in-service carts, completed work orders, and issue severity
           </p>
         </CardContent>
       </Card>
@@ -128,15 +135,15 @@ export function SystemOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">Organizations</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.users.total}</div>
-            <div className="flex gap-2 mt-2">
-              <Badge variant="destructive">{stats.users.admin} Admin</Badge>
-              <Badge variant="outline">{stats.users.store} Store</Badge>
-              <Badge variant="outline">{stats.users.maintenance} Maintenance</Badge>
+            <div className="text-2xl font-bold">{stats.organizations.total}</div>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              <Badge variant="outline">{stats.organizations.stores} Stores</Badge>
+              <Badge variant="outline">{stats.organizations.providers} Providers</Badge>
+              <Badge variant="outline">{stats.organizations.corporations} Corps</Badge>
             </div>
           </CardContent>
         </Card>
@@ -158,15 +165,15 @@ export function SystemOverview() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Maintenance Requests</CardTitle>
+            <CardTitle className="text-sm font-medium">Work Orders</CardTitle>
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.requests.total}</div>
+            <div className="text-2xl font-bold">{stats.workOrders.total}</div>
             <div className="flex gap-1 mt-2 flex-wrap">
-              <Badge variant="secondary" className="text-xs">{stats.requests.pending} Pending</Badge>
-              <Badge variant="default" className="text-xs">{stats.requests.inProgress} In Progress</Badge>
-              <Badge variant="outline" className="text-xs">{stats.requests.completed} Done</Badge>
+              <Badge variant="secondary" className="text-xs">{stats.workOrders.new + stats.workOrders.scheduled} Pending</Badge>
+              <Badge variant="default" className="text-xs">{stats.workOrders.inProgress} In Progress</Badge>
+              <Badge variant="outline" className="text-xs">{stats.workOrders.completed} Done</Badge>
             </div>
           </CardContent>
         </Card>
@@ -177,10 +184,10 @@ export function SystemOverview() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.providers.total}</div>
+            <div className="text-2xl font-bold">{stats.organizations.providers}</div>
             <div className="flex gap-2 mt-2">
-              <Badge variant="default">{stats.providers.verified} Verified</Badge>
-              <Badge variant="secondary">{stats.providers.pending} Pending</Badge>
+              <Badge variant="default">{stats.organizations.verifiedProviders} Verified</Badge>
+              <Badge variant="secondary">{stats.organizations.providers - stats.organizations.verifiedProviders} Pending</Badge>
             </div>
           </CardContent>
         </Card>
@@ -209,7 +216,7 @@ export function SystemOverview() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.analytics.totalDowntime.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              Minutes of cart downtime
+              Minutes of cart downtime (30d)
             </p>
           </CardContent>
         </Card>
@@ -222,14 +229,14 @@ export function SystemOverview() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.analytics.totalIssues}</div>
             <p className="text-xs text-muted-foreground">
-              Total issues across all carts
+              {stats.issues.open} open, {stats.issues.highSeverity} high severity
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Alert Status */}
-      {stats.requests.urgent > 0 && (
+      {stats.issues.highSeverity > 0 && (
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -238,7 +245,7 @@ export function SystemOverview() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>There are {stats.requests.urgent} urgent maintenance requests requiring immediate attention.</p>
+            <p>There are {stats.issues.highSeverity} high-severity issues requiring attention.</p>
           </CardContent>
         </Card>
       )}

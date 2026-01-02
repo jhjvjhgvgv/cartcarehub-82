@@ -1,7 +1,7 @@
 import React from "react"
 import { Card } from "@/components/ui/card"
 import { ShoppingCart, AlertTriangle, CheckCircle, Bell } from "lucide-react"
-import { Cart, CartWithPrediction } from "@/types/cart"
+import { Cart, CartWithPrediction, hasDbPrediction } from "@/types/cart"
 
 interface CartStatsProps {
   totalCarts: number
@@ -10,26 +10,19 @@ interface CartStatsProps {
   carts?: (Cart | CartWithPrediction)[]
 }
 
-// Type guard to check if cart has prediction
-function hasValidPrediction(cart: Cart | CartWithPrediction): cart is CartWithPrediction {
-  return 'prediction' in cart && 
-    cart.prediction !== undefined && 
-    typeof cart.prediction.maintenance_probability === 'number';
-}
-
 export function CartStats({ totalCarts, activeCarts, maintenanceNeeded, carts = [] }: CartStatsProps) {
   // Find carts that need attention soon (high probability of needing maintenance)
-  const cartsNeedingAttention = carts.filter(
-    cart => hasValidPrediction(cart) && 
-    cart.prediction.maintenance_probability > 0.7 &&
+  const cartsNeedingAttention = carts.filter(cart => 
+    hasDbPrediction(cart) && 
+    (cart.maintenance_probability ?? 0) > 0.7 &&
     cart.status === "in_service"
   ) as CartWithPrediction[];
 
   // Get the cart that needs attention most urgently
   const urgentCart = cartsNeedingAttention.length > 0 
     ? cartsNeedingAttention.sort((a, b) => {
-        const daysA = a.prediction.days_until_maintenance ?? 999;
-        const daysB = b.prediction.days_until_maintenance ?? 999;
+        const daysA = a.days_until_maintenance ?? 999;
+        const daysB = b.days_until_maintenance ?? 999;
         return daysA - daysB;
       })[0]
     : null;
@@ -83,8 +76,8 @@ export function CartStats({ totalCarts, activeCarts, maintenanceNeeded, carts = 
             <div>
               <p className="font-medium text-destructive">Preventive Maintenance Alert</p>
               <p className="text-sm text-destructive/80">
-                Cart #{urgentCart.asset_tag || urgentCart.qr_token} has a {Math.round(urgentCart.prediction.maintenance_probability * 100)}% chance 
-                of needing repairs{urgentCart.prediction.days_until_maintenance !== null ? ` in ${urgentCart.prediction.days_until_maintenance} days` : ''}.
+                Cart #{urgentCart.asset_tag || urgentCart.qr_token} has a {Math.round((urgentCart.maintenance_probability ?? 0) * 100)}% chance 
+                of needing repairs{urgentCart.days_until_maintenance !== null ? ` in ${urgentCart.days_until_maintenance} days` : ''}.
               </p>
             </div>
           </div>

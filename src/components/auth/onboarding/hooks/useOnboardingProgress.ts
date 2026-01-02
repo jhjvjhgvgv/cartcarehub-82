@@ -24,34 +24,16 @@ export const useOnboardingProgress = () => {
     }
 
     try {
-      // Check profile onboarding status
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_step, onboarding_completed')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile) {
-        setCurrentStep(profile.onboarding_step || 1);
-        setOnboardingCompleted(profile.onboarding_completed || false);
-      }
-
-      // Fetch step progress
-      const { data: progressData } = await supabase
-        .from('onboarding_progress')
-        .select('step_number, step_name, completed, completed_at, data')
+      // Check if user has any org memberships (means onboarding is complete)
+      const { data: memberships } = await supabase
+        .from('org_memberships')
+        .select('id')
         .eq('user_id', user.id)
-        .order('step_number', { ascending: true });
+        .limit(1);
 
-      if (progressData) {
-        const mappedSteps: OnboardingStep[] = progressData.map((item: any) => ({
-          step_number: item.step_number,
-          step_name: item.step_name,
-          completed: item.completed,
-          completed_at: item.completed_at || undefined,
-          data: (item.data || {}) as Record<string, any>,
-        }));
-        setSteps(mappedSteps);
+      if (memberships && memberships.length > 0) {
+        setOnboardingCompleted(true);
+        setCurrentStep(4); // Final step
       }
     } catch (err) {
       console.error('Error fetching onboarding progress:', err);
@@ -60,29 +42,13 @@ export const useOnboardingProgress = () => {
     }
   }, [user]);
 
-  const updateStep = async (stepNumber: number, stepName: string, completed: boolean, data?: Record<string, any>) => {
+  const updateStep = async (stepNumber: number, _stepName: string, completed: boolean, _data?: Record<string, any>) => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('onboarding_progress')
-        .upsert({
-          user_id: user.id,
-          step_number: stepNumber,
-          step_name: stepName,
-          completed,
-          completed_at: completed ? new Date().toISOString() : null,
-          data: data || {},
-        }, {
-          onConflict: 'user_id,step_number',
-        });
-
-      if (error) {
-        console.error('Error updating step:', error);
-        return false;
+      if (completed) {
+        setCurrentStep(stepNumber + 1);
       }
-
-      await fetchProgress();
       return true;
     } catch (err) {
       console.error('Error updating onboarding step:', err);
@@ -93,12 +59,6 @@ export const useOnboardingProgress = () => {
   const completeStep = async (stepNumber: number, stepName: string, data?: Record<string, any>) => {
     const success = await updateStep(stepNumber, stepName, true, data);
     if (success) {
-      // Update profile current step
-      await supabase
-        .from('profiles')
-        .update({ onboarding_step: stepNumber + 1 })
-        .eq('id', user!.id);
-      
       setCurrentStep(stepNumber + 1);
     }
     return success;
@@ -106,27 +66,8 @@ export const useOnboardingProgress = () => {
 
   const completeOnboarding = async () => {
     if (!user) return false;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          onboarding_completed: true,
-          onboarding_completed_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error completing onboarding:', error);
-        return false;
-      }
-
-      setOnboardingCompleted(true);
-      return true;
-    } catch (err) {
-      console.error('Error completing onboarding:', err);
-      return false;
-    }
+    setOnboardingCompleted(true);
+    return true;
   };
 
   useEffect(() => {
