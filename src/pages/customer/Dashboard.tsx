@@ -32,7 +32,7 @@ export default function CustomerDashboard() {
 
         if (error) throw error;
 
-        // Use new status values
+        // Use canonical status values
         const inServiceCarts = carts?.filter(c => c.status === 'in_service').length || 0;
         const outOfServiceCarts = carts?.filter(c => c.status === 'out_of_service').length || 0;
         const totalCarts = carts?.length || 0;
@@ -50,19 +50,19 @@ export default function CustomerDashboard() {
           recentIssues: issuesCount || 0
         });
 
-        // Fetch recent maintenance requests
-        const { data: requests } = await supabase
-          .from('maintenance_requests')
-          .select('*')
+        // Fetch recent work orders for activity feed
+        const { data: workOrders } = await supabase
+          .from('work_orders')
+          .select('id, created_at, status, summary')
           .order('created_at', { ascending: false })
           .limit(5);
 
-        const formattedActivities = requests?.map(req => ({
-          id: req.id,
-          type: 'maintenance_request',
-          date: req.created_at,
-          description: `${req.request_type} request - ${req.status}`,
-          status: req.status
+        const formattedActivities = workOrders?.map(wo => ({
+          id: wo.id,
+          type: 'work_order',
+          date: wo.created_at,
+          description: `${wo.summary || 'Work order'} - ${wo.status}`,
+          status: wo.status
         })) || [];
 
         setActivities(formattedActivities);
@@ -81,7 +81,7 @@ export default function CustomerDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'carts' }, () => {
         fetchDashboardData();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'maintenance_requests' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_orders' }, () => {
         fetchDashboardData();
       })
       .subscribe();

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useMaintenanceRequests } from "@/hooks/use-maintenance";
+import { useWorkOrders } from "@/hooks/use-maintenance";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -19,10 +19,10 @@ interface RouteStop {
   cart_qr_token: string;
   store_name: string;
   store_org_id: string;
-  request_type: string;
-  priority: string;
+  summary: string;
+  status: string;
   estimated_duration: number;
-  scheduled_date?: string;
+  scheduled_at?: string;
   order: number;
 }
 
@@ -39,56 +39,35 @@ export function RouteOptimizer() {
   const [clusters, setClusters] = useState<StoreCluster[]>([]);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const { data: requests = [] } = useMaintenanceRequests();
+  const { data: workOrders = [] } = useWorkOrders();
   const { toast } = useToast();
 
-  const todaysRequests = requests.filter(req => 
-    req.status === 'scheduled' && 
-    req.scheduled_date &&
-    new Date(req.scheduled_date).toDateString() === new Date().toDateString()
+  // Filter to today's scheduled work orders
+  const todaysOrders = workOrders.filter(wo => 
+    wo.status === 'scheduled' && 
+    wo.scheduled_at &&
+    new Date(wo.scheduled_at).toDateString() === new Date().toDateString()
   );
 
   const optimizeRoute = async () => {
     try {
       setIsOptimizing(true);
 
-      // Fetch cart and store information
-      const requestsWithDetails = await Promise.all(
-        todaysRequests.map(async (req) => {
-          // Fetch cart with store organization
-          const { data: cart } = await supabase
-            .from('carts')
-            .select('qr_token, store_org_id')
-            .eq('id', req.cart_id)
-            .maybeSingle();
+      // Map work orders to route stops
+      const stops: RouteStop[] = todaysOrders.map((wo) => ({
+        id: wo.id,
+        cart_qr_token: wo.summary || 'Work Order',
+        store_name: wo.store_name || 'Unknown Store',
+        store_org_id: wo.store_org_id,
+        summary: wo.summary || '',
+        status: wo.status,
+        estimated_duration: 60, // Default 1 hour
+        scheduled_at: wo.scheduled_at || undefined,
+        order: 0,
+      }));
 
-          // Fetch store name from organizations
-          let storeName = req.store_id;
-          if (cart?.store_org_id) {
-            const { data: org } = await supabase
-              .from('organizations')
-              .select('name')
-              .eq('id', cart.store_org_id)
-              .maybeSingle();
-            storeName = org?.name || req.store_id;
-          }
-
-          return {
-            id: req.id,
-            cart_qr_token: cart?.qr_token || 'N/A',
-            store_name: storeName,
-            store_org_id: cart?.store_org_id || req.store_id,
-            request_type: req.request_type,
-            priority: req.priority,
-            estimated_duration: req.estimated_duration || 30,
-            scheduled_date: req.scheduled_date,
-            order: 0 // Will be assigned during optimization
-          };
-        })
-      );
-
-      // Advanced optimization: cluster by store, then prioritize
-      const storeGroups = requestsWithDetails.reduce((acc, stop) => {
+      // Group by store for clustering
+      const storeGroups = stops.reduce((acc, stop) => {
         if (!acc[stop.store_org_id]) {
           acc[stop.store_org_id] = {
             store_org_id: stop.store_org_id,
@@ -100,24 +79,13 @@ export function RouteOptimizer() {
         }
         acc[stop.store_org_id].stops.push(stop);
         acc[stop.store_org_id].total_duration += stop.estimated_duration;
-        
-        // Priority scoring
-        const priorityValue = stop.priority === 'high' ? 3 : stop.priority === 'medium' ? 2 : 1;
-        acc[stop.store_org_id].priority_score += priorityValue;
+        acc[stop.store_org_id].priority_score += 1;
         
         return acc;
       }, {} as Record<string, StoreCluster>);
 
       const clustersArray = Object.values(storeGroups);
       clustersArray.sort((a, b) => b.priority_score - a.priority_score);
-
-      const priorityOrder = { high: 1, medium: 2, low: 3 };
-      clustersArray.forEach(cluster => {
-        cluster.stops.sort((a, b) => 
-          (priorityOrder[a.priority as keyof typeof priorityOrder] || 3) - 
-          (priorityOrder[b.priority as keyof typeof priorityOrder] || 3)
-        );
-      });
 
       setClusters(clustersArray);
 
@@ -147,14 +115,15 @@ export function RouteOptimizer() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      critical: 'bg-red-100 text-red-800',
-      high: 'bg-orange-100 text-orange-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-blue-100 text-blue-800',
+      new: 'bg-red-100 text-red-800',
+      assigned: 'bg-orange-100 text-orange-800',
+      scheduled: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-yellow-100 text-yellow-800',
+      complete: 'bg-green-100 text-green-800',
     };
-    return colors[priority] || colors.low;
+    return colors[status] || colors.new;
   };
 
   return (
@@ -167,12 +136,12 @@ export function RouteOptimizer() {
               Intelligent Route Optimizer
             </CardTitle>
             <CardDescription>
-              AI-optimized route by priority & location clustering
+              AI-optimized route by location clustering
             </CardDescription>
           </div>
           <Button 
             onClick={optimizeRoute}
-            disabled={todaysRequests.length === 0 || isOptimizing}
+            disabled={todaysOrders.length === 0 || isOptimizing}
           >
             <Navigation className="h-4 w-4 mr-2" />
             {isOptimizing ? 'Optimizing...' : 'Optimize Route'}
@@ -187,7 +156,7 @@ export function RouteOptimizer() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Today's Stops</p>
-                  <p className="text-2xl font-bold">{optimizedRoute.length || todaysRequests.length}</p>
+                  <p className="text-2xl font-bold">{optimizedRoute.length || todaysOrders.length}</p>
                 </div>
                 <MapPin className="h-8 w-8 text-primary" />
               </div>
@@ -250,14 +219,13 @@ export function RouteOptimizer() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{stop.cart_qr_token}</span>
-                          <Badge className={getPriorityColor(stop.priority)}>
-                            {stop.priority}
+                          <span className="text-sm font-medium">{stop.summary}</span>
+                          <Badge className={getStatusColor(stop.status)}>
+                            {stop.status}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span>{stop.estimated_duration} min</span>
-                          <span className="capitalize">{stop.request_type}</span>
                         </div>
                       </div>
                     </div>
@@ -270,8 +238,8 @@ export function RouteOptimizer() {
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              {todaysRequests.length === 0 
-                ? "No scheduled requests for today"
+              {todaysOrders.length === 0 
+                ? "No scheduled work orders for today"
                 : "Click 'Optimize Route' to plan your day"}
             </p>
           </div>

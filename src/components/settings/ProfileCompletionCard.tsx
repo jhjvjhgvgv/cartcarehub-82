@@ -20,20 +20,16 @@ export const ProfileCompletionCard = () => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    display_name: profile?.display_name || '',
-    email: profile?.email || '',
-    company_name: profile?.company_name || '',
-    contact_phone: profile?.contact_phone || ''
+    full_name: profile?.full_name || '',
+    phone: profile?.phone || ''
   });
 
   const calculateCompletion = () => {
     const fields = [
-      profile?.display_name,
-      profile?.email,
-      profile?.company_name,
-      profile?.role
+      profile?.full_name,
+      profile?.portal
     ];
-    const completed = fields.filter(field => field && field.trim() !== '').length;
+    const completed = fields.filter(field => field && String(field).trim() !== '').length;
     return Math.round((completed / fields.length) * 100);
   };
 
@@ -43,12 +39,10 @@ export const ProfileCompletionCard = () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
-          display_name: formData.display_name,
-          email: formData.email,
-          company_name: formData.company_name,
-          contact_phone: formData.contact_phone,
+          full_name: formData.full_name,
+          phone: formData.phone,
           updated_at: new Date().toISOString()
         })
         .eq('id', profile.id);
@@ -87,7 +81,7 @@ export const ProfileCompletionCard = () => {
             Profile Completion
           </span>
           {isComplete && (
-            <CheckCircle className="h-5 w-5 text-success" />
+            <CheckCircle className="h-5 w-5 text-green-500" />
           )}
         </CardTitle>
       </CardHeader>
@@ -104,52 +98,32 @@ export const ProfileCompletionCard = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Complete your profile to enable all features and improve connection success rates.
+              Complete your profile to enable all features.
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="display_name">Display Name</Label>
+            <Label htmlFor="full_name">Full Name</Label>
             <Input
-              id="display_name"
-              value={formData.display_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
-              placeholder="Your display name"
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+              placeholder="Your full name"
             />
           </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="phone">Phone Number (Optional)</Label>
             <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="your.email@example.com"
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="+1 (555) 123-4567"
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="company_name">Company Name</Label>
-          <Input
-            id="company_name"
-            value={formData.company_name}
-            onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
-            placeholder="Your company or organization"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contact_phone">Contact Phone (Optional)</Label>
-          <Input
-            id="contact_phone"
-            type="tel"
-            value={formData.contact_phone}
-            onChange={(e) => setFormData(prev => ({ ...prev, contact_phone: e.target.value }))}
-            placeholder="+1 (555) 123-4567"
-          />
         </div>
 
         <Button 

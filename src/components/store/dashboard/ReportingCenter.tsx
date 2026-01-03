@@ -48,53 +48,63 @@ export function ReportingCenter() {
 
   const fetchAnalytics = async () => {
     try {
+      setLoading(true);
       const daysAgo = parseInt(timeRange);
-      const startDate = format(subDays(new Date(), daysAgo), 'yyyy-MM-dd');
-      const endDate = format(new Date(), 'yyyy-MM-dd');
+      const startDate = subDays(new Date(), daysAgo);
 
-      const { data: summary, error: summaryError } = await supabase
-        .rpc('get_cart_analytics_summary', {
-          store_id_param: null,
-          date_from: startDate,
-          date_to: endDate
-        });
+      // Fetch carts for status breakdown
+      const { data: carts, error: cartsError } = await supabase
+        .from('carts')
+        .select('status');
 
-      if (summaryError) throw summaryError;
+      if (cartsError) throw cartsError;
 
-      const summaryData = summary as any;
+      const inServiceCount = carts?.filter(c => c.status === 'in_service').length || 0;
+      const outOfServiceCount = carts?.filter(c => c.status === 'out_of_service').length || 0;
+      const retiredCount = carts?.filter(c => c.status === 'retired').length || 0;
 
-      // Fetch maintenance requests for time series
-      const { data: requests, error: requestsError } = await supabase
-        .from('maintenance_requests')
-        .select('created_at, status, cost, actual_duration')
-        .gte('created_at', new Date(startDate).toISOString())
+      // Fetch work orders for time series
+      const { data: workOrders, error: workOrdersError } = await supabase
+        .from('work_orders')
+        .select('created_at, status')
+        .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: true });
 
-      if (requestsError) throw requestsError;
+      if (workOrdersError) throw workOrdersError;
+
+      // Fetch open issues count
+      const { count: issuesCount } = await supabase
+        .from('issues')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'open');
 
       // Process data for charts
       const statusBreakdown = [
-        { name: 'Active', value: summaryData?.summary?.active_carts || 0 },
-        { name: 'Maintenance', value: summaryData?.summary?.maintenance_carts || 0 },
-        { name: 'Other', value: (summaryData?.summary?.total_carts || 0) - (summaryData?.summary?.active_carts || 0) - (summaryData?.summary?.maintenance_carts || 0) }
-      ];
+        { name: 'In Service', value: inServiceCount },
+        { name: 'Out of Service', value: outOfServiceCount },
+        { name: 'Retired', value: retiredCount }
+      ].filter(item => item.value > 0);
 
-      // Group requests by date
-      const requestsByDate = requests?.reduce((acc: any, req: any) => {
-        const date = format(new Date(req.created_at), 'MM/dd');
+      // Group work orders by date
+      const ordersByDate = workOrders?.reduce((acc: any, wo: any) => {
+        const date = format(new Date(wo.created_at), 'MM/dd');
         if (!acc[date]) {
-          acc[date] = { date, requests: 0, cost: 0, duration: 0 };
+          acc[date] = { date, orders: 0 };
         }
-        acc[date].requests += 1;
-        acc[date].cost += req.cost || 0;
-        acc[date].duration += req.actual_duration || 0;
+        acc[date].orders += 1;
         return acc;
       }, {});
 
-      const timeSeriesData = Object.values(requestsByDate || {});
+      const timeSeriesData = Object.values(ordersByDate || {});
 
       setAnalytics({
-        summary: summaryData,
+        summary: {
+          total_carts: carts?.length || 0,
+          in_service: inServiceCount,
+          out_of_service: outOfServiceCount,
+          open_issues: issuesCount || 0,
+          utilization_rate: carts?.length ? Math.round((inServiceCount / carts.length) * 100) : 0
+        },
         statusBreakdown,
         timeSeriesData
       });
@@ -123,18 +133,11 @@ export function ReportingCenter() {
       ['Time Range', `Last ${timeRange} days`],
       [''],
       ['Summary Metrics', ''],
-      ['Total Carts', analytics?.summary?.summary?.total_carts || 0],
-      ['Active Carts', analytics?.summary?.summary?.active_carts || 0],
-      ['Maintenance Carts', analytics?.summary?.summary?.maintenance_carts || 0],
-      ['Cart Utilization', `${analytics?.summary?.summary?.cart_utilization_rate || 0}%`],
-      [''],
-      ['Financial Metrics', ''],
-      ['Total Maintenance Cost', `$${analytics?.summary?.metrics?.total_maintenance_cost || 0}`],
-      ['Average Cost Per Cart', `$${analytics?.summary?.metrics?.avg_cost_per_cart || 0}`],
-      [''],
-      ['Operational Metrics', ''],
-      ['Total Issues', analytics?.summary?.metrics?.total_issues_reported || 0],
-      ['Avg Downtime (minutes)', analytics?.summary?.metrics?.avg_downtime_minutes || 0]
+      ['Total Carts', analytics?.summary?.total_carts || 0],
+      ['In Service', analytics?.summary?.in_service || 0],
+      ['Out of Service', analytics?.summary?.out_of_service || 0],
+      ['Utilization Rate', `${analytics?.summary?.utilization_rate || 0}%`],
+      ['Open Issues', analytics?.summary?.open_issues || 0],
     ];
 
     const csv = csvData.map(row => row.join(',')).join('\n');
@@ -202,7 +205,7 @@ export function ReportingCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Carts</p>
-                  <p className="text-2xl font-bold">{analytics?.summary?.summary?.total_carts || 0}</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.total_carts || 0}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
@@ -214,7 +217,7 @@ export function ReportingCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Utilization Rate</p>
-                  <p className="text-2xl font-bold">{analytics?.summary?.summary?.cart_utilization_rate || 0}%</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.utilization_rate || 0}%</p>
                 </div>
                 <Clock className="h-8 w-8 text-primary" />
               </div>
@@ -225,8 +228,8 @@ export function ReportingCenter() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Cost</p>
-                  <p className="text-2xl font-bold">${analytics?.summary?.metrics?.total_maintenance_cost || 0}</p>
+                  <p className="text-sm text-muted-foreground">In Service</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.in_service || 0}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-primary" />
               </div>
@@ -237,8 +240,8 @@ export function ReportingCenter() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Issues Reported</p>
-                  <p className="text-2xl font-bold">{analytics?.summary?.metrics?.total_issues_reported || 0}</p>
+                  <p className="text-sm text-muted-foreground">Open Issues</p>
+                  <p className="text-2xl font-bold">{analytics?.summary?.open_issues || 0}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-primary" />
               </div>
@@ -248,10 +251,9 @@ export function ReportingCenter() {
 
         {/* Charts */}
         <Tabs defaultValue="status" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="status">Cart Status</TabsTrigger>
-            <TabsTrigger value="trends">Maintenance Trends</TabsTrigger>
-            <TabsTrigger value="costs">Cost Analysis</TabsTrigger>
+            <TabsTrigger value="trends">Work Order Trends</TabsTrigger>
           </TabsList>
           
           <TabsContent value="status" className="space-y-4">
@@ -287,7 +289,7 @@ export function ReportingCenter() {
           <TabsContent value="trends" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Maintenance Request Trends</CardTitle>
+                <CardTitle>Work Order Trends</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -299,32 +301,12 @@ export function ReportingCenter() {
                     <Legend />
                     <Line 
                       type="monotone" 
-                      dataKey="requests" 
+                      dataKey="orders" 
                       stroke="hsl(var(--primary))" 
-                      name="Requests"
+                      name="Work Orders"
                       strokeWidth={2}
                     />
                   </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="costs" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Maintenance Costs Over Time</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={analytics?.timeSeriesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="cost" fill="hsl(var(--primary))" name="Cost ($)" />
-                  </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>

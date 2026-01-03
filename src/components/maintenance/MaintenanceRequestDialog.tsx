@@ -27,23 +27,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateMaintenanceRequest } from '@/hooks/use-maintenance';
+import { useCreateWorkOrder } from '@/hooks/use-maintenance';
 import { Cart, CartWithStore } from '@/types/cart';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const maintenanceRequestSchema = z.object({
-  cart_id: z.string().min(1, 'Cart is required'),
-  provider_id: z.string().min(1, 'Provider is required'),
-  store_id: z.string().min(1, 'Store is required'),
-  request_type: z.enum(['routine', 'emergency', 'inspection', 'repair']),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']),
-  description: z.string().optional(),
-  scheduled_date: z.string().optional(),
-  estimated_duration: z.number().optional(),
+const workOrderSchema = z.object({
+  store_org_id: z.string().min(1, 'Store is required'),
+  provider_org_id: z.string().optional(),
+  summary: z.string().min(1, 'Summary is required'),
+  notes: z.string().optional(),
+  scheduled_at: z.string().optional(),
 });
 
-type MaintenanceRequestFormData = z.infer<typeof maintenanceRequestSchema>;
+type WorkOrderFormData = z.infer<typeof workOrderSchema>;
 
 interface MaintenanceRequestDialogProps {
   open: boolean;
@@ -58,36 +55,45 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
   cart,
   carts,
 }) => {
-  const createRequest = useCreateMaintenanceRequest();
+  const createWorkOrder = useCreateWorkOrder();
   const { toast } = useToast();
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const form = useForm<MaintenanceRequestFormData>({
-    resolver: zodResolver(maintenanceRequestSchema),
+  const form = useForm<WorkOrderFormData>({
+    resolver: zodResolver(workOrderSchema),
     defaultValues: {
-      cart_id: cart?.id || '',
-      store_id: cart?.store_org_id || '',
-      request_type: 'routine',
-      priority: 'medium',
-      estimated_duration: 30,
+      store_org_id: cart?.store_org_id || '',
+      summary: '',
+      notes: '',
     },
   });
 
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const storeOrgId = cart?.store_org_id;
+        if (!storeOrgId) {
+          setLoading(false);
+          return;
+        }
 
-        // Get connected maintenance providers
-        const { data: connections } = await supabase
-          .from('store_provider_connections')
-          .select('provider_id, maintenance_providers(id, company_name)')
-          .eq('initiated_by', user.id)
-          .eq('status', 'accepted');
+        // Get connected maintenance providers via provider_store_links
+        const { data: links } = await supabase
+          .from('provider_store_links')
+          .select('provider_org_id')
+          .eq('store_org_id', storeOrgId)
+          .eq('status', 'active');
 
-        setProviders(connections || []);
+        if (links && links.length > 0) {
+          const providerIds = links.map(l => l.provider_org_id);
+          const { data: orgs } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .in('id', providerIds);
+          
+          setProviders(orgs || []);
+        }
       } catch (error) {
         console.error('Error fetching providers:', error);
       } finally {
@@ -98,34 +104,22 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
     if (open) {
       fetchProviders();
     }
-  }, [open]);
+  }, [open, cart?.store_org_id]);
 
-  const onSubmit = async (data: MaintenanceRequestFormData) => {
+  const onSubmit = async (data: WorkOrderFormData) => {
     try {
-      if (providers.length === 0) {
-        toast({
-          title: "No Providers",
-          description: "Please connect to a maintenance provider first",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      await createRequest.mutateAsync({
-        cart_id: data.cart_id!,
-        provider_id: data.provider_id!,
-        store_id: data.store_id!,
-        request_type: data.request_type,
-        priority: data.priority,
-        status: 'pending',
-        description: data.description,
-        scheduled_date: data.scheduled_date,
-        estimated_duration: data.estimated_duration,
+      await createWorkOrder.mutateAsync({
+        store_org_id: data.store_org_id,
+        provider_org_id: data.provider_org_id || undefined,
+        summary: data.summary,
+        notes: data.notes,
+        scheduled_at: data.scheduled_at,
+        status: 'new',
       });
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to create maintenance request:', error);
+      console.error('Failed to create work order:', error);
     }
   };
 
@@ -138,9 +132,9 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Maintenance Request</DialogTitle>
+          <DialogTitle>Create Work Order</DialogTitle>
           <DialogDescription>
-            Schedule maintenance for your cart. All fields marked with * are required.
+            Create a new maintenance work order. All fields marked with * are required.
           </DialogDescription>
         </DialogHeader>
 
@@ -148,19 +142,19 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="cart_id"
+              name="store_org_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cart *</FormLabel>
+                  <FormLabel>Store *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a cart" />
+                        <SelectValue placeholder="Select a store" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {carts.map((cartOption) => (
-                        <SelectItem key={cartOption.id} value={cartOption.id}>
+                        <SelectItem key={cartOption.id} value={cartOption.store_org_id}>
                           {getCartDisplayName(cartOption)}
                         </SelectItem>
                       ))}
@@ -173,14 +167,14 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
 
             <FormField
               control={form.control}
-              name="provider_id"
+              name="provider_org_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Maintenance Provider *</FormLabel>
+                  <FormLabel>Maintenance Provider</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a provider" />
+                        <SelectValue placeholder="Select a provider (optional)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -189,9 +183,9 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
                       ) : providers.length === 0 ? (
                         <SelectItem value="none" disabled>No connected providers</SelectItem>
                       ) : (
-                        providers.map((conn: any) => (
-                          <SelectItem key={conn.provider_id} value={conn.provider_id}>
-                            {conn.maintenance_providers?.company_name || 'Unknown Provider'}
+                        providers.map((provider) => (
+                          <SelectItem key={provider.id} value={provider.id}>
+                            {provider.name}
                           </SelectItem>
                         ))
                       )}
@@ -204,23 +198,13 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
 
             <FormField
               control={form.control}
-              name="request_type"
+              name="summary"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Request Type *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="routine">Routine Maintenance</SelectItem>
-                      <SelectItem value="emergency">Emergency Repair</SelectItem>
-                      <SelectItem value="inspection">Inspection</SelectItem>
-                      <SelectItem value="repair">General Repair</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Summary *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Brief description of the work needed" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -228,31 +212,7 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
 
             <FormField
               control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Priority *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="scheduled_date"
+              name="scheduled_at"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Scheduled Date</FormLabel>
@@ -266,31 +226,13 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
 
             <FormField
               control={form.control}
-              name="estimated_duration"
+              name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Estimated Duration (minutes)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the maintenance needed..."
+                      placeholder="Additional details..."
                       {...field}
                     />
                   </FormControl>
@@ -309,9 +251,9 @@ export const MaintenanceRequestDialog: React.FC<MaintenanceRequestDialogProps> =
               </Button>
               <Button 
                 type="submit" 
-                disabled={createRequest.isPending}
+                disabled={createWorkOrder.isPending}
               >
-                {createRequest.isPending ? 'Creating...' : 'Create Request'}
+                {createWorkOrder.isPending ? 'Creating...' : 'Create Work Order'}
               </Button>
             </div>
           </form>

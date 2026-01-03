@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { NavigateFunction } from "react-router-dom";
 import { UserRole } from "../context/types";
@@ -13,12 +12,11 @@ export const signInUser = async (
   navigate: NavigateFunction
 ): Promise<AuthResult> => {
   try {
-    console.log("Attempting sign in with:", { email, password });
+    console.log("Attempting sign in with:", { email });
     
-    // FORCEFULLY clear any new account flags for sign-ins
+    // Clear any new account flags for sign-ins
     clearNewAccountFlags(true);
     localStorage.setItem("lastOperation", "signin");
-    console.log("⭐ NEW ACCOUNT FLAGS FORCEFULLY CLEARED - THIS IS NOT A NEW ACCOUNT ⭐");
     
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -35,31 +33,13 @@ export const signInUser = async (
       localStorage.setItem('supabase.auth.token', JSON.stringify(signInData.session));
       
       try {
-        // Ensure profile/role is synced from auth metadata before routing
-        try {
-          const { error: setupError } = await supabase.rpc('safe_user_setup', {
-            user_id_param: signInData.user.id,
-          });
-          if (setupError) {
-            console.warn('safe_user_setup failed, continuing with existing profile:', setupError);
-          }
-        } catch (e) {
-          console.warn('safe_user_setup threw, continuing:', e);
-        }
-        
-        // Fetch the (potentially updated) profile
+        // Fetch the user profile and memberships
         const profile = await fetchUserProfile(signInData.user.id);
-        const roleFromProfile = profile?.role || null;
+        const portalRole = profile?.portal || null;
         const roleFromMetadata = (signInData.user.user_metadata as any)?.role || null;
         
-        // Prefer synced profile role; if missing, fall back to auth metadata, then selected portal
-        const role = roleFromProfile || roleFromMetadata || selectedRole;
-        
-        // Update last sign in timestamp
-        await supabase
-          .from('profiles')
-          .update({ last_sign_in: new Date().toISOString() })
-          .eq('id', signInData.user.id);
+        // Prefer portal role from memberships; fallback to auth metadata, then selected portal
+        const role = portalRole || roleFromMetadata || selectedRole;
         
         await handleNavigation(role, selectedRole, navigate, signInData.user.id);
         
