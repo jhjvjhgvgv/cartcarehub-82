@@ -20,16 +20,9 @@ export const SessionChecker = () => {
     
     const checkSession = async () => {
       try {
-        // Ensure user is properly set up first
-        const { data: setupResult, error: setupError } = await supabase.rpc('safe_user_setup', {
-          user_id_param: user.id
-        });
-
-        if (setupError) {
-          console.error("❌ User setup failed:", setupError);
-        } else {
-          console.log("✅ User setup result:", setupResult);
-        }
+        // Ensure user profile exists (non-blocking, handled by trigger too)
+        supabase.rpc('safe_user_setup', { user_id_param: user.id })
+          .then(({ error }) => { if (error) console.warn("User setup warning:", error.message); });
 
         // Get portal context to determine user's memberships and roles
         const { data: portalContext, error: contextError } = await supabase.rpc('get_my_portal_context');
