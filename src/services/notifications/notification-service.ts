@@ -15,7 +15,7 @@ export interface Notification {
   type: 'maintenance_due' | 'status_change' | 'critical_alert' | 'completion' | 'reminder';
   title: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   read: boolean;
   createdAt: string;
 }
@@ -29,7 +29,7 @@ class NotificationService {
     type: Notification['type'],
     title: string,
     message: string,
-    data?: any
+    data?: Record<string, unknown>
   ): Promise<void> {
     try {
       const { error } = await supabase.functions.invoke('maintenance-notifications', {
@@ -50,49 +50,51 @@ class NotificationService {
   }
 
   /**
-   * Send maintenance reminder notification
+   * Send maintenance reminder notification to provider org members
    */
   async sendMaintenanceReminder(
-    cartId: string,
-    providerId: string,
+    workOrderId: string,
+    providerOrgId: string,
     scheduledDate: string
   ): Promise<void> {
-    const { data: provider } = await supabase
-      .from('maintenance_providers')
-      .select('user_id, company_name')
-      .eq('id', providerId)
-      .maybeSingle();
+    // Get members of the provider org
+    const { data: members } = await supabase
+      .from('org_memberships')
+      .select('user_id')
+      .eq('org_id', providerOrgId);
 
-    if (!provider) return;
+    if (!members?.length) return;
 
-    await this.sendNotification(
-      provider.user_id,
-      'maintenance_due',
-      'Maintenance Scheduled',
-      `You have a maintenance appointment scheduled for ${new Date(scheduledDate).toLocaleDateString()}`,
-      { cartId, scheduledDate }
-    );
+    for (const member of members) {
+      await this.sendNotification(
+        member.user_id,
+        'maintenance_due',
+        'Maintenance Scheduled',
+        `You have a maintenance appointment scheduled for ${new Date(scheduledDate).toLocaleDateString()}`,
+        { workOrderId, scheduledDate }
+      );
+    }
   }
 
   /**
-   * Send critical alert notification
+   * Send critical alert notification to store members
    */
   async sendCriticalAlert(
     cartId: string,
     issue: string,
     storeOrgId: string
   ): Promise<void> {
-    // Get all users associated with the store
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('role', 'store');
+    // Get all members of the store org
+    const { data: members } = await supabase
+      .from('org_memberships')
+      .select('user_id')
+      .eq('org_id', storeOrgId);
 
-    if (!profiles) return;
+    if (!members?.length) return;
 
-    for (const profile of profiles) {
+    for (const member of members) {
       await this.sendNotification(
-        profile.id,
+        member.user_id,
         'critical_alert',
         'Critical Cart Issue',
         `Cart requires immediate attention: ${issue}`,
@@ -120,16 +122,17 @@ class NotificationService {
 
     const cartIdentifier = cart.asset_tag || cart.qr_token.slice(0, 8);
 
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'store');
+    // Get all members of the store org
+    const { data: members } = await supabase
+      .from('org_memberships')
+      .select('user_id')
+      .eq('org_id', storeOrgId);
 
-    if (!profiles) return;
+    if (!members?.length) return;
 
-    for (const profile of profiles) {
+    for (const member of members) {
       await this.sendNotification(
-        profile.id,
+        member.user_id,
         'status_change',
         'Cart Status Updated',
         `Cart ${cartIdentifier} status changed from ${oldStatus} to ${newStatus}`,
@@ -139,44 +142,35 @@ class NotificationService {
   }
 
   /**
-   * Send completion notification
+   * Send completion notification for work order
    */
   async sendCompletionNotification(
-    requestId: string,
-    cartId: string,
-    providerId: string
+    workOrderId: string,
+    storeOrgId: string
   ): Promise<void> {
-    const { data: request } = await supabase
-      .from('maintenance_requests')
-      .select('*')
-      .eq('id', requestId)
+    const { data: workOrder } = await supabase
+      .from('work_orders')
+      .select('summary')
+      .eq('id', workOrderId)
       .maybeSingle();
 
-    if (!request) return;
+    if (!workOrder) return;
 
-    // Get cart identifier
-    const { data: cart } = await supabase
-      .from('carts')
-      .select('qr_token, asset_tag')
-      .eq('id', cartId)
-      .maybeSingle();
+    // Get all members of the store org
+    const { data: members } = await supabase
+      .from('org_memberships')
+      .select('user_id')
+      .eq('org_id', storeOrgId);
 
-    const cartIdentifier = cart?.asset_tag || cart?.qr_token?.slice(0, 8) || 'Unknown';
+    if (!members?.length) return;
 
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'store');
-
-    if (!profiles) return;
-
-    for (const profile of profiles) {
+    for (const member of members) {
       await this.sendNotification(
-        profile.id,
+        member.user_id,
         'completion',
-        'Maintenance Completed',
-        `Maintenance work on cart ${cartIdentifier} has been completed`,
-        { requestId, cartId, cost: request.cost }
+        'Work Order Completed',
+        `Work order has been completed: ${workOrder.summary || 'Maintenance task'}`,
+        { workOrderId, storeOrgId }
       );
     }
   }
@@ -184,14 +178,8 @@ class NotificationService {
   /**
    * Get user's notification preferences
    */
-  async getPreferences(userId: string): Promise<NotificationPreferences> {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-
-    // Default preferences if none exist
+  async getPreferences(_userId: string): Promise<NotificationPreferences> {
+    // Default preferences - in production this would be stored per-user
     return {
       email: true,
       sms: false,
@@ -209,31 +197,35 @@ class NotificationService {
     userId: string,
     preferences: Partial<NotificationPreferences>
   ): Promise<void> {
-    // Store preferences in profile or separate table
+    // Store preferences - would need a notification_preferences table
     console.log('Updating notification preferences for user:', userId, preferences);
   }
 
   /**
-   * Schedule automated notifications for upcoming maintenance
+   * Schedule automated notifications for upcoming work orders
    */
   async scheduleMaintenanceReminders(): Promise<void> {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const { data: schedules } = await supabase
-      .from('maintenance_schedules')
-      .select('*')
-      .lte('next_due_date', tomorrow.toISOString())
-      .eq('is_active', true);
+    // Get scheduled work orders for tomorrow
+    const { data: workOrders } = await supabase
+      .from('work_orders')
+      .select('id, provider_org_id, scheduled_at')
+      .eq('status', 'scheduled')
+      .not('scheduled_at', 'is', null)
+      .lte('scheduled_at', tomorrow.toISOString());
 
-    if (!schedules) return;
+    if (!workOrders?.length) return;
 
-    for (const schedule of schedules) {
-      await this.sendMaintenanceReminder(
-        schedule.cart_id,
-        schedule.provider_id,
-        schedule.next_due_date
-      );
+    for (const wo of workOrders) {
+      if (wo.provider_org_id && wo.scheduled_at) {
+        await this.sendMaintenanceReminder(
+          wo.id,
+          wo.provider_org_id,
+          wo.scheduled_at
+        );
+      }
     }
   }
 }

@@ -66,9 +66,12 @@ export const ImprovedConnectionsManager = () => {
         
         setConnections(activeConnections);
         setPendingRequests(pending);
-        const stores = ConnectionService.getStores();
-        console.log('ImprovedConnectionsManager: Available stores', stores);
-        setAvailableOptions(stores);
+        const storesPromise = ConnectionService.getStores();
+        storesPromise.then(stores => {
+          console.log('ImprovedConnectionsManager: Available stores', stores);
+          setAvailableOptions(stores);
+        });
+        // Already handled above
       } else if (isStoreUser) {
         console.log('ImprovedConnectionsManager: Loading data for store user');
         // Load store connections and available maintenance providers

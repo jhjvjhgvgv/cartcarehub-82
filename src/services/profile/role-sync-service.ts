@@ -7,35 +7,66 @@ export interface RoleSyncResult {
 }
 
 /**
- * Service to handle role consistency between auth metadata and profile records
+ * Service to handle role consistency using org_memberships
  */
 export const RoleSyncService = {
   /**
-   * Syncs user role from auth metadata to profile table
+   * Gets user's primary role from org_memberships
+   */
+  async getUserRole(userId: string): Promise<string | null> {
+    try {
+      const { data: membership } = await supabase
+        .from('org_memberships')
+        .select('role')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+
+      return membership?.role || null;
+    } catch (error) {
+      console.error("Error getting user role:", error);
+      return null;
+    }
+  },
+
+  /**
+   * Syncs user role - uses org_memberships as source of truth
    */
   async syncUserRole(userId: string): Promise<RoleSyncResult> {
     try {
       console.log("🔄 Syncing role for user:", userId);
       
-      // Use the new safe setup function
+      // Try to use safe_user_setup RPC if available
       const { data, error } = await supabase.rpc('safe_user_setup', {
         user_id_param: userId
       });
 
       if (error) {
-        console.error("❌ Failed to setup user:", error);
+        console.error("❌ Failed to setup user via RPC:", error);
+        
+        // Fallback: just get existing role from org_memberships
+        const role = await this.getUserRole(userId);
+        
+        if (role) {
+          return { 
+            success: true, 
+            message: "Role retrieved from existing membership",
+            updatedRole: role
+          };
+        }
+        
         return { 
           success: false, 
-          message: `Failed to setup user: ${error.message}` 
+          message: `No role found for user` 
         };
       }
 
-      const result = data as { success: boolean; message: string; role?: string };
+      const result = data as { success: boolean; message: string; role?: string } | null;
       
-      if (!result.success) {
+      if (!result?.success) {
         return { 
           success: false, 
-          message: result.message 
+          message: result?.message || 'Unknown error' 
         };
       }
 
@@ -55,74 +86,23 @@ export const RoleSyncService = {
   },
 
   /**
-   * Ensures maintenance provider profile exists for maintenance users
+   * Checks if user has a provider org membership
    */
-  async ensureMaintenanceProviderProfile(userId: string, profileData: {
-    companyName?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-  }): Promise<RoleSyncResult> {
+  async isProviderMember(userId: string): Promise<boolean> {
     try {
-      console.log("🏢 Ensuring maintenance provider profile for user:", userId);
-      
-      // Check if maintenance provider profile already exists
-      const { data: existingProvider, error: checkError } = await supabase
-        .from('maintenance_providers')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
+      const { data: memberships } = await supabase
+        .from('org_memberships')
+        .select('org_id, role')
+        .eq('user_id', userId);
 
-      if (checkError) {
-        console.error("❌ Error checking existing provider:", checkError);
-        // Don't fail completely, this might be due to RLS
-        console.warn("⚠️ Could not check existing provider, proceeding with creation attempt");
-      }
+      if (!memberships?.length) return false;
 
-      if (existingProvider) {
-        console.log("✅ Maintenance provider profile already exists");
-        return { 
-          success: true, 
-          message: "Maintenance provider profile already exists" 
-        };
-      }
-
-      // Create maintenance provider profile with defensive handling
-      const { error: createError } = await supabase
-        .from('maintenance_providers')
-        .insert({
-          user_id: userId,
-          company_name: profileData.companyName || 'Company Name Required',
-          contact_email: profileData.contactEmail || '',
-          contact_phone: profileData.contactPhone || '',
-          is_verified: false
-        });
-
-      if (createError) {
-        console.error("❌ Error creating maintenance provider profile:", createError);
-        // Return success if it's a duplicate key error (already exists)
-        if (createError.code === '23505') {
-          return { 
-            success: true, 
-            message: "Maintenance provider profile already exists" 
-          };
-        }
-        return { 
-          success: false, 
-          message: `Failed to create maintenance provider profile: ${createError.message}` 
-        };
-      }
-
-      console.log("✅ Maintenance provider profile created successfully");
-      return { 
-        success: true, 
-        message: "Maintenance provider profile created successfully" 
-      };
+      // Check if any membership is for a provider org
+      const providerRoles = ['provider_admin', 'provider_tech'];
+      return memberships.some(m => providerRoles.includes(m.role));
     } catch (error) {
-      console.error("❌ Error creating maintenance provider profile:", error);
-      return { 
-        success: false, 
-        message: `Failed to create maintenance provider profile: ${error instanceof Error ? error.message : 'Unknown error'}` 
-      };
+      console.error("Error checking provider membership:", error);
+      return false;
     }
   },
 
@@ -131,36 +111,21 @@ export const RoleSyncService = {
    */
   async performComprehensiveSync(userId: string): Promise<RoleSyncResult> {
     try {
-      // First sync the role
+      // Sync the role
       const roleSyncResult = await this.syncUserRole(userId);
       
       if (!roleSyncResult.success) {
-        return roleSyncResult;
-      }
-
-      // If user is maintenance, ensure provider profile exists
-      if (roleSyncResult.updatedRole === 'maintenance') {
-        // Get additional profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('email, display_name, company_name, contact_phone')
-          .eq('id', userId)
-          .maybeSingle();
-
-        const providerResult = await this.ensureMaintenanceProviderProfile(userId, {
-          companyName: profile?.company_name,
-          contactEmail: profile?.email,
-          contactPhone: profile?.contact_phone
-        });
-
-        if (!providerResult.success) {
+        // Try to get existing role as fallback
+        const existingRole = await this.getUserRole(userId);
+        if (existingRole) {
           return {
-            success: false,
-            message: `Role synced but failed to create maintenance provider profile: ${providerResult.message}`
+            success: true,
+            message: "Using existing role from org membership",
+            updatedRole: existingRole
           };
         }
+        return roleSyncResult;
       }
-      // Store users and admin users don't need additional profile setup
 
       return {
         success: true,
