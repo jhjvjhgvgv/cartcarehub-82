@@ -3,16 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 export interface ProfileCompletion {
   isComplete: boolean;
   missingFields: string[];
-  needsMaintenanceProfile: boolean;
+  hasOrgMembership: boolean;
   emailVerified: boolean;
   onboardingCompleted: boolean;
 }
 
 export const checkProfileCompletion = async (userId: string): Promise<ProfileCompletion> => {
   try {
-    // Get the user's profile from the profiles table
+    // Get the user's profile from the user_profiles table
     const { data: profile, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
@@ -22,7 +22,7 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       return {
         isComplete: false,
         missingFields: ['profile'],
-        needsMaintenanceProfile: false,
+        hasOrgMembership: false,
         emailVerified: false,
         onboardingCompleted: false,
       };
@@ -32,64 +32,49 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
       return {
         isComplete: false,
         missingFields: ['profile'],
-        needsMaintenanceProfile: false,
+        hasOrgMembership: false,
         emailVerified: false,
         onboardingCompleted: false,
       };
     }
 
     const missingFields: string[] = [];
-    let needsMaintenanceProfile = false;
 
-    // Check email verification
-    const emailVerified = profile.email_verified || false;
+    // Check required fields
+    if (!profile.full_name) {
+      missingFields.push('full_name');
+    }
+
+    // Check if user has any org memberships
+    const { data: memberships } = await supabase
+      .from('org_memberships')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    const hasOrgMembership = (memberships?.length || 0) > 0;
+    
+    if (!hasOrgMembership) {
+      missingFields.push('organization');
+    }
+
+    // Get auth user for email verification status
+    const { data: { user } } = await supabase.auth.getUser();
+    const emailVerified = user?.email_confirmed_at != null;
+
     if (!emailVerified) {
       missingFields.push('email_verification');
     }
 
-    // Check onboarding completion
-    const onboardingCompleted = profile.onboarding_completed || false;
-    if (!onboardingCompleted) {
-      missingFields.push('onboarding');
-    }
+    // Consider onboarding complete if user has profile and org membership
+    const onboardingCompleted = !!profile.full_name && hasOrgMembership;
 
-    // Check required fields for all users
-    if (!profile.display_name) {
-      missingFields.push('display_name');
-    }
-    if (!profile.company_name) {
-      missingFields.push('company_name');
-    }
-
-    // Get user's role from user_roles table
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    // If user is a maintenance provider, check if they have a maintenance_providers profile
-    if (userRole?.role === 'maintenance') {
-      const { data: maintenanceProfile, error: maintenanceError } = await supabase
-        .from('maintenance_providers')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (maintenanceError) {
-        console.error("Error checking maintenance profile:", maintenanceError);
-        needsMaintenanceProfile = true;
-      } else if (!maintenanceProfile) {
-        needsMaintenanceProfile = true;
-      }
-    }
-
-    const isComplete = missingFields.length === 0 && !needsMaintenanceProfile && emailVerified && onboardingCompleted;
+    const isComplete = missingFields.length === 0;
 
     return {
       isComplete,
       missingFields,
-      needsMaintenanceProfile,
+      hasOrgMembership,
       emailVerified,
       onboardingCompleted,
     };
@@ -98,44 +83,67 @@ export const checkProfileCompletion = async (userId: string): Promise<ProfileCom
     return {
       isComplete: false,
       missingFields: ['error'],
-      needsMaintenanceProfile: false,
+      hasOrgMembership: false,
       emailVerified: false,
       onboardingCompleted: false,
     };
   }
 };
 
-export const createMaintenanceProviderProfile = async (userId: string, companyName: string, contactEmail: string, contactPhone?: string): Promise<boolean> => {
+export const createUserProfile = async (
+  userId: string, 
+  fullName: string, 
+  phone?: string
+): Promise<boolean> => {
   try {
-    // Check if maintenance provider profile already exists
-    const { data: existingProvider } = await supabase
-      .from('maintenance_providers')
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from('user_profiles')
       .select('id')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle();
 
-    if (existingProvider) {
-      console.log("Maintenance provider profile already exists");
-      return true; // Already exists, consider it successful
+    if (existingProfile) {
+      // Update existing profile
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: fullName,
+          phone: phone,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (error) {
+        console.error("Error updating profile:", error);
+        return false;
+      }
+      return true;
     }
 
-    const { error } = await supabase
-      .from('maintenance_providers')
-      .insert({
-        user_id: userId,
-        company_name: companyName,
-        contact_email: contactEmail,
-        contact_phone: contactPhone
-      });
-
-    if (error) {
-      console.error("Error creating maintenance provider profile:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error creating maintenance provider profile:", error);
+    // Insert new profile - note: user_profiles RLS may need INSERT policy
+    // For now, profile creation is typically handled by auth trigger
+    console.log("Profile creation for new users should be handled by database trigger");
     return false;
+  } catch (error) {
+    console.error("Error creating/updating profile:", error);
+    return false;
+  }
+};
+
+// Helper to get user's primary role from org_memberships
+export const getUserPrimaryRole = async (userId: string): Promise<string | null> => {
+  try {
+    const { data: membership } = await supabase
+      .from('org_memberships')
+      .select('role')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+
+    return membership?.role || null;
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return null;
   }
 };

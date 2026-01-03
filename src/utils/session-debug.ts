@@ -32,15 +32,16 @@ export const logCurrentSessionState = async () => {
       console.log("User email:", session.session.user.email);
       console.log("User metadata:", session.session.user.user_metadata);
       
-      // Try to get profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.session.user.id)
+      // Try to get user's org membership
+      const { data: membership, error: membershipError } = await supabase
+        .from('org_memberships')
+        .select('role, org_id')
+        .eq('user_id', session.session.user.id)
+        .limit(1)
         .maybeSingle();
         
-      console.log("Profile data:", profile);
-      console.log("Profile error:", profileError);
+      console.log("Membership data:", membership);
+      console.log("Membership error:", membershipError);
     }
     
     // Check localStorage
