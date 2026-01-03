@@ -3092,10 +3092,6 @@ export type Database = {
       }
       get_my_portal_context: { Args: never; Returns: Json }
       get_user_primary_role: { Args: { _user_id: string }; Returns: string }
-      has_admin_permission: {
-        Args: { permission_name: string }
-        Returns: boolean
-      }
       has_role: {
         Args: {
           _org: string
@@ -3112,7 +3108,6 @@ export type Database = {
         }
         Returns: Json
       }
-      is_maintenance_provider: { Args: { user_id: string }; Returns: boolean }
       is_member: { Args: { _org: string }; Returns: boolean }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
       log_admin_activity: {
@@ -3166,12 +3161,7 @@ export type Database = {
           store_org_id: string
         }[]
       }
-      sync_user_roles_from_metadata: { Args: never; Returns: undefined }
       user_can_access_store: { Args: { _store_org: string }; Returns: boolean }
-      user_has_maintenance_profile: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
       verify_admin_session: { Args: { p_session_token: string }; Returns: Json }
     }
     Enums: {
