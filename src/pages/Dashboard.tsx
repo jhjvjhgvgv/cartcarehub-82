@@ -1,4 +1,3 @@
-
 import DashboardLayout from "@/components/DashboardLayout";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { UserWelcome } from "@/components/dashboard/UserWelcome";
@@ -7,38 +6,39 @@ import { WorkOrderManager } from "@/components/maintenance/dashboard/WorkOrderMa
 import { MaintenanceCalendar } from "@/components/maintenance/MaintenanceCalendar";
 import { RouteOptimizer } from "@/components/maintenance/RouteOptimizer";
 import { PredictiveMaintenanceAlerts } from "@/components/analytics/PredictiveMaintenanceAlerts";
-import { useMaintenanceRequests } from "@/hooks/use-maintenance";
+import { useWorkOrders } from "@/hooks/use-maintenance";
 import { ShoppingCart, Wrench, AlertTriangle, Clock } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: requests = [], isLoading } = useMaintenanceRequests();
+  const { data: workOrders = [], isLoading } = useWorkOrders();
 
-  const pendingRequests = requests.filter(r => r.status === 'pending').length;
-  const inProgressRequests = requests.filter(r => r.status === 'in_progress').length;
-  const scheduledRequests = requests.filter(r => r.status === 'scheduled').length;
-  const completedToday = requests.filter(r => 
-    r.status === 'completed' && 
-    new Date(r.completed_date || '').toDateString() === new Date().toDateString()
+  const newOrders = workOrders.filter(wo => wo.status === 'new').length;
+  const inProgressOrders = workOrders.filter(wo => wo.status === 'in_progress').length;
+  const scheduledOrders = workOrders.filter(wo => wo.status === 'scheduled').length;
+  const completedToday = workOrders.filter(wo => 
+    wo.status === 'completed' && 
+    wo.updated_at &&
+    new Date(wo.updated_at).toDateString() === new Date().toDateString()
   ).length;
 
   const stats = [
     {
-      title: "Pending Requests",
-      value: pendingRequests,
+      title: "New Orders",
+      value: newOrders,
       description: "Awaiting assignment",
       icon: AlertTriangle,
       color: "text-amber-600",
     },
     {
       title: "In Progress",
-      value: inProgressRequests,
+      value: inProgressOrders,
       description: "Active work orders",
       icon: Wrench,
       color: "text-blue-600",
     },
     {
       title: "Scheduled",
-      value: scheduledRequests,
+      value: scheduledOrders,
       description: "Upcoming work",
       icon: Clock,
       color: "text-purple-600",
@@ -107,5 +107,3 @@ export default function Dashboard() {
     </DashboardLayout>
   );
 }
-
-

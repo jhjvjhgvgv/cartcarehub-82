@@ -1,9 +1,18 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ConnectionService } from "@/services/ConnectionService";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+
+type PortalRole = 'store' | 'provider' | 'corp';
+
+// Determine portal type from org_memberships role
+const getPortalFromMembership = (role: string): PortalRole | null => {
+  if (role.startsWith('store_')) return 'store';
+  if (role.startsWith('provider_')) return 'provider';
+  if (role.startsWith('corp_')) return 'corp';
+  return null;
+};
 
 export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
   const [isVerified, setIsVerified] = useState<boolean | null>(null);
@@ -49,31 +58,41 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
         console.log("👤 User authenticated, checking role...");
         
         try {
-          // Get user role from profile table
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
+          // Get user's org memberships to determine portal access
+          const { data: memberships, error: membershipError } = await supabase
+            .from('org_memberships')
+            .select('role, org_id')
+            .eq('user_id', user.id)
+            .limit(1);
             
-          if (profileError) {
-            console.error("Error fetching profile:", profileError);
+          if (membershipError) {
+            console.error("Error fetching memberships:", membershipError);
             if (mounted) setIsVerified(false);
             return;
           }
           
-          const userRole = profile?.role;
-          console.log("🎭 User role:", userRole, "Required role:", allowedRole);
+          const membershipRole = memberships?.[0]?.role || null;
+          const portal = membershipRole ? getPortalFromMembership(membershipRole) : null;
+          
+          console.log("🎭 User portal:", portal, "Required role:", allowedRole);
+          
+          // Map allowedRole to portal type for checking
+          const roleToPortal: Record<string, PortalRole> = {
+            'maintenance': 'provider',
+            'store': 'store',
+            'admin': 'corp',
+          };
           
           // Check if user has required role
-          if (allowedRole && userRole !== allowedRole) {
-            console.log("❌ Role mismatch, access denied");
-            if (mounted) setIsVerified(false);
-            return;
+          if (allowedRole) {
+            const requiredPortal = roleToPortal[allowedRole];
+            if (portal !== requiredPortal) {
+              console.log("❌ Portal mismatch, access denied");
+              if (mounted) setIsVerified(false);
+              return;
+            }
           }
           
-          // For maintenance role, we'll skip the connection check for now to avoid complex dependencies
-          // The connection check can be handled at the component level if needed
           console.log("✅ Auth check passed");
           if (mounted) {
             setIsVerified(true);

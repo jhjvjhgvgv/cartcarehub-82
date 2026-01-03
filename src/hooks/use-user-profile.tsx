@@ -4,16 +4,29 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface UserProfile {
   id: string;
-  email?: string;
-  display_name?: string;
-  role?: string;
-  company_name?: string;
-  contact_phone?: string;
-  is_active?: boolean;
-  last_sign_in?: string;
+  full_name?: string;
+  phone?: string;
   created_at?: string;
   updated_at?: string;
+  // Derived from org_memberships
+  portal?: 'store' | 'provider' | 'corp';
+  membership_role?: string;
+  // Legacy compatibility fields (mapped from new schema)
+  display_name?: string;
+  company_name?: string;
+  contact_phone?: string;
+  email?: string;
+  role?: string;
+  last_sign_in?: string;
 }
+
+// Determine portal type from org_memberships role
+const getPortalFromMembership = (role: string): 'store' | 'provider' | 'corp' | undefined => {
+  if (role.startsWith('store_')) return 'store';
+  if (role.startsWith('provider_')) return 'provider';
+  if (role.startsWith('corp_')) return 'corp';
+  return undefined;
+};
 
 export const useUserProfile = () => {
   const { user } = useAuth();
@@ -36,8 +49,9 @@ export const useUserProfile = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
+      // Fetch from user_profiles table
+      const { data: profileData, error: fetchError } = await supabase
+        .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
@@ -45,10 +59,36 @@ export const useUserProfile = () => {
       if (fetchError) {
         console.error("Error fetching profile:", fetchError);
         setError(fetchError.message);
-        return;
       }
 
-      setProfile(data);
+      // Fetch memberships to determine role/portal
+      const { data: memberships } = await supabase
+        .from('org_memberships')
+        .select('role, org_id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      const membershipRole = memberships?.[0]?.role || undefined;
+      const portal = membershipRole ? getPortalFromMembership(membershipRole) : undefined;
+
+      // Map portal to legacy role for compatibility
+      const legacyRole = portal === 'provider' ? 'maintenance' : 
+                        portal === 'corp' ? 'admin' : 'store';
+
+      setProfile({
+        id: user.id,
+        full_name: profileData?.full_name || undefined,
+        phone: profileData?.phone || undefined,
+        created_at: profileData?.created_at,
+        updated_at: profileData?.updated_at,
+        portal,
+        membership_role: membershipRole,
+        // Legacy compatibility mappings
+        display_name: profileData?.full_name || undefined,
+        contact_phone: profileData?.phone || undefined,
+        role: legacyRole,
+        email: user.email,
+      });
     } catch (err) {
       console.error("Unexpected error fetching profile:", err);
       setError("Failed to fetch profile");
@@ -66,9 +106,10 @@ export const useUserProfile = () => {
 
     try {
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
-          ...updates,
+          full_name: updates.full_name,
+          phone: updates.phone,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -95,8 +136,8 @@ export const useUserProfile = () => {
     error,
     updateProfile,
     refreshProfile,
-    isMaintenanceUser: profile?.role === 'maintenance',
-    isStoreUser: profile?.role === 'store',
-    isAdminUser: profile?.role === 'admin',
+    isMaintenanceUser: profile?.portal === 'provider',
+    isStoreUser: profile?.portal === 'store',
+    isAdminUser: profile?.portal === 'corp',
   };
 };

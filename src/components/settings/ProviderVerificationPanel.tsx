@@ -10,49 +10,61 @@ import {
   CheckCircle, 
   Clock, 
   AlertTriangle, 
-  Mail,
-  Phone,
   Building,
   Loader2 
 } from "lucide-react";
 
-interface MaintenanceProvider {
+interface ProviderOrg {
   id: string;
-  company_name: string;
-  contact_email: string;
-  contact_phone: string | null;
-  is_verified: boolean;
-  verification_date: string | null;
+  name: string;
+  type: string;
   created_at: string;
 }
 
 export const ProviderVerificationPanel = () => {
   const { profile, isMaintenanceUser } = useUserProfile();
   const { toast } = useToast();
-  const [provider, setProvider] = useState<MaintenanceProvider | null>(null);
+  const [providerOrg, setProviderOrg] = useState<ProviderOrg | null>(null);
   const [loading, setLoading] = useState(true);
   const [submittingVerification, setSubmittingVerification] = useState(false);
 
   useEffect(() => {
     if (isMaintenanceUser && profile) {
       loadProviderData();
+    } else {
+      setLoading(false);
     }
   }, [isMaintenanceUser, profile]);
 
   const loadProviderData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('maintenance_providers')
-        .select('*')
+      // Get user's provider organization via memberships
+      const { data: memberships, error: membershipError } = await supabase
+        .from('org_memberships')
+        .select('org_id')
         .eq('user_id', profile!.id)
-        .maybeSingle();
+        .limit(1);
 
-      if (error) {
-        console.error("Error loading provider data:", error);
+      if (membershipError) {
+        console.error("Error loading memberships:", membershipError);
         return;
       }
 
-      setProvider(data);
+      if (memberships && memberships.length > 0) {
+        const { data: org, error: orgError } = await supabase
+          .from('organizations')
+          .select('id, name, type, created_at')
+          .eq('id', memberships[0].org_id)
+          .eq('type', 'provider')
+          .maybeSingle();
+
+        if (orgError) {
+          console.error("Error loading organization:", orgError);
+          return;
+        }
+
+        setProviderOrg(org);
+      }
     } catch (error) {
       console.error("Failed to load provider data:", error);
     } finally {
@@ -61,12 +73,11 @@ export const ProviderVerificationPanel = () => {
   };
 
   const requestVerification = async () => {
-    if (!provider) return;
+    if (!providerOrg) return;
 
     setSubmittingVerification(true);
     try {
       // In a real implementation, this would trigger an admin review process
-      // For now, we'll simulate a verification request
       toast({
         title: "Verification Requested",
         description: "Your verification request has been submitted. You'll be notified once reviewed.",
@@ -99,12 +110,12 @@ export const ProviderVerificationPanel = () => {
     );
   }
 
-  if (!provider) {
+  if (!providerOrg) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-warning" />
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
             Provider Profile Missing
           </CardTitle>
         </CardHeader>
@@ -112,7 +123,7 @@ export const ProviderVerificationPanel = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Your maintenance provider profile hasn't been created yet. Please complete your profile setup.
+              Your maintenance provider profile hasn't been created yet. Please contact an administrator.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -120,32 +131,18 @@ export const ProviderVerificationPanel = () => {
     );
   }
 
-  const getVerificationStatus = () => {
-    if (provider.is_verified) {
-      return (
-        <Badge variant="default" className="gap-1">
-          <CheckCircle className="h-3 w-3" />
-          Verified
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="secondary" className="gap-1">
-        <Clock className="h-3 w-3" />
-        Pending Verification
-      </Badge>
-    );
-  };
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Building className="h-5 w-5" />
-            Provider Verification
+            Provider Organization
           </span>
-          {getVerificationStatus()}
+          <Badge variant="default" className="gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Active
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -153,61 +150,18 @@ export const ProviderVerificationPanel = () => {
           <div className="flex items-center gap-3">
             <Building className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="font-medium">{provider.company_name}</p>
-              <p className="text-sm text-muted-foreground">Company Name</p>
+              <p className="font-medium">{providerOrg.name}</p>
+              <p className="text-sm text-muted-foreground">Organization Name</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <p className="font-medium">{provider.contact_email}</p>
-              <p className="text-sm text-muted-foreground">Contact Email</p>
-            </div>
-          </div>
-          
-          {provider.contact_phone && (
-            <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="font-medium">{provider.contact_phone}</p>
-                <p className="text-sm text-muted-foreground">Contact Phone</p>
-              </div>
-            </div>
-          )}
         </div>
 
-        {provider.is_verified ? (
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              Your provider account is verified. You can receive connection requests from stores.
-              {provider.verification_date && (
-                <span className="block text-sm mt-1">
-                  Verified on {new Date(provider.verification_date).toLocaleDateString()}
-                </span>
-              )}
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="space-y-3">
-            <Alert>
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                Your provider account is not yet verified. Verified providers can receive connection requests from stores.
-              </AlertDescription>
-            </Alert>
-            
-            <Button 
-              onClick={requestVerification}
-              disabled={submittingVerification}
-              className="gap-2"
-            >
-              {submittingVerification && <Loader2 className="h-4 w-4 animate-spin" />}
-              Request Verification
-            </Button>
-          </div>
-        )}
+        <Alert>
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            Your provider organization is active. You can receive work orders from linked stores.
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -56,42 +55,11 @@ export const ProtectedRoute = ({ element, allowedRole }: ProtectedRouteProps) =>
     
     // If we have a user but wrong role, redirect to appropriate dashboard
     if (user && isAuthenticated) {
-      // Get role from database by calling an async function safely
-      setTimeout(async () => {
-        try {
-          const { supabase } = await import("@/integrations/supabase/client");
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          const userRole = profile?.role;
-          console.log("🔀 Wrong role detected, user role:", userRole);
-          
-          // Redirect based on actual database role
-          if (userRole === "maintenance") {
-            window.location.href = "/dashboard";
-          } else if (userRole === "admin") {
-            window.location.href = "/admin";
-          } else {
-            window.location.href = "/customer/dashboard";
-          }
-        } catch (error) {
-          console.error("Error checking user role:", error);
-          window.location.href = "/";
-        }
-      }, 0);
-      
-      // Show loading while redirecting
-      return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Redirecting to appropriate dashboard...</p>
-          </div>
-        </div>
-      );
+      // Redirect based on allowed role
+      const redirectPath = allowedRole === "maintenance" ? "/customer/dashboard" : 
+                          allowedRole === "admin" ? "/customer/dashboard" : "/dashboard";
+      console.log("🔀 Redirecting to:", redirectPath);
+      return <Navigate to={redirectPath} replace />;
     }
     
     // Fallback to login if no user

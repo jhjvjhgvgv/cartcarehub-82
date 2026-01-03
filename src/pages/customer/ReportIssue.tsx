@@ -7,69 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { AICartAssistant } from "@/components/customer/AICartAssistant";
-import { ConnectionService } from "@/services/ConnectionService";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useUserProfile } from "@/hooks/use-user-profile";
 import { supabase } from "@/integrations/supabase/client";
 
 const ReportIssue = () => {
   const { toast } = useToast();
-  const { profile } = useUserProfile();
   const [cartIdentifier, setCartIdentifier] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasConnections, setHasConnections] = useState(true);
-  const [isCheckingConnections, setIsCheckingConnections] = useState(true);
-
-  useEffect(() => {
-    const checkConnections = async () => {
-      try {
-        // Skip in test mode
-        if (localStorage.getItem("testMode") === "true") {
-          setIsCheckingConnections(false);
-          return;
-        }
-        
-        const userId = profile?.id || '';
-        const connections = await ConnectionService.getStoreConnections(userId);
-        
-        const hasActiveConnections = connections.some(conn => conn.status === "active");
-        setHasConnections(hasActiveConnections);
-      } catch (error) {
-        console.error("Error checking connections:", error);
-      } finally {
-        setIsCheckingConnections(false);
-      }
-    };
-    
-    checkConnections();
-  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Get connected maintenance providers
-      const { data: connections } = await supabase
-        .from('store_provider_connections')
-        .select('provider_id')
-        .eq('store_id', user.id)
-        .eq('status', 'accepted');
-
-      if (!connections || connections.length === 0) {
-        toast({
-          title: "No Connected Maintenance Providers",
-          description: "Please connect to a maintenance provider first.",
-          variant: "destructive"
-        });
-        return;
-      }
-
       // Find the cart by qr_token or asset_tag
       const { data: cart } = await supabase
         .from('carts')
@@ -89,30 +41,15 @@ const ReportIssue = () => {
       // Create issue record
       const { error: issueError } = await supabase
         .from('issues')
-        .insert({
+        .insert([{
           cart_id: cart.id,
           store_org_id: cart.store_org_id,
           description: description,
           severity: 'medium',
           status: 'open'
-        });
+        }]);
 
       if (issueError) throw issueError;
-
-      // Create maintenance request for the first connected provider
-      const { error: requestError } = await supabase
-        .from('maintenance_requests')
-        .insert({
-          cart_id: cart.id,
-          provider_id: connections[0].provider_id,
-          store_id: cart.store_org_id,
-          request_type: 'repair',
-          priority: 'high',
-          status: 'pending',
-          description: description
-        });
-
-      if (requestError) throw requestError;
 
       // Update cart status to out_of_service
       await supabase
@@ -122,7 +59,7 @@ const ReportIssue = () => {
       
       toast({
         title: "Issue Reported",
-        description: "Maintenance request created successfully.",
+        description: "Your issue has been reported successfully.",
       });
       
       setCartIdentifier("");
@@ -155,49 +92,32 @@ const ReportIssue = () => {
               <CardTitle>Issue Details</CardTitle>
             </CardHeader>
             <CardContent>
-              {isCheckingConnections ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">Checking connection status...</p>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cartId">Cart ID or QR Token</Label>
+                  <Input
+                    id="cartId"
+                    placeholder="Enter cart ID or QR token"
+                    value={cartIdentifier}
+                    onChange={(e) => setCartIdentifier(e.target.value)}
+                    required
+                  />
                 </div>
-              ) : !hasConnections ? (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>No maintenance providers connected</AlertTitle>
-                  <AlertDescription>
-                    Please connect to a maintenance provider in Settings before reporting issues.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cartId">Cart ID or QR Token</Label>
-                    <Input
-                      id="cartId"
-                      placeholder="Enter cart ID or QR token"
-                      value={cartIdentifier}
-                      onChange={(e) => setCartIdentifier(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Please describe the issue you're experiencing..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      required
-                      className="min-h-[150px]"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting || !hasConnections}
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Report"}
-                  </Button>
-                </form>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Please describe the issue..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    className="min-h-[150px]"
+                  />
+                </div>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Report"}
+                </Button>
+              </form>
             </CardContent>
           </Card>
           

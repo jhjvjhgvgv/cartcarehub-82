@@ -5,9 +5,9 @@ import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useMaintenanceSchedules, useMaintenanceRequests } from '@/hooks/use-maintenance';
+import { useWorkOrders } from '@/hooks/use-maintenance';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, Clock, AlertTriangle } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 
 const locales = {
   'en-US': enUS,
@@ -27,11 +27,9 @@ interface CalendarEvent {
   start: Date;
   end: Date;
   resource: {
-    type: 'schedule' | 'request';
-    priority?: string;
+    type: 'work_order' | 'inspection';
     status?: string;
-    cart_qr_code?: string;
-    provider_name?: string;
+    store_name?: string;
   };
 }
 
@@ -39,73 +37,50 @@ export const MaintenanceCalendar: React.FC = () => {
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [date, setDate] = useState(new Date());
   
-  const { data: schedules = [] } = useMaintenanceSchedules();
-  const { data: requests = [] } = useMaintenanceRequests();
+  const { data: workOrders = [] } = useWorkOrders();
 
-  // Convert schedules and requests to calendar events
-  const events: CalendarEvent[] = [
-    // Scheduled maintenance
-    ...schedules.map(schedule => ({
-      id: `schedule-${schedule.id}`,
-      title: `${schedule.maintenance_type} - ${(schedule as any).carts?.qr_code}`,
-      start: new Date(schedule.next_due_date),
-      end: new Date(new Date(schedule.next_due_date).getTime() + schedule.estimated_duration * 60000),
+  // Convert work orders to calendar events
+  const events: CalendarEvent[] = workOrders
+    .filter(wo => wo.scheduled_at)
+    .map(wo => ({
+      id: `wo-${wo.id}`,
+      title: wo.summary || `Work Order - ${wo.store_name || 'Store'}`,
+      start: new Date(wo.scheduled_at!),
+      end: new Date(new Date(wo.scheduled_at!).getTime() + 60 * 60000), // 1 hour default
       resource: {
-        type: 'schedule' as const,
-        cart_qr_code: (schedule as any).carts?.qr_code,
-        provider_name: (schedule as any).maintenance_providers?.company_name,
+        type: 'work_order' as const,
+        status: wo.status,
+        store_name: wo.store_name,
       },
-    })),
-    // Maintenance requests
-    ...requests
-      .filter(request => request.scheduled_date)
-      .map(request => ({
-        id: `request-${request.id}`,
-        title: `${request.request_type} - ${(request as any).carts?.qr_code}`,
-        start: new Date(request.scheduled_date!),
-        end: new Date(new Date(request.scheduled_date!).getTime() + (request.estimated_duration || 30) * 60000),
-        resource: {
-          type: 'request' as const,
-          priority: request.priority,
-          status: request.status,
-          cart_qr_code: (request as any).carts?.qr_code,
-          provider_name: (request as any).maintenance_providers?.company_name,
-        },
-      })),
-  ];
+    }));
 
   const eventStyleGetter = (event: CalendarEvent) => {
     let backgroundColor = '#3174ad';
     let borderColor = '#3174ad';
 
-    if (event.resource.type === 'request') {
-      switch (event.resource.priority) {
-        case 'urgent':
+    if (event.resource.type === 'work_order') {
+      switch (event.resource.status) {
+        case 'new':
           backgroundColor = '#ef4444';
           borderColor = '#dc2626';
           break;
-        case 'high':
+        case 'assigned':
           backgroundColor = '#f97316';
           borderColor = '#ea580c';
           break;
-        case 'medium':
+        case 'in_progress':
           backgroundColor = '#eab308';
           borderColor = '#ca8a04';
           break;
-        case 'low':
+        case 'complete':
           backgroundColor = '#22c55e';
           borderColor = '#16a34a';
           break;
+        case 'cancelled':
+          backgroundColor = '#6b7280';
+          borderColor = '#4b5563';
+          break;
       }
-
-      if (event.resource.status === 'completed') {
-        backgroundColor = '#6b7280';
-        borderColor = '#4b5563';
-      }
-    } else {
-      // Scheduled maintenance
-      backgroundColor = '#8b5cf6';
-      borderColor = '#7c3aed';
     }
 
     return {
@@ -121,17 +96,12 @@ export const MaintenanceCalendar: React.FC = () => {
 
   const CustomEvent = ({ event }: { event: CalendarEvent }) => (
     <div className="text-xs">
-      <div className="font-medium">{event.title}</div>
+      <div className="font-medium truncate">{event.title}</div>
       <div className="flex items-center gap-1 mt-1">
-        {event.resource.type === 'request' && event.resource.priority && (
+        {event.resource.status && (
           <Badge variant="secondary" className="text-xs">
-            {event.resource.priority}
+            {event.resource.status}
           </Badge>
-        )}
-        {event.resource.provider_name && (
-          <span className="text-xs opacity-75">
-            {event.resource.provider_name}
-          </span>
         )}
       </div>
     </div>
@@ -173,24 +143,24 @@ export const MaintenanceCalendar: React.FC = () => {
       <CardContent>
         <div className="mb-4 flex flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-purple-500 rounded"></div>
-            <span className="text-sm">Scheduled Maintenance</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span className="text-sm">Low Priority</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-            <span className="text-sm">Medium Priority</span>
+            <div className="w-3 h-3 bg-red-500 rounded"></div>
+            <span className="text-sm">New</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-orange-500 rounded"></div>
-            <span className="text-sm">High Priority</span>
+            <span className="text-sm">Assigned</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded"></div>
-            <span className="text-sm">Urgent</span>
+            <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <span className="text-sm">In Progress</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded"></div>
+            <span className="text-sm">Complete</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-500 rounded"></div>
+            <span className="text-sm">Cancelled</span>
           </div>
         </div>
         
