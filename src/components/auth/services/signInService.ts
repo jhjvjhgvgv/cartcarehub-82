@@ -3,7 +3,19 @@ import { NavigateFunction } from "react-router-dom";
 import { UserRole } from "../context/types";
 import { AuthResult } from "./types";
 import { clearNewAccountFlags } from "@/services/connection/storage-utils";
-import { fetchUserProfile, handleNavigation } from "./profile/profileService";
+
+interface PortalContext {
+  memberships: Array<{
+    org_id: string;
+    org_name: string;
+    org_type: string;
+    role: string;
+  }>;
+  accessible_stores: Array<{
+    store_org_id: string;
+    store_name: string;
+  }>;
+}
 
 export const signInUser = async (
   email: string,
@@ -33,20 +45,44 @@ export const signInUser = async (
       localStorage.setItem('supabase.auth.token', JSON.stringify(signInData.session));
       
       try {
-        // Fetch the user profile and memberships
-        const profile = await fetchUserProfile(signInData.user.id);
-        const portalRole = profile?.portal || null;
-        const roleFromMetadata = (signInData.user.user_metadata as any)?.role || null;
+        // Use get_my_portal_context for routing
+        const { data: ctx, error: ctxError } = await supabase.rpc('get_my_portal_context');
         
-        // Prefer portal role from memberships; fallback to auth metadata, then selected portal
-        const role = portalRole || roleFromMetadata || selectedRole;
+        if (ctxError) {
+          console.error("Error getting portal context:", ctxError);
+          // Fallback to onboarding
+          navigate('/onboarding', { replace: true });
+          return { success: true, message: "You have been signed in successfully!" };
+        }
+
+        const context = ctx as unknown as PortalContext | null;
         
-        await handleNavigation(role, selectedRole, navigate, signInData.user.id);
+        if (context?.memberships && context.memberships.length > 0) {
+          const membership = context.memberships[0];
+          const role = membership.role;
+          
+          // Route based on membership role
+          if (role.startsWith('provider_')) {
+            navigate('/dashboard', { replace: true });
+          } else if (role.startsWith('corp_')) {
+            navigate('/admin', { replace: true });
+          } else {
+            navigate('/customer/dashboard', { replace: true });
+          }
+        } else {
+          // No memberships - go to onboarding
+          navigate('/onboarding', { replace: true });
+        }
         
         return { success: true, message: "You have been signed in successfully!" };
       } catch (err) {
-        console.error("Error during profile fetch or navigation:", err);
-        await handleNavigation(selectedRole, selectedRole, navigate, signInData.user.id);
+        console.error("Error during portal context fetch:", err);
+        // Fallback based on selected role
+        if (selectedRole === 'maintenance') {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/customer/dashboard', { replace: true });
+        }
         return { success: true, message: "You have been signed in successfully!" };
       }
     }

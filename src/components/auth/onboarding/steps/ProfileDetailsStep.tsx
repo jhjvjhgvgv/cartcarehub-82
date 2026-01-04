@@ -47,6 +47,38 @@ export const ProfileDetailsStep = ({ onComplete, userRole }: ProfileDetailsStepP
 
       if (profileError) throw profileError;
 
+      // Check if user has org membership (should be created by trigger)
+      const { data: memberships, error: membershipError } = await supabase
+        .from('org_memberships')
+        .select('id, org_id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (membershipError) {
+        console.error('Error checking memberships:', membershipError);
+      }
+
+      // If no membership exists, create org via RPC (fallback for existing users)
+      if (!memberships || memberships.length === 0) {
+        console.log('No membership found, creating org via RPC...');
+        
+        const orgType = userRole === 'maintenance' ? 'provider' : 'store';
+        const ownerRole = userRole === 'maintenance' ? 'provider_admin' : 'store_admin';
+        
+        const { error: orgError } = await supabase.rpc('create_org_with_owner', {
+          p_type: orgType,
+          p_name: `${data.full_name}'s Organization`,
+          p_owner_role: ownerRole,
+        });
+        
+        if (orgError) {
+          console.error('Error creating org:', orgError);
+          // Don't fail the step if org creation fails - trigger should have handled it
+        } else {
+          console.log('Org created successfully via RPC');
+        }
+      }
+
       toast.success('Profile updated successfully!');
       onComplete();
     } catch (error) {
