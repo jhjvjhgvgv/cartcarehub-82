@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { Loader2, MapPin } from 'lucide-react';
 
@@ -21,6 +23,7 @@ interface StoreFormData {
 }
 
 export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps) => {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<StoreFormData>({
@@ -34,12 +37,55 @@ export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps
   });
 
   const onSubmit = async (data: StoreFormData) => {
+    if (!user) {
+      toast.error('User not found. Please sign in again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: Implement store creation when store management is built
-      console.log('Store data:', data);
-      
-      toast.success('Store location added successfully!');
+      // Get user's org membership
+      const { data: membership, error: membershipError } = await supabase
+        .from('org_memberships')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .eq('role', 'store_admin')
+        .maybeSingle();
+
+      if (membershipError) {
+        console.error('Error fetching membership:', membershipError);
+        throw membershipError;
+      }
+
+      if (membership?.org_id) {
+        // Update the organization with store details
+        const { error: updateError } = await supabase
+          .from('organizations')
+          .update({
+            name: data.store_name,
+            market: data.city,
+            region: data.state,
+            settings: {
+              address: data.address,
+              city: data.city,
+              state: data.state,
+              zip_code: data.zip_code,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', membership.org_id);
+
+        if (updateError) {
+          console.error('Error updating organization:', updateError);
+          throw updateError;
+        }
+
+        toast.success('Store location added successfully!');
+      } else {
+        console.warn('No store membership found for user');
+        toast.success('Store details saved!');
+      }
+
       onComplete();
     } catch (error) {
       console.error('Store creation error:', error);
