@@ -90,14 +90,12 @@ export const OnboardingContainer = () => {
     return null;
   }
 
-  // If profile is still loading or missing, show loading (don't redirect - that causes loop)
-  if (!profile) {
-    return <LoadingView onLoadingComplete={() => {}} />;
-  }
-
+  // If profile is missing, default to store role and continue with onboarding
+  // Don't keep showing loading - that causes infinite loop
+  
   // Derive userRole from portal (provider -> maintenance, else store)
-  // This uses the new org_memberships-based portal detection
-  const userRole: 'store' | 'maintenance' = profile.portal === 'provider' ? 'maintenance' : 'store';
+  // Default to 'store' if portal is undefined
+  const userRole: 'store' | 'maintenance' = profile?.portal === 'provider' ? 'maintenance' : 'store';
 
   // Define steps based on user role
   const storeSteps = [
