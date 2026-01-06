@@ -20,46 +20,34 @@ export const SessionChecker = () => {
     
     const checkSession = async () => {
       try {
-        // Ensure user profile exists (non-blocking, handled by trigger too)
-        supabase.rpc('safe_user_setup', { user_id_param: user.id })
-          .then(({ error }) => { if (error) console.warn("User setup warning:", error.message); });
+        // Ensure user profile + org exists - this is the key fix for missing memberships
+        const setupResult = await supabase.rpc('safe_user_setup', { user_id_param: user.id });
+        if (setupResult.error) {
+          console.warn("User setup warning:", setupResult.error.message);
+        } else {
+          console.log("✅ safe_user_setup result:", setupResult.data);
+        }
 
         // Get portal context to determine user's memberships and roles
         const { data: portalContext, error: contextError } = await supabase.rpc('get_my_portal_context');
         
         if (contextError) {
           console.error("Portal context fetch error:", contextError);
-          // Fallback: check if user has any org memberships
-          const { data: memberships } = await supabase
-            .from('org_memberships')
-            .select('role, organizations(type)')
-            .eq('user_id', user.id)
-            .limit(1);
-          
-          if (!memberships || memberships.length === 0) {
-            // New user without memberships - redirect to onboarding
-            console.log("📧 New user without memberships, redirecting to onboarding");
-            hasRedirected.current = true;
-            navigate('/onboarding', { replace: true });
-            return;
-          }
-
-          // Determine role from first membership
-          const membership = memberships[0];
-          const orgType = (membership.organizations as any)?.type;
+          // Redirect to onboarding - safe_user_setup should have created the membership
           hasRedirected.current = true;
-          redirectBasedOnRole(membership.role, orgType);
+          navigate('/customer/dashboard', { replace: true });
           return;
         }
         
         const context = portalContext as any;
         const memberships = context?.memberships || [];
         
-        // If user has no memberships, they're a new user - redirect to onboarding
+        // If user STILL has no memberships after safe_user_setup, go to customer dashboard
+        // The membership should exist now, but just in case
         if (memberships.length === 0) {
-          console.log("📧 New user without memberships, redirecting to onboarding");
+          console.log("📧 No memberships found even after setup, redirecting to customer dashboard");
           hasRedirected.current = true;
-          navigate('/onboarding', { replace: true });
+          navigate('/customer/dashboard', { replace: true });
           return;
         }
         
