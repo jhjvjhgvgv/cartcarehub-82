@@ -171,12 +171,12 @@ export const useOrg = () => {
 // Helper to get the dashboard path for a role
 export const getDashboardPath = (role: MembershipRole): string => {
   if (role === 'corp_admin' || role === 'corp_viewer') {
-    return '/corp/dashboard';
+    return '/admin';
   }
   if (role === 'provider_admin' || role === 'provider_tech') {
-    return '/provider/dashboard';
+    return '/dashboard';
   }
-  return '/store/dashboard';
+  return '/customer/dashboard';
 };
 
 // Helper to check if role is store-related

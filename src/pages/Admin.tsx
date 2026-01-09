@@ -30,6 +30,7 @@ import { AdvancedAnalytics } from "@/components/admin/AdvancedAnalytics";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
 import { AdminSystemSettings } from "@/components/admin/AdminSystemSettings";
+import { ProviderVerificationPanel } from "@/components/admin/ProviderVerificationPanel";
 
 export default function Admin() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -81,6 +82,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="providers" className="space-y-6">
+            <ProviderVerificationPanel />
             <ProviderManagement />
           </TabsContent>
 

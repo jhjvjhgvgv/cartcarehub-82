@@ -35,7 +35,7 @@ export const ProfileDetailsStep = ({ onComplete, userRole }: ProfileDetailsStepP
 
     setIsSubmitting(true);
     try {
-      // Update user_profiles table (canonical schema)
+      // Update user_profiles table
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
@@ -73,10 +73,36 @@ export const ProfileDetailsStep = ({ onComplete, userRole }: ProfileDetailsStepP
         
         if (orgError) {
           console.error('Error creating org:', orgError);
-          // Don't fail the step if org creation fails - trigger should have handled it
         } else {
           console.log('Org created successfully via RPC');
         }
+      }
+
+      // Update onboarding status
+      const { error: onboardingError } = await supabase
+        .from('user_onboarding')
+        .update({
+          profile_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (onboardingError) {
+        console.error('Error updating onboarding:', onboardingError);
+      }
+
+      // Try to send welcome email (non-blocking)
+      try {
+        await supabase.functions.invoke('welcome-email', {
+          body: {
+            email: user.email,
+            name: data.full_name,
+            role: userRole,
+          },
+        });
+      } catch (emailError) {
+        console.warn('Welcome email not sent:', emailError);
+        // Don't fail the step if email fails
       }
 
       toast.success('Profile updated successfully!');

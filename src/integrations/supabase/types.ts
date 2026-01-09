@@ -989,6 +989,114 @@ export type Database = {
           },
         ]
       }
+      provider_verifications: {
+        Row: {
+          created_at: string | null
+          documents: Json | null
+          id: string
+          insurance_provider: string | null
+          license_number: string | null
+          org_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_areas: string[] | null
+          service_description: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          insurance_provider?: string | null
+          license_number?: string | null
+          org_id: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_areas?: string[] | null
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          documents?: Json | null
+          id?: string
+          insurance_provider?: string | null
+          license_number?: string | null
+          org_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_areas?: string[] | null
+          service_description?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_kpis_30d"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "corp_preventive_kpis"
+            referencedColumns: ["corp_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_dashboard_snapshot"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_downtime_cost_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_preventive_kpis"
+            referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "provider_verifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "store_uptime_kpis_30d"
+            referencedColumns: ["store_org_id"]
+          },
+        ]
+      }
       store_daily_rollups: {
         Row: {
           day: string
@@ -1072,6 +1180,51 @@ export type Database = {
             referencedColumns: ["store_org_id"]
           },
         ]
+      }
+      user_onboarding: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          email_verified: boolean | null
+          id: string
+          location_completed: boolean | null
+          onboarding_completed: boolean | null
+          profile_completed: boolean | null
+          provider_connected: boolean | null
+          skipped_at: string | null
+          updated_at: string | null
+          user_id: string
+          verification_submitted: boolean | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          email_verified?: boolean | null
+          id?: string
+          location_completed?: boolean | null
+          onboarding_completed?: boolean | null
+          profile_completed?: boolean | null
+          provider_connected?: boolean | null
+          skipped_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_submitted?: boolean | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          email_verified?: boolean | null
+          id?: string
+          location_completed?: boolean | null
+          onboarding_completed?: boolean | null
+          profile_completed?: boolean | null
+          provider_connected?: boolean | null
+          skipped_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_submitted?: boolean | null
+        }
+        Relationships: []
       }
       user_profiles: {
         Row: {

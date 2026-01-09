@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AlertCircle, RefreshCw, LogOut } from 'lucide-react';
+import { getDashboardPath } from '@/contexts/OrgContext';
 
 const LOADING_TIMEOUT_MS = 15000;
 
@@ -21,7 +22,18 @@ export const OnboardingContainer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
-  const { currentStep, loading, completeStep, completeOnboarding } = useOnboardingProgress();
+  const { 
+    status,
+    currentStep, 
+    loading, 
+    onboardingCompleted,
+    completeStep, 
+    completeVerification,
+    completeProviderConnection,
+    completeOnboarding,
+    skipOnboarding,
+    refreshProgress 
+  } = useOnboardingProgress();
   const [localStep, setLocalStep] = useState(1);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
@@ -37,9 +49,64 @@ export const OnboardingContainer = () => {
     }
   }, [loading, profileLoading]);
 
+  // Calculate correct step based on status and role
   useEffect(() => {
-    setLocalStep(currentStep);
-  }, [currentStep]);
+    if (status && profile) {
+      const userRole = profile?.portal === 'provider' ? 'maintenance' : 'store';
+      
+      if (status.onboarding_completed || status.skipped_at) {
+        // Already completed, redirect to dashboard
+        navigateToDashboard();
+        return;
+      }
+      
+      if (!status.email_verified) {
+        setLocalStep(1);
+      } else if (!status.profile_completed) {
+        setLocalStep(2);
+      } else if (userRole === 'store') {
+        if (!status.location_completed) {
+          setLocalStep(3);
+        } else {
+          setLocalStep(4);
+        }
+      } else {
+        // maintenance
+        if (!status.verification_submitted) {
+          setLocalStep(3);
+        } else {
+          // All done
+          navigateToDashboard();
+        }
+      }
+    } else if (status && !profileLoading) {
+      // No profile yet, start from step 1
+      if (!status.email_verified) {
+        setLocalStep(1);
+      } else if (!status.profile_completed) {
+        setLocalStep(2);
+      } else {
+        setLocalStep(3);
+      }
+    }
+  }, [status, profile, profileLoading]);
+
+  const navigateToDashboard = async () => {
+    // Get the user's membership to determine dashboard
+    const { data: memberships } = await supabase
+      .from('org_memberships')
+      .select('role')
+      .eq('user_id', user?.id)
+      .limit(1);
+
+    if (memberships && memberships.length > 0) {
+      const path = getDashboardPath(memberships[0].role);
+      navigate(path);
+    } else {
+      // Default to customer dashboard
+      navigate('/customer/dashboard');
+    }
+  };
 
   // Show timeout error if loading takes too long
   if (loadingTimeout) {
@@ -56,6 +123,7 @@ export const OnboardingContainer = () => {
               onClick={() => {
                 setLoadingTimeout(false);
                 refreshProfile();
+                refreshProgress();
               }}
               className="w-full"
             >
@@ -90,49 +158,74 @@ export const OnboardingContainer = () => {
     return null;
   }
 
-  // If profile is missing, default to store role and continue with onboarding
-  // Don't keep showing loading - that causes infinite loop
-  
+  // Already completed onboarding
+  if (onboardingCompleted) {
+    navigateToDashboard();
+    return null;
+  }
+
   // Derive userRole from portal (provider -> maintenance, else store)
-  // Default to 'store' if portal is undefined
   const userRole: 'store' | 'maintenance' = profile?.portal === 'provider' ? 'maintenance' : 'store';
 
   // Define steps based on user role
   const storeSteps = [
-    { number: 1, name: 'Verify Email', completed: localStep > 1 },
-    { number: 2, name: 'Profile', completed: localStep > 2 },
-    { number: 3, name: 'Store Location', completed: localStep > 3 },
-    { number: 4, name: 'Connect', completed: localStep > 4 },
+    { number: 1, name: 'Verify Email', completed: status?.email_verified || false },
+    { number: 2, name: 'Profile', completed: status?.profile_completed || false },
+    { number: 3, name: 'Store Location', completed: status?.location_completed || false },
+    { number: 4, name: 'Connect', completed: status?.provider_connected || false },
   ];
 
   const maintenanceSteps = [
-    { number: 1, name: 'Verify Email', completed: localStep > 1 },
-    { number: 2, name: 'Profile', completed: localStep > 2 },
-    { number: 3, name: 'Verification', completed: localStep > 3 },
+    { number: 1, name: 'Verify Email', completed: status?.email_verified || false },
+    { number: 2, name: 'Profile', completed: status?.profile_completed || false },
+    { number: 3, name: 'Verification', completed: status?.verification_submitted || false },
   ];
 
   const steps = userRole === 'store' ? storeSteps : maintenanceSteps;
 
-  const handleStepComplete = async (stepNumber: number, stepName: string) => {
-    const success = await completeStep(stepNumber, stepName);
-    if (success) {
-      setLocalStep(stepNumber + 1);
-    }
+  const handleEmailVerified = async () => {
+    await completeStep(1, 'Email Verification');
+    setLocalStep(2);
+  };
+
+  const handleProfileComplete = async () => {
+    await completeStep(2, 'Profile Details');
+    setLocalStep(3);
+  };
+
+  const handleStoreLocationComplete = async () => {
+    await completeStep(3, 'Store Location');
+    setLocalStep(4);
+  };
+
+  const handleStoreLocationSkip = async () => {
+    await completeStep(3, 'Store Location (Skipped)');
+    setLocalStep(4);
+  };
+
+  const handleVerificationComplete = async () => {
+    await completeVerification();
+    await handleOnboardingComplete();
+  };
+
+  const handleProviderConnected = async () => {
+    await completeProviderConnection();
+    await handleOnboardingComplete();
   };
 
   const handleOnboardingComplete = async () => {
     const success = await completeOnboarding();
     if (success) {
       toast.success('Welcome! Your account is ready.');
-      
-      // Navigate to appropriate dashboard based on portal
-      if (profile.portal === 'provider') {
-        navigate('/dashboard');
-      } else if (profile.portal === 'corp') {
-        navigate('/admin');
-      } else {
-        navigate('/customer/dashboard');
-      }
+      navigateToDashboard();
+    }
+  };
+
+  const handleSkipOnboarding = async () => {
+    const success = await skipOnboarding();
+    if (success) {
+      toast.success('Welcome! You can complete setup later in Settings.');
+      navigateToDashboard();
     }
   };
 
@@ -141,14 +234,14 @@ export const OnboardingContainer = () => {
       case 1:
         return (
           <EmailVerificationStep
-            onComplete={() => handleStepComplete(1, 'Email Verification')}
+            onComplete={handleEmailVerified}
           />
         );
       
       case 2:
         return (
           <ProfileDetailsStep
-            onComplete={() => handleStepComplete(2, 'Profile Details')}
+            onComplete={handleProfileComplete}
             userRole={userRole}
           />
         );
@@ -157,14 +250,14 @@ export const OnboardingContainer = () => {
         if (userRole === 'store') {
           return (
             <StoreLocationStep
-              onComplete={() => handleStepComplete(3, 'Store Location')}
-              onSkip={() => handleStepComplete(3, 'Store Location (Skipped)')}
+              onComplete={handleStoreLocationComplete}
+              onSkip={handleStoreLocationSkip}
             />
           );
         } else {
           return (
             <MaintenanceVerificationStep
-              onComplete={handleOnboardingComplete}
+              onComplete={handleVerificationComplete}
             />
           );
         }
@@ -173,7 +266,7 @@ export const OnboardingContainer = () => {
         if (userRole === 'store') {
           return (
             <ConnectProviderStep
-              onComplete={handleOnboardingComplete}
+              onComplete={handleProviderConnected}
               onSkip={handleOnboardingComplete}
             />
           );
@@ -200,6 +293,17 @@ export const OnboardingContainer = () => {
 
         <div className="mt-8">
           {renderStep()}
+        </div>
+
+        {/* Skip link for users who want to explore */}
+        <div className="mt-6 text-center">
+          <Button 
+            variant="link" 
+            className="text-muted-foreground"
+            onClick={handleSkipOnboarding}
+          >
+            Skip setup and explore →
+          </Button>
         </div>
       </div>
     </div>
