@@ -6,6 +6,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import { Loader2, Shield, Upload, AlertCircle } from 'lucide-react';
 
@@ -21,6 +23,7 @@ interface VerificationFormData {
 }
 
 export const MaintenanceVerificationStep = ({ onComplete }: MaintenanceVerificationStepProps) => {
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<VerificationFormData>({
@@ -33,10 +36,86 @@ export const MaintenanceVerificationStep = ({ onComplete }: MaintenanceVerificat
   });
 
   const onSubmit = async (data: VerificationFormData) => {
+    if (!user) {
+      toast.error('User not found. Please sign in again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: Implement verification submission when provider verification system is built
-      console.log('Verification data:', data);
+      // Get user's provider org
+      const { data: membership, error: membershipError } = await supabase
+        .from('org_memberships')
+        .select('org_id')
+        .eq('user_id', user.id)
+        .in('role', ['provider_admin', 'provider_tech'])
+        .maybeSingle();
+
+      if (membershipError) {
+        console.error('Error fetching membership:', membershipError);
+      }
+
+      if (!membership?.org_id) {
+        console.warn('No provider membership found');
+        toast.error('No provider organization found. Please contact support.');
+        return;
+      }
+
+      // Parse service areas into array
+      const serviceAreasArray = data.service_areas
+        .split(',')
+        .map(area => area.trim())
+        .filter(area => area.length > 0);
+
+      // Insert verification record
+      const { error: verificationError } = await supabase
+        .from('provider_verifications')
+        .insert({
+          org_id: membership.org_id,
+          user_id: user.id,
+          license_number: data.license_number || null,
+          insurance_provider: data.insurance_provider || null,
+          service_description: data.service_description,
+          service_areas: serviceAreasArray,
+          status: 'pending',
+        });
+
+      if (verificationError) {
+        console.error('Error creating verification:', verificationError);
+        throw verificationError;
+      }
+
+      // Update org settings with service info
+      const { error: orgError } = await supabase
+        .from('organizations')
+        .update({
+          settings: {
+            service_description: data.service_description,
+            service_areas: serviceAreasArray,
+            verification_status: 'pending',
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', membership.org_id);
+
+      if (orgError) {
+        console.error('Error updating org settings:', orgError);
+      }
+
+      // Update onboarding status
+      const { error: onboardingError } = await supabase
+        .from('user_onboarding')
+        .update({
+          verification_submitted: true,
+          onboarding_completed: true,
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      if (onboardingError) {
+        console.error('Error updating onboarding:', onboardingError);
+      }
       
       toast.success('Verification submitted! An admin will review your application.');
       onComplete();

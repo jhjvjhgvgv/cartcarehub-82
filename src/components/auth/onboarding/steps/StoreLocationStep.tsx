@@ -36,6 +36,22 @@ export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps
     },
   });
 
+  const updateOnboardingStatus = async () => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('user_onboarding')
+      .update({
+        location_completed: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error updating onboarding:', error);
+    }
+  };
+
   const onSubmit = async (data: StoreFormData) => {
     if (!user) {
       toast.error('User not found. Please sign in again.');
@@ -86,6 +102,8 @@ export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps
         toast.success('Store details saved!');
       }
 
+      // Update onboarding status
+      await updateOnboardingStatus();
       onComplete();
     } catch (error) {
       console.error('Store creation error:', error);
@@ -93,6 +111,11 @@ export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSkip = async () => {
+    await updateOnboardingStatus();
+    onSkip();
   };
 
   return (
@@ -193,7 +216,7 @@ export const StoreLocationStep = ({ onComplete, onSkip }: StoreLocationStepProps
             />
 
             <div className="flex gap-4">
-              <Button type="button" variant="outline" onClick={onSkip} className="flex-1">
+              <Button type="button" variant="outline" onClick={handleSkip} className="flex-1">
                 Skip for Now
               </Button>
               <Button type="submit" className="flex-1" disabled={isSubmitting}>
