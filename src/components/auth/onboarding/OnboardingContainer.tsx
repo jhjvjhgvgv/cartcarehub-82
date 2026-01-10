@@ -51,45 +51,48 @@ export const OnboardingContainer = () => {
 
   // Calculate correct step based on status and role
   useEffect(() => {
-    if (status && profile) {
-      const userRole = profile?.portal === 'provider' ? 'maintenance' : 'store';
-      
-      if (status.onboarding_completed || status.skipped_at) {
-        // Already completed, redirect to dashboard
-        navigateToDashboard();
-        return;
-      }
-      
-      if (!status.email_verified) {
-        setLocalStep(1);
-      } else if (!status.profile_completed) {
-        setLocalStep(2);
-      } else if (userRole === 'store') {
-        if (!status.location_completed) {
-          setLocalStep(3);
-        } else {
-          setLocalStep(4);
-        }
-      } else {
-        // maintenance
-        if (!status.verification_submitted) {
-          setLocalStep(3);
-        } else {
-          // All done
-          navigateToDashboard();
-        }
-      }
-    } else if (status && !profileLoading) {
-      // No profile yet, start from step 1
-      if (!status.email_verified) {
-        setLocalStep(1);
-      } else if (!status.profile_completed) {
-        setLocalStep(2);
-      } else {
+    // Don't calculate until we have status (onboarding record)
+    if (!status) return;
+    
+    // Derive role from profile.portal or from user metadata
+    const metaRole = user?.user_metadata?.role;
+    const userRole = profile?.portal === 'provider' ? 'maintenance' : 
+                    metaRole === 'maintenance' ? 'maintenance' : 'store';
+    
+    console.log('📋 Onboarding step calculation:', { 
+      status, 
+      profilePortal: profile?.portal, 
+      metaRole, 
+      userRole,
+      profileLoading 
+    });
+    
+    if (status.onboarding_completed || status.skipped_at) {
+      // Already completed, redirect to dashboard
+      navigateToDashboard();
+      return;
+    }
+    
+    if (!status.email_verified) {
+      setLocalStep(1);
+    } else if (!status.profile_completed) {
+      setLocalStep(2);
+    } else if (userRole === 'store') {
+      if (!status.location_completed) {
         setLocalStep(3);
+      } else {
+        setLocalStep(4);
+      }
+    } else {
+      // maintenance
+      if (!status.verification_submitted) {
+        setLocalStep(3);
+      } else {
+        // All done
+        navigateToDashboard();
       }
     }
-  }, [status, profile, profileLoading]);
+  }, [status, profile, profileLoading, user]);
 
   const navigateToDashboard = async () => {
     // Get the user's membership to determine dashboard
@@ -164,8 +167,11 @@ export const OnboardingContainer = () => {
     return null;
   }
 
-  // Derive userRole from portal (provider -> maintenance, else store)
-  const userRole: 'store' | 'maintenance' = profile?.portal === 'provider' ? 'maintenance' : 'store';
+  // Derive userRole from portal or user metadata (for new users during onboarding)
+  const metaRole = user?.user_metadata?.role;
+  const userRole: 'store' | 'maintenance' = 
+    profile?.portal === 'provider' ? 'maintenance' : 
+    metaRole === 'maintenance' ? 'maintenance' : 'store';
 
   // Define steps based on user role
   const storeSteps = [
