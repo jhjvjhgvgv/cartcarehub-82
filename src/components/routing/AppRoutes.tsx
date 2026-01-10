@@ -30,8 +30,8 @@ export const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/invite" element={<Invite />} />
       <Route path="/error-recovery" element={<ErrorRecovery error="Authentication error occurred" />} />
-      <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} />} />
-      <Route path="/onboarding" element={<OnboardingContainer />} />
+      <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} skipOnboardingCheck />} />
+      <Route path="/onboarding" element={<ProtectedRoute element={<OnboardingContainer />} skipOnboardingCheck />} />
       
       {/* Master Admin Routes - Separate authentication system */}
       <Route path="/master-admin" element={<MasterAdminLogin />} />
