@@ -71,9 +71,19 @@ export const useUserProfile = () => {
       const membershipRole = memberships?.[0]?.role || undefined;
       const portal = membershipRole ? getPortalFromMembership(membershipRole) : undefined;
 
-      // Map portal to legacy role for compatibility
+      // Get role from user metadata if no membership yet (new user during onboarding)
+      const metaRole = user.user_metadata?.role;
+      
+      // Determine legacy role: from membership, then from metadata, then default to store
       const legacyRole = portal === 'provider' ? 'maintenance' : 
-                        portal === 'corp' ? 'admin' : 'store';
+                        portal === 'corp' ? 'admin' : 
+                        metaRole === 'maintenance' ? 'maintenance' :
+                        'store';
+      
+      // Determine portal type: from membership or from metadata
+      const derivedPortal = portal || 
+                           (metaRole === 'maintenance' ? 'provider' : 
+                            metaRole === 'store' ? 'store' : undefined);
 
       setProfile({
         id: user.id,
@@ -81,7 +91,7 @@ export const useUserProfile = () => {
         phone: profileData?.phone || undefined,
         created_at: profileData?.created_at,
         updated_at: profileData?.updated_at,
-        portal,
+        portal: derivedPortal,
         membership_role: membershipRole,
         // Legacy compatibility mappings
         display_name: profileData?.full_name || undefined,
