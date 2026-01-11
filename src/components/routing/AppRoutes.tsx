@@ -14,6 +14,7 @@ import Admin from "@/pages/Admin";
 import Store from "@/pages/Store";
 import Invite from "@/pages/Invite";
 import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import CustomerDashboard from "@/pages/customer/Dashboard";
 import CartStatus from "@/pages/customer/CartStatus";
 import ReportIssue from "@/pages/customer/ReportIssue";
@@ -28,6 +29,7 @@ export const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/invite" element={<Invite />} />
       <Route path="/error-recovery" element={<ErrorRecovery error="Authentication error occurred" />} />
       <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} skipOnboardingCheck />} />
