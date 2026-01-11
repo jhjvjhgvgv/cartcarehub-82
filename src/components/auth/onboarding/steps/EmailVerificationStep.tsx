@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +20,13 @@ export const EmailVerificationStep = ({ onComplete }: EmailVerificationStepProps
     resendCooldown,
     resendVerificationEmail,
   } = useEmailVerification();
+  
+  // Use ref to prevent multiple calls
+  const hasCalledComplete = useRef(false);
 
   useEffect(() => {
-    if (isVerified) {
+    if (isVerified && !hasCalledComplete.current) {
+      hasCalledComplete.current = true;
       toast.success('Email verified successfully!');
       onComplete();
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -34,8 +34,16 @@ export const OnboardingContainer = () => {
     skipOnboarding,
     refreshProgress 
   } = useOnboardingProgress();
-  const [localStep, setLocalStep] = useState(1);
+  const [localStep, setLocalStep] = useState<number | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Derive userRole from portal or user metadata - memoized for stability
+  const userRole: 'store' | 'maintenance' = useMemo(() => {
+    const metaRole = user?.user_metadata?.role;
+    return profile?.portal === 'provider' ? 'maintenance' : 
+           metaRole === 'maintenance' ? 'maintenance' : 'store';
+  }, [profile?.portal, user?.user_metadata?.role]);
 
   // Loading timeout to prevent infinite loading
   useEffect(() => {
@@ -49,52 +57,11 @@ export const OnboardingContainer = () => {
     }
   }, [loading, profileLoading]);
 
-  // Calculate correct step based on status and role
-  useEffect(() => {
-    // Don't calculate until we have status (onboarding record)
-    if (!status) return;
+  // Navigate to dashboard helper - memoized
+  const navigateToDashboard = useCallback(async () => {
+    if (isRedirecting) return;
+    setIsRedirecting(true);
     
-    // Derive role from profile.portal or from user metadata
-    const metaRole = user?.user_metadata?.role;
-    const userRole = profile?.portal === 'provider' ? 'maintenance' : 
-                    metaRole === 'maintenance' ? 'maintenance' : 'store';
-    
-    console.log('📋 Onboarding step calculation:', { 
-      status, 
-      profilePortal: profile?.portal, 
-      metaRole, 
-      userRole,
-      profileLoading 
-    });
-    
-    if (status.onboarding_completed || status.skipped_at) {
-      // Already completed, redirect to dashboard
-      navigateToDashboard();
-      return;
-    }
-    
-    if (!status.email_verified) {
-      setLocalStep(1);
-    } else if (!status.profile_completed) {
-      setLocalStep(2);
-    } else if (userRole === 'store') {
-      if (!status.location_completed) {
-        setLocalStep(3);
-      } else {
-        setLocalStep(4);
-      }
-    } else {
-      // maintenance
-      if (!status.verification_submitted) {
-        setLocalStep(3);
-      } else {
-        // All done
-        navigateToDashboard();
-      }
-    }
-  }, [status, profile, profileLoading, user]);
-
-  const navigateToDashboard = async () => {
     // Get the user's membership to determine dashboard
     const { data: memberships } = await supabase
       .from('org_memberships')
@@ -106,10 +73,62 @@ export const OnboardingContainer = () => {
       const path = getDashboardPath(memberships[0].role);
       navigate(path);
     } else {
-      // Default to customer dashboard
-      navigate('/customer/dashboard');
+      // Default based on role in metadata
+      const metaRole = user?.user_metadata?.role;
+      if (metaRole === 'maintenance') {
+        navigate('/dashboard');
+      } else {
+        navigate('/customer/dashboard');
+      }
     }
-  };
+  }, [user?.id, user?.user_metadata?.role, navigate, isRedirecting]);
+
+  // Calculate correct step based on status and role
+  useEffect(() => {
+    // Don't calculate until we have status (onboarding record)
+    if (!status) return;
+    // Don't recalculate if already redirecting
+    if (isRedirecting) return;
+    
+    console.log('📋 Onboarding step calculation:', { 
+      status, 
+      userRole,
+      profileLoading,
+      isRedirecting
+    });
+    
+    if (status.onboarding_completed || status.skipped_at) {
+      // Already completed, redirect to dashboard
+      navigateToDashboard();
+      return;
+    }
+    
+    // Calculate the step based on completion status
+    let step = 1;
+    if (!status.email_verified) {
+      step = 1;
+    } else if (!status.profile_completed) {
+      step = 2;
+    } else if (userRole === 'store') {
+      if (!status.location_completed) {
+        step = 3;
+      } else {
+        step = 4;
+      }
+    } else {
+      // maintenance
+      if (!status.verification_submitted) {
+        step = 3;
+      } else {
+        // All done - redirect
+        navigateToDashboard();
+        return;
+      }
+    }
+    
+    console.log('📋 Setting step to:', step);
+    setLocalStep(step);
+  }, [status, userRole, profileLoading, isRedirecting, navigateToDashboard]);
 
   // Show timeout error if loading takes too long
   if (loadingTimeout) {
@@ -167,13 +186,12 @@ export const OnboardingContainer = () => {
     return null;
   }
 
-  // Derive userRole from portal or user metadata (for new users during onboarding)
-  const metaRole = user?.user_metadata?.role;
-  const userRole: 'store' | 'maintenance' = 
-    profile?.portal === 'provider' ? 'maintenance' : 
-    metaRole === 'maintenance' ? 'maintenance' : 'store';
+  // Wait until step is calculated
+  if (localStep === null) {
+    return <LoadingView onLoadingComplete={() => {}} />;
+  }
 
-  // Define steps based on user role
+  // Define steps based on user role (userRole is memoized at top)
   const storeSteps = [
     { number: 1, name: 'Verify Email', completed: status?.email_verified || false },
     { number: 2, name: 'Profile', completed: status?.profile_completed || false },
@@ -189,51 +207,59 @@ export const OnboardingContainer = () => {
 
   const steps = userRole === 'store' ? storeSteps : maintenanceSteps;
 
-  const handleEmailVerified = async () => {
+  const handleEmailVerified = useCallback(async () => {
     await completeStep(1, 'Email Verification');
     setLocalStep(2);
-  };
+  }, [completeStep]);
 
-  const handleProfileComplete = async () => {
+  const handleProfileComplete = useCallback(async () => {
     await completeStep(2, 'Profile Details');
     setLocalStep(3);
-  };
+  }, [completeStep]);
 
-  const handleStoreLocationComplete = async () => {
+  const handleStoreLocationComplete = useCallback(async () => {
     await completeStep(3, 'Store Location');
     setLocalStep(4);
-  };
+  }, [completeStep]);
 
-  const handleStoreLocationSkip = async () => {
+  const handleStoreLocationSkip = useCallback(async () => {
     await completeStep(3, 'Store Location (Skipped)');
     setLocalStep(4);
-  };
+  }, [completeStep]);
 
-  const handleVerificationComplete = async () => {
-    await completeVerification();
-    await handleOnboardingComplete();
-  };
-
-  const handleProviderConnected = async () => {
-    await completeProviderConnection();
-    await handleOnboardingComplete();
-  };
-
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = useCallback(async () => {
     const success = await completeOnboarding();
     if (success) {
       toast.success('Welcome! Your account is ready.');
       navigateToDashboard();
     }
-  };
+  }, [completeOnboarding, navigateToDashboard]);
 
-  const handleSkipOnboarding = async () => {
+  const handleVerificationComplete = useCallback(async () => {
+    await completeVerification();
+    const success = await completeOnboarding();
+    if (success) {
+      toast.success('Welcome! Your account is ready.');
+      navigateToDashboard();
+    }
+  }, [completeVerification, completeOnboarding, navigateToDashboard]);
+
+  const handleProviderConnected = useCallback(async () => {
+    await completeProviderConnection();
+    const success = await completeOnboarding();
+    if (success) {
+      toast.success('Welcome! Your account is ready.');
+      navigateToDashboard();
+    }
+  }, [completeProviderConnection, completeOnboarding, navigateToDashboard]);
+
+  const handleSkipOnboarding = useCallback(async () => {
     const success = await skipOnboarding();
     if (success) {
       toast.success('Welcome! You can complete setup later in Settings.');
       navigateToDashboard();
     }
-  };
+  }, [skipOnboarding, navigateToDashboard]);
 
   const renderStep = () => {
     switch (localStep) {
