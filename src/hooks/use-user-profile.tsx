@@ -68,8 +68,12 @@ export const useUserProfile = () => {
         .eq('user_id', user.id)
         .limit(1);
 
+      console.log('🔍 User memberships:', memberships);
+
       const membershipRole = memberships?.[0]?.role || undefined;
       const portal = membershipRole ? getPortalFromMembership(membershipRole) : undefined;
+
+      console.log('🔍 Derived portal:', portal, 'from role:', membershipRole);
 
       // Get role from user metadata if no membership yet (new user during onboarding)
       const metaRole = user.user_metadata?.role;
@@ -81,9 +85,10 @@ export const useUserProfile = () => {
                         'store';
       
       // Determine portal type: from membership or from metadata
+      // If we have a membership, use that portal. Otherwise fall back to metadata or 'store'
       const derivedPortal = portal || 
                            (metaRole === 'maintenance' ? 'provider' : 
-                            metaRole === 'store' ? 'store' : undefined);
+                            metaRole === 'store' ? 'store' : 'store');
 
       setProfile({
         id: user.id,

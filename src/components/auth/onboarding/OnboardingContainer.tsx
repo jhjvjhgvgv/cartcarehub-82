@@ -262,6 +262,8 @@ export const OnboardingContainer = () => {
   }, [skipOnboarding, navigateToDashboard]);
 
   const renderStep = () => {
+    console.log('🎯 Rendering step:', localStep, 'userRole:', userRole);
+    
     switch (localStep) {
       case 1:
         return (
@@ -303,13 +305,22 @@ export const OnboardingContainer = () => {
             />
           );
         }
-        break;
+        // Fallback for step 4 when not store
+        return null;
       
       default:
-        handleOnboardingComplete();
+        // Don't call handleOnboardingComplete in render - causes infinite loops
+        console.log('🎯 Default case, completing onboarding...');
         return null;
     }
   };
+  
+  // Handle completion for default case outside of render
+  useEffect(() => {
+    if (localStep !== null && localStep > 4 && !isRedirecting) {
+      handleOnboardingComplete();
+    }
+  }, [localStep, isRedirecting, handleOnboardingComplete]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">
