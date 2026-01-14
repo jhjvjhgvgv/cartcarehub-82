@@ -215,31 +215,8 @@ export const OnboardingContainer = () => {
     return null;
   }
 
-  // If status is loaded but localStep is null, we need to calculate it
-  // This can happen if the useEffect hasn't run yet
-  if (status && localStep === null && !isRedirecting) {
-    console.log('⚠️ Status loaded but localStep is null, triggering calculation');
-    // Calculate step directly here as fallback
-    let fallbackStep = 1;
-    if (!status.email_verified) {
-      fallbackStep = 1;
-    } else if (!status.profile_completed) {
-      fallbackStep = 2;
-    } else if (userRole === 'store') {
-      if (!status.location_completed) {
-        fallbackStep = 3;
-      } else {
-        fallbackStep = 4;
-      }
-    } else if (!status.verification_submitted) {
-      fallbackStep = 3;
-    }
-    console.log('📋 Fallback step calculation:', fallbackStep);
-    // Set step synchronously to avoid another loading cycle
-    if (fallbackStep !== localStep) {
-      setLocalStep(fallbackStep);
-    }
-  }
+  // NOTE: Avoid setting state during render; step calculation happens in the effect above.
+  // If localStep is still null, we'll show the loading view until the effect sets it.
 
   // Wait until step is calculated (but show loading only briefly)
   if (localStep === null) {

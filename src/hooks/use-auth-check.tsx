@@ -67,7 +67,10 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
             
           if (membershipError) {
             console.error("Error fetching memberships:", membershipError);
-            if (mounted) setIsVerified(false);
+            if (mounted) {
+              setIsVerified(false);
+              setRoleCheckComplete(true); // prevent indefinite "Verifying access..." state
+            }
             return;
           }
           
