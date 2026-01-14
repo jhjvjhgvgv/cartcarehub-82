@@ -20,12 +20,12 @@ const LOADING_TIMEOUT_MS = 15000;
 
 export const OnboardingContainer = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
   const { 
     status,
     currentStep, 
-    loading, 
+    loading: onboardingLoading, 
     onboardingCompleted,
     completeStep, 
     completeVerification,
@@ -37,6 +37,9 @@ export const OnboardingContainer = () => {
   const [localStep, setLocalStep] = useState<number | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Combined loading state
+  const loading = authLoading || onboardingLoading;
 
   // Derive userRole from portal or user metadata - memoized for stability
   const userRole: 'store' | 'maintenance' = useMemo(() => {
@@ -86,19 +89,27 @@ export const OnboardingContainer = () => {
   // Calculate correct step based on status and role
   useEffect(() => {
     // Don't calculate until we have status (onboarding record)
-    if (!status) return;
+    if (!status) {
+      console.log('📋 No status yet, waiting...');
+      return;
+    }
     // Don't recalculate if already redirecting
-    if (isRedirecting) return;
+    if (isRedirecting) {
+      console.log('📋 Already redirecting, skipping calculation');
+      return;
+    }
     
     console.log('📋 Onboarding step calculation:', { 
       status, 
       userRole,
       profileLoading,
-      isRedirecting
+      isRedirecting,
+      currentLocalStep: localStep
     });
     
     if (status.onboarding_completed || status.skipped_at) {
       // Already completed, redirect to dashboard
+      console.log('📋 Onboarding already completed, redirecting...');
       navigateToDashboard();
       return;
     }
@@ -121,14 +132,18 @@ export const OnboardingContainer = () => {
         step = 3;
       } else {
         // All done - redirect
+        console.log('📋 Maintenance onboarding complete, redirecting...');
         navigateToDashboard();
         return;
       }
     }
     
-    console.log('📋 Setting step to:', step);
-    setLocalStep(step);
-  }, [status, userRole, profileLoading, isRedirecting, navigateToDashboard]);
+    console.log('📋 Calculated step:', step, 'current localStep:', localStep);
+    // Only update if different to avoid unnecessary re-renders
+    if (step !== localStep) {
+      setLocalStep(step);
+    }
+  }, [status, userRole, isRedirecting, navigateToDashboard, localStep]);
 
   // Show timeout error if loading takes too long
   if (loadingTimeout) {
@@ -169,25 +184,66 @@ export const OnboardingContainer = () => {
     );
   }
 
+  // Debug logging to understand render state
+  console.log('🎬 OnboardingContainer render:', {
+    loading,
+    profileLoading,
+    user: !!user,
+    status: !!status,
+    localStep,
+    onboardingCompleted,
+    isRedirecting
+  });
+
   // Show loading while checking auth/profile status
   if (loading || profileLoading) {
+    console.log('⏳ Still loading profile or onboarding data...');
     return <LoadingView onLoadingComplete={() => {}} />;
   }
 
   // If no user, redirect to login
   if (!user) {
+    console.log('❌ No user, redirecting to login');
     navigate('/');
     return null;
   }
 
   // Already completed onboarding
   if (onboardingCompleted) {
+    console.log('✅ Onboarding completed, navigating to dashboard');
     navigateToDashboard();
     return null;
   }
 
-  // Wait until step is calculated
+  // If status is loaded but localStep is null, we need to calculate it
+  // This can happen if the useEffect hasn't run yet
+  if (status && localStep === null && !isRedirecting) {
+    console.log('⚠️ Status loaded but localStep is null, triggering calculation');
+    // Calculate step directly here as fallback
+    let fallbackStep = 1;
+    if (!status.email_verified) {
+      fallbackStep = 1;
+    } else if (!status.profile_completed) {
+      fallbackStep = 2;
+    } else if (userRole === 'store') {
+      if (!status.location_completed) {
+        fallbackStep = 3;
+      } else {
+        fallbackStep = 4;
+      }
+    } else if (!status.verification_submitted) {
+      fallbackStep = 3;
+    }
+    console.log('📋 Fallback step calculation:', fallbackStep);
+    // Set step synchronously to avoid another loading cycle
+    if (fallbackStep !== localStep) {
+      setLocalStep(fallbackStep);
+    }
+  }
+
+  // Wait until step is calculated (but show loading only briefly)
   if (localStep === null) {
+    console.log('⏳ Waiting for step calculation...');
     return <LoadingView onLoadingComplete={() => {}} />;
   }
 
