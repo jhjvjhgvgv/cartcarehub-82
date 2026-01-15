@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useOnboardingProgress } from './hooks/useOnboardingProgress';
@@ -34,9 +34,11 @@ export const OnboardingContainer = () => {
     skipOnboarding,
     refreshProgress 
   } = useOnboardingProgress();
-  const [localStep, setLocalStep] = useState<number | null>(null);
+  
+  const [localStep, setLocalStep] = useState<number>(2); // Default to profile step
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
 
   // Derive userRole from portal or user metadata - memoized for stability
   const userRole: 'store' | 'maintenance' = useMemo(() => {
@@ -56,6 +58,14 @@ export const OnboardingContainer = () => {
       setLoadingTimeout(false);
     }
   }, [authLoading, onboardingLoading]);
+
+  // Handle no-user redirect via effect, not during render
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log('❌ No user, will redirect to login');
+      setShouldRedirectToLogin(true);
+    }
+  }, [authLoading, user]);
 
   // Navigate to dashboard helper - memoized
   const navigateToDashboard = useCallback(async () => {
@@ -83,7 +93,7 @@ export const OnboardingContainer = () => {
     }
   }, [user?.id, user?.user_metadata?.role, navigate, isRedirecting]);
 
-  // Calculate correct step based on status and role
+  // Calculate correct step based on status and role - in useEffect only
   useEffect(() => {
     // Don't calculate until we have both user and status
     if (!user || !status) {
@@ -135,114 +145,34 @@ export const OnboardingContainer = () => {
     
     console.log('📋 Setting step to:', step);
     setLocalStep(step);
-  }, [user, status, userRole, isRedirecting, navigateToDashboard]);
+  }, [user, status, userRole, isRedirecting, navigateToDashboard, localStep]);
 
-  // Show timeout error if loading takes too long
-  if (loadingTimeout) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center space-y-6">
-          <AlertCircle className="w-16 h-16 text-destructive mx-auto" />
-          <h2 className="text-2xl font-bold">Loading Taking Too Long</h2>
-          <p className="text-muted-foreground">
-            We're having trouble loading your profile. This might be a temporary issue.
-          </p>
-          <div className="flex flex-col gap-3">
-            <Button 
-              onClick={() => {
-                setLoadingTimeout(false);
-                refreshProfile();
-                refreshProgress();
-              }}
-              className="w-full"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                navigate('/');
-              }}
-              className="w-full"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading while auth is initializing
-  if (authLoading) {
-    console.log('⏳ Auth loading...');
-    return <LoadingView onLoadingComplete={() => {}} />;
-  }
-
-  // If no user, redirect to login
-  if (!user) {
-    console.log('❌ No user, redirecting to login');
-    navigate('/');
-    return null;
-  }
-
-  // Show loading while onboarding status is being fetched
-  if (onboardingLoading) {
-    console.log('⏳ Onboarding loading...');
-    return <LoadingView onLoadingComplete={() => {}} />;
-  }
-
-  // Already completed onboarding
-  if (onboardingCompleted) {
-    console.log('✅ Onboarding completed, navigating to dashboard');
-    navigateToDashboard();
-    return null;
-  }
-
-  // If we have status but no localStep yet, calculate it immediately
-  if (status && localStep === null) {
-    let step = 1;
-    if (!status.email_verified) {
-      step = 1;
-    } else if (!status.profile_completed) {
-      step = 2;
-    } else if (userRole === 'store') {
-      if (!status.location_completed) {
-        step = 3;
-      } else {
-        step = 4;
-      }
-    } else if (!status.verification_submitted) {
-      step = 3;
+  // Handle onboarding completion for step > 4
+  useEffect(() => {
+    if (localStep > 4 && !isRedirecting && status && !status.onboarding_completed) {
+      console.log('🎯 Step > 4, completing onboarding...');
+      completeOnboarding().then(success => {
+        if (success) {
+          toast.success('Welcome! Your account is ready.');
+          navigateToDashboard();
+        }
+      });
     }
-    console.log('📋 Immediate step calculation:', step);
-    // Use a ref-based approach to avoid render-loop
-    setTimeout(() => setLocalStep(step), 0);
-    return <LoadingView onLoadingComplete={() => {}} />;
-  }
+  }, [localStep, isRedirecting, status, completeOnboarding, navigateToDashboard]);
 
-  // Wait until step is calculated
-  if (localStep === null) {
-    console.log('⏳ Waiting for step calculation...');
-    return <LoadingView onLoadingComplete={() => {}} />;
-  }
-
-  // Define steps based on user role (userRole is memoized at top)
-  const storeSteps = [
+  // Define steps based on user role
+  const storeSteps = useMemo(() => [
     { number: 1, name: 'Verify Email', completed: status?.email_verified || false },
     { number: 2, name: 'Profile', completed: status?.profile_completed || false },
     { number: 3, name: 'Store Location', completed: status?.location_completed || false },
     { number: 4, name: 'Connect', completed: status?.provider_connected || false },
-  ];
+  ], [status]);
 
-  const maintenanceSteps = [
+  const maintenanceSteps = useMemo(() => [
     { number: 1, name: 'Verify Email', completed: status?.email_verified || false },
     { number: 2, name: 'Profile', completed: status?.profile_completed || false },
     { number: 3, name: 'Verification', completed: status?.verification_submitted || false },
-  ];
+  ], [status]);
 
   const steps = userRole === 'store' ? storeSteps : maintenanceSteps;
 
@@ -300,6 +230,7 @@ export const OnboardingContainer = () => {
     }
   }, [skipOnboarding, navigateToDashboard]);
 
+  // Render step content
   const renderStep = () => {
     console.log('🎯 Rendering step:', localStep, 'userRole:', userRole);
     
@@ -344,23 +275,105 @@ export const OnboardingContainer = () => {
             />
           );
         }
-        // Fallback for step 4 when not store
-        return null;
+        // Fall through to default for non-store at step 4
+        return (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Completing setup...</p>
+          </div>
+        );
       
       default:
-        // Don't call handleOnboardingComplete in render - causes infinite loops
-        console.log('🎯 Default case, completing onboarding...');
-        return null;
+        return (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Completing setup...</p>
+          </div>
+        );
     }
   };
-  
-  // Handle completion for default case outside of render
-  useEffect(() => {
-    if (localStep !== null && localStep > 4 && !isRedirecting) {
-      handleOnboardingComplete();
-    }
-  }, [localStep, isRedirecting, handleOnboardingComplete]);
 
+  // === RENDER LOGIC - Never return null, always show meaningful UI ===
+
+  // Redirect to login if no user (use Navigate component, not navigate())
+  if (shouldRedirectToLogin) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Show timeout error if loading takes too long
+  if (loadingTimeout) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <AlertCircle className="w-16 h-16 text-destructive mx-auto" />
+          <h2 className="text-2xl font-bold">Loading Taking Too Long</h2>
+          <p className="text-muted-foreground">
+            We're having trouble loading your profile. This might be a temporary issue.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Button 
+              onClick={() => {
+                setLoadingTimeout(false);
+                refreshProfile();
+                refreshProgress();
+              }}
+              className="w-full"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate('/');
+              }}
+              className="w-full"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while onboarding status is being fetched
+  if (onboardingLoading || !status) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show redirecting state
+  if (isRedirecting || onboardingCompleted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main onboarding UI
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">
       <div className="max-w-4xl mx-auto">
