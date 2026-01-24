@@ -20,7 +20,22 @@ export const SessionChecker = () => {
     
     const checkSession = async () => {
       try {
-        // Ensure user profile + org exists - this is the key fix for missing memberships
+        // FIRST: Check onboarding status before anything else
+        const { data: onboardingData, error: onboardingError } = await supabase
+          .from('user_onboarding')
+          .select('onboarding_completed, skipped_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        // If no onboarding record or not completed, redirect to onboarding
+        if (!onboardingData || (!onboardingData.onboarding_completed && !onboardingData.skipped_at)) {
+          console.log("📋 User needs onboarding, redirecting...");
+          hasRedirected.current = true;
+          navigate('/onboarding', { replace: true });
+          return;
+        }
+        
+        // Ensure user profile + org exists
         const setupResult = await supabase.rpc('safe_user_setup', { user_id_param: user.id });
         if (setupResult.error) {
           console.warn("User setup warning:", setupResult.error.message);
@@ -33,7 +48,6 @@ export const SessionChecker = () => {
         
         if (contextError) {
           console.error("Portal context fetch error:", contextError);
-          // Redirect to onboarding - safe_user_setup should have created the membership
           hasRedirected.current = true;
           navigate('/customer/dashboard', { replace: true });
           return;
@@ -42,10 +56,9 @@ export const SessionChecker = () => {
         const context = portalContext as any;
         const memberships = context?.memberships || [];
         
-        // If user STILL has no memberships after safe_user_setup, go to customer dashboard
-        // The membership should exist now, but just in case
+        // If user has no memberships, go to customer dashboard
         if (memberships.length === 0) {
-          console.log("📧 No memberships found even after setup, redirecting to customer dashboard");
+          console.log("📧 No memberships found, redirecting to customer dashboard");
           hasRedirected.current = true;
           navigate('/customer/dashboard', { replace: true });
           return;
@@ -58,7 +71,7 @@ export const SessionChecker = () => {
         
         console.log("👤 User role:", role, "org type:", orgType);
         
-        // Only redirect if we're on the root path to avoid redirect loops
+        // Only redirect if we're on the root path
         const currentPath = window.location.pathname;
         
         if (currentPath === '/' || currentPath === '/login') {
@@ -67,7 +80,6 @@ export const SessionChecker = () => {
         }
       } catch (err) {
         console.error("Error checking session:", err);
-        // Don't redirect on error - let user stay on login page
         console.log("⚠️ Error during session check, staying on current page");
       }
     };
