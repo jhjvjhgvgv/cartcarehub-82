@@ -35,15 +35,19 @@ export const ProfileDetailsStep = ({ onComplete, userRole }: ProfileDetailsStepP
 
     setIsSubmitting(true);
     try {
-      // Update user_profiles table
+      // Upsert user_profiles table (insert if missing, update if exists)
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .update({
+        .upsert({
+          id: user.id,
           full_name: data.full_name,
           phone: data.phone,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        }, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        });
 
       if (profileError) throw profileError;
 

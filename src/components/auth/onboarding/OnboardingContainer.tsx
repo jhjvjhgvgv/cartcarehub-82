@@ -21,7 +21,7 @@ const LOADING_TIMEOUT_MS = 15000;
 export const OnboardingContainer = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { profile, loading: profileLoading, refreshProfile } = useUserProfile();
+  const { refreshProfile } = useUserProfile();
   const { 
     status,
     currentStep, 
@@ -35,17 +35,17 @@ export const OnboardingContainer = () => {
     refreshProgress 
   } = useOnboardingProgress();
   
-  const [localStep, setLocalStep] = useState<number>(2); // Default to profile step
+  const [localStep, setLocalStep] = useState<number>(1); // Default to email verification step
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
-  // Derive userRole from portal or user metadata - memoized for stability
+  // Derive userRole directly from user metadata - no profile dependency
   const userRole: 'store' | 'maintenance' = useMemo(() => {
     const metaRole = user?.user_metadata?.role;
-    return profile?.portal === 'provider' ? 'maintenance' : 
-           metaRole === 'maintenance' ? 'maintenance' : 'store';
-  }, [profile?.portal, user?.user_metadata?.role]);
+    return metaRole === 'maintenance' ? 'maintenance' : 'store';
+  }, [user?.user_metadata?.role]);
 
   // Loading timeout to prevent infinite loading
   useEffect(() => {
@@ -230,64 +230,84 @@ export const OnboardingContainer = () => {
     }
   }, [skipOnboarding, navigateToDashboard]);
 
-  // Render step content
+  // Render step content with error handling
   const renderStep = () => {
     console.log('🎯 Rendering step:', localStep, 'userRole:', userRole);
     
-    switch (localStep) {
-      case 1:
-        return (
-          <EmailVerificationStep
-            onComplete={handleEmailVerified}
-          />
-        );
-      
-      case 2:
-        return (
-          <ProfileDetailsStep
-            onComplete={handleProfileComplete}
-            userRole={userRole}
-          />
-        );
-      
-      case 3:
-        if (userRole === 'store') {
+    try {
+      switch (localStep) {
+        case 1:
           return (
-            <StoreLocationStep
-              onComplete={handleStoreLocationComplete}
-              onSkip={handleStoreLocationSkip}
+            <EmailVerificationStep
+              onComplete={handleEmailVerified}
             />
           );
-        } else {
+        
+        case 2:
           return (
-            <MaintenanceVerificationStep
-              onComplete={handleVerificationComplete}
+            <ProfileDetailsStep
+              onComplete={handleProfileComplete}
+              userRole={userRole}
             />
           );
-        }
-      
-      case 4:
-        if (userRole === 'store') {
+        
+        case 3:
+          if (userRole === 'store') {
+            return (
+              <StoreLocationStep
+                onComplete={handleStoreLocationComplete}
+                onSkip={handleStoreLocationSkip}
+              />
+            );
+          } else {
+            return (
+              <MaintenanceVerificationStep
+                onComplete={handleVerificationComplete}
+              />
+            );
+          }
+        
+        case 4:
+          if (userRole === 'store') {
+            return (
+              <ConnectProviderStep
+                onComplete={handleProviderConnected}
+                onSkip={handleOnboardingComplete}
+              />
+            );
+          }
+          // Fall through to default for non-store at step 4
           return (
-            <ConnectProviderStep
-              onComplete={handleProviderConnected}
-              onSkip={handleOnboardingComplete}
-            />
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Completing setup...</p>
+            </div>
           );
-        }
-        // Fall through to default for non-store at step 4
-        return (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Completing setup...</p>
-          </div>
-        );
-      
-      default:
-        return (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Completing setup...</p>
-          </div>
-        );
+        
+        default:
+          return (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Completing setup...</p>
+            </div>
+          );
+      }
+    } catch (error) {
+      console.error('Error rendering step:', error);
+      return (
+        <div className="max-w-2xl mx-auto p-6 text-center space-y-4 bg-card rounded-lg border">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+          <h3 className="text-lg font-semibold">Something went wrong</h3>
+          <p className="text-muted-foreground">We encountered an error loading this step.</p>
+          <Button 
+            onClick={() => {
+              setInitError(null);
+              refreshProgress();
+            }}
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      );
     }
   };
 

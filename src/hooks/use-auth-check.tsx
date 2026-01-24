@@ -68,8 +68,9 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
           if (membershipError) {
             console.error("Error fetching memberships:", membershipError);
             if (mounted) {
-              setIsVerified(false);
-              setRoleCheckComplete(true); // prevent indefinite "Verifying access..." state
+              // Even on error, allow the user through - they may need to complete onboarding
+              setIsVerified(allowedRole ? false : true);
+              setRoleCheckComplete(true);
             }
             return;
           }
@@ -77,7 +78,20 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
           const membershipRole = memberships?.[0]?.role || null;
           const portal = membershipRole ? getPortalFromMembership(membershipRole) : null;
           
-          console.log("🎭 User portal:", portal, "Required role:", allowedRole);
+          console.log("🎭 User portal:", portal, "Required role:", allowedRole, "Has memberships:", (memberships?.length || 0) > 0);
+          
+          // If user has no memberships yet, they need onboarding
+          // Allow them through if no specific role is required
+          if (!memberships || memberships.length === 0) {
+            console.log("⚠️ No memberships found - user needs onboarding");
+            if (mounted) {
+              // No role required = allow through (e.g., onboarding page)
+              // Role required = deny (they can't access role-specific pages yet)
+              setIsVerified(allowedRole ? false : true);
+              setRoleCheckComplete(true);
+            }
+            return;
+          }
           
           // Map allowedRole to portal type for checking
           const roleToPortal: Record<string, PortalRole> = {
@@ -91,7 +105,10 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
             const requiredPortal = roleToPortal[allowedRole];
             if (portal !== requiredPortal) {
               console.log("❌ Portal mismatch, access denied");
-              if (mounted) setIsVerified(false);
+              if (mounted) {
+                setIsVerified(false);
+                setRoleCheckComplete(true);
+              }
               return;
             }
           }
@@ -105,7 +122,8 @@ export function useAuthCheck(allowedRole?: "maintenance" | "store" | "admin") {
         } catch (error) {
           console.error("Error in auth check:", error);
           if (mounted) {
-            setIsVerified(false);
+            // On error, allow access if no role required
+            setIsVerified(allowedRole ? false : true);
             setRoleCheckComplete(true);
           }
         }
