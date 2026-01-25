@@ -13,7 +13,8 @@ export const SupabaseConnectionChecker = ({ setSupabaseReady }: SupabaseConnecti
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
-        const { data, error } = await supabase.from('carts').select('count').limit(1);
+        // Use auth.getSession() for connection check - doesn't require RLS permissions
+        const { error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Supabase connection error:", error.message);
