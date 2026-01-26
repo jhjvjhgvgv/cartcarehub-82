@@ -3,9 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useUserProfile } from "@/hooks/use-user-profile";
-import { ConnectionService } from "@/services/ConnectionService";
-import { StoreConnection } from "@/services/connection/types";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Wifi, 
   WifiOff, 
@@ -16,40 +14,110 @@ import {
   Loader2
 } from "lucide-react";
 
+interface ProviderStoreLink {
+  id: string;
+  provider_org_id: string;
+  store_org_id: string;
+  status: string;
+  created_at: string;
+  store?: { name: string };
+  provider?: { name: string };
+}
+
 export const ConnectionStatusDisplay = () => {
-  const { profile, isMaintenanceUser, isStoreUser } = useUserProfile();
-  const [connections, setConnections] = useState<StoreConnection[]>([]);
+  const [connections, setConnections] = useState<ProviderStoreLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userOrgId, setUserOrgId] = useState<string | null>(null);
+  const [userOrgType, setUserOrgType] = useState<'store' | 'provider' | null>(null);
 
   useEffect(() => {
-    loadConnectionStatus();
-  }, [profile, isMaintenanceUser, isStoreUser]);
+    loadUserContext();
+  }, []);
 
-  const loadConnectionStatus = async () => {
-    if (!profile) return;
-
+  const loadUserContext = async () => {
     try {
-      setLoading(true);
-      let connectionsData: StoreConnection[] = [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      if (isMaintenanceUser) {
-        connectionsData = await ConnectionService.getMaintenanceRequests(profile.id);
-      } else if (isStoreUser) {
-        connectionsData = await ConnectionService.getStoreConnections(profile.company_name || 'unknown');
+      // Get user's organization membership
+      const { data: membership } = await supabase
+        .from('org_memberships')
+        .select('org_id, role, organizations(id, name, type)')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (membership?.organizations) {
+        const org = membership.organizations as any;
+        setUserOrgId(org.id);
+        setUserOrgType(org.type === 'provider' ? 'provider' : 'store');
+        await loadConnections(org.id, org.type);
       }
-
-      setConnections(connectionsData);
     } catch (error) {
-      console.error("Error loading connection status:", error);
+      console.error("Error loading user context:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const loadConnections = async (orgId: string, orgType: string) => {
+    try {
+      let query;
+      
+      if (orgType === 'provider') {
+        // For providers: get stores they're connected to
+        const { data, error } = await supabase
+          .from('provider_store_links')
+          .select('id, provider_org_id, store_org_id, status, created_at')
+          .eq('provider_org_id', orgId);
+
+        if (error) throw error;
+
+        // Fetch store names separately
+        const storeIds = (data || []).map(d => d.store_org_id);
+        const { data: stores } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .in('id', storeIds);
+
+        const storeMap = new Map((stores || []).map(s => [s.id, s.name]));
+        setConnections((data || []).map(link => ({
+          ...link,
+          store: { name: storeMap.get(link.store_org_id) || 'Unknown Store' }
+        })));
+      } else {
+        // For stores: get providers connected to them
+        const { data, error } = await supabase
+          .from('provider_store_links')
+          .select('id, provider_org_id, store_org_id, status, created_at')
+          .eq('store_org_id', orgId);
+
+        if (error) throw error;
+
+        // Fetch provider names separately
+        const providerIds = (data || []).map(d => d.provider_org_id);
+        const { data: providers } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .in('id', providerIds);
+
+        const providerMap = new Map((providers || []).map(p => [p.id, p.name]));
+        setConnections((data || []).map(link => ({
+          ...link,
+          provider: { name: providerMap.get(link.provider_org_id) || 'Unknown Provider' }
+        })));
+      }
+    } catch (error) {
+      console.error("Error loading connections:", error);
+      setConnections([]);
+    }
+  };
+
   const handleRefresh = async () => {
+    if (!userOrgId || !userOrgType) return;
     setRefreshing(true);
-    await loadConnectionStatus();
+    await loadConnections(userOrgId, userOrgType);
     setRefreshing(false);
   };
 
@@ -63,7 +131,7 @@ export const ConnectionStatusDisplay = () => {
 
   const getStatusColor = () => {
     const { active } = getConnectionStats();
-    if (active > 0) return "text-success";
+    if (active > 0) return "text-primary";
     return "text-muted-foreground";
   };
 
@@ -113,7 +181,7 @@ export const ConnectionStatusDisplay = () => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-success">{active}</div>
+            <div className="text-2xl font-bold text-primary">{active}</div>
             <div className="text-sm text-muted-foreground">Active</div>
           </div>
           <div className="text-center">
@@ -130,7 +198,7 @@ export const ConnectionStatusDisplay = () => {
           <Alert>
             <Building className="h-4 w-4" />
             <AlertDescription>
-              No connections yet. Start by sending connection requests to {isMaintenanceUser ? 'stores' : 'maintenance providers'}.
+              No connections yet. Start by sending connection requests to {userOrgType === 'provider' ? 'stores' : 'maintenance providers'}.
             </AlertDescription>
           </Alert>
         ) : (
@@ -138,7 +206,7 @@ export const ConnectionStatusDisplay = () => {
             <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4" />
               <span>
-                Connected to {active} {isMaintenanceUser ? 'store' : 'provider'}{active !== 1 ? 's' : ''}
+                Connected to {active} {userOrgType === 'provider' ? 'store' : 'provider'}{active !== 1 ? 's' : ''}
               </span>
             </div>
             {pending > 0 && (
