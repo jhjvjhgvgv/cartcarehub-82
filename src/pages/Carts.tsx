@@ -5,8 +5,8 @@ import { CartDialog } from "@/components/carts/CartDialog"
 import { CartHeader } from "@/components/carts/CartHeader"
 import { CartListSection } from "@/components/carts/CartListSection"
 import { useCarts } from "@/hooks/use-carts"
+import { useManagedStores } from "@/hooks/use-managed-stores"
 import { Cart, getStatusValue } from "@/types/cart"
-import { managedStores } from "@/constants/stores"
 import { AlertCircle, Loader2, WifiOff, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,9 @@ const filterCarts = (carts: Cart[], filters: CartFilters): Cart[] => {
 }
 
 const Carts = () => {
+  const { data: managedStores = [], isLoading: storesLoading } = useManagedStores()
   console.log("Available managed stores:", managedStores)
+  
   const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart, isSubmitting } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingCart, setEditingCart] = useState<Cart | null>(null)
@@ -125,6 +127,8 @@ const Carts = () => {
     return "Failed to load carts. Please try again later."
   }
 
+  const isPageLoading = isLoading || storesLoading
+
   if (error) {
     return (
       <DashboardLayout>
@@ -178,7 +182,7 @@ const Carts = () => {
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
         <CartHeader onAddClick={() => setIsAddDialogOpen(true)} />
-        {isLoading ? (
+        {isPageLoading ? (
           <div className="flex flex-col items-center justify-center p-8 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground text-sm">Loading carts data...</p>
