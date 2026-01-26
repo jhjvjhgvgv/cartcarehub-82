@@ -46,7 +46,8 @@ export const ProviderVerificationPanel = () => {
         .from('provider_verifications')
         .select(`
           *,
-          organization:organizations(name)
+          organization:organizations(name),
+          user_profile:user_profiles(full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -57,6 +58,7 @@ export const ProviderVerificationPanel = () => {
         ...v,
         status: v.status as 'pending' | 'approved' | 'rejected',
         organization: v.organization as unknown as { name: string } | undefined,
+        user_profile: v.user_profile as unknown as { full_name: string | null } | undefined,
       }));
       
       setVerifications(transformed);
