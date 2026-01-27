@@ -1,52 +1,46 @@
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Mail, Building, Search, Users, AlertCircle } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Mail, Search, Users, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { DatabaseConnectionService } from "@/services/connection/database-connection-service"
-import { useUserProfile } from "@/hooks/use-user-profile"
-import { generateStoreId } from "@/utils/store-id-utils"
+import { supabase } from "@/integrations/supabase/client"
 
 interface ConnectionDialogProps {
   isDialogOpen: boolean
   setIsDialogOpen: (open: boolean) => void
   isMaintenance: boolean
   currentUserId: string
+  userOrgId?: string
 }
 
 export function ConnectionDialog({ 
   isDialogOpen, 
   setIsDialogOpen, 
   isMaintenance, 
-  currentUserId 
+  currentUserId,
+  userOrgId
 }: ConnectionDialogProps) {
   const [email, setEmail] = useState("")
-  const [storeId, setStoreId] = useState("")
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-  const { profile } = useUserProfile()
 
-  const handleSendRequest = async () => {
-    if (!email.trim() && !storeId.trim()) {
+  const handleSendInvitation = async () => {
+    if (!email.trim()) {
       toast({
-        title: "Information required",
-        description: isMaintenance 
-          ? "Please enter a store email or store ID" 
-          : "Please enter a maintenance provider email",
+        title: "Email required",
+        description: "Please enter an email address",
         variant: "destructive"
       })
       return
     }
 
-    if (!currentUserId) {
+    if (!userOrgId) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to send connection requests",
+        title: "Organization not found",
+        description: "Please complete your profile setup first",
         variant: "destructive"
       })
       return
@@ -54,57 +48,29 @@ export function ConnectionDialog({
 
     setLoading(true)
     try {
-      let success = false
-      let message = ""
+      // Use the invite_user_to_org RPC
+      const role = isMaintenance ? 'store_admin' : 'provider_tech'
+      
+      const { data, error } = await supabase.rpc('invite_user_to_org', {
+        p_org_id: userOrgId,
+        p_email: email.trim().toLowerCase(),
+        p_role: role as any,
+        p_provider_org_id: isMaintenance ? userOrgId : null
+      })
 
-      if (isMaintenance) {
-        // Maintenance provider connecting to store
-        // Use store ID input or derive from email for consistency
-        const targetStoreId = storeId.trim() || (email.includes('@') ? email.split('@')[1] : email)
-        
-        // Get maintenance provider ID from profile using user ID
-        const provider = await DatabaseConnectionService.getMaintenanceProviderByUserId(currentUserId)
-        if (!provider) {
-          toast({
-            title: "Provider not found",
-            description: "Your maintenance provider profile could not be found. Please complete your profile setup.",
-            variant: "destructive"
-          })
-          return
-        }
+      if (error) throw error
 
-        success = await DatabaseConnectionService.requestConnection(targetStoreId, provider.id)
-        message = success 
-          ? `Connection request sent to store: ${targetStoreId}`
-          : "Failed to send connection request. A connection may already exist."
-      } else {
-        // Store connecting to maintenance provider - use standardized store ID
-        const userStoreId = generateStoreId(profile)
-        console.log('ConnectionDialog: Using store ID:', userStoreId, 'for profile:', profile)
-        const result = await DatabaseConnectionService.requestConnectionByEmail(userStoreId, email)
-        success = result.success
-        message = result.message
-      }
-
-      if (success) {
-        toast({
-          title: "Request sent",
-          description: message
-        })
-        setEmail("")
-        setStoreId("")
-        setIsDialogOpen(false)
-      } else {
-        toast({
-          title: "Request failed", 
-          description: message,
-          variant: "destructive"
-        })
-      }
-    } catch (error: any) {
-      console.error("Error sending connection request:", error)
       toast({
-        title: "Error",
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${email}`,
+      })
+      
+      setEmail("")
+      setIsDialogOpen(false)
+    } catch (error: any) {
+      console.error("Error sending invitation:", error)
+      toast({
+        title: "Failed to send invitation",
         description: error.message || "An unexpected error occurred",
         variant: "destructive"
       })
@@ -115,7 +81,6 @@ export function ConnectionDialog({
 
   const resetForm = () => {
     setEmail("")
-    setStoreId("")
   }
 
   return (
@@ -127,12 +92,12 @@ export function ConnectionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            {isMaintenance ? "Connect to Store" : "Connect to Maintenance Provider"}
+            {isMaintenance ? "Invite Store" : "Invite Maintenance Provider"}
           </DialogTitle>
           <DialogDescription>
             {isMaintenance 
-              ? "Send a connection request to a store that needs maintenance services"
-              : "Find and connect with a maintenance provider for your shopping carts"
+              ? "Send an invitation to a store that needs maintenance services"
+              : "Invite a maintenance provider to manage your shopping carts"
             }
           </DialogDescription>
         </DialogHeader>
@@ -142,28 +107,10 @@ export function ConnectionDialog({
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Search className="h-4 w-4" />
-                Connection Details
+                Invitation Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isMaintenance ? (
-                <>
-                  <div>
-                    <Label htmlFor="storeId">Store ID (Optional)</Label>
-                    <Input
-                      id="storeId"
-                      placeholder="store-12345"
-                      value={storeId}
-                      onChange={(e) => setStoreId(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>Or enter store email to auto-generate ID</span>
-                  </div>
-                </>
-              ) : null}
-              
               <div>
                 <Label htmlFor="email">
                   {isMaintenance ? "Store Email" : "Maintenance Provider Email"}
@@ -174,8 +121,11 @@ export function ConnectionDialog({
                   placeholder={isMaintenance ? "store@retailchain.com" : "maintenance@provider.com"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !loading && handleSendRequest()}
+                  onKeyDown={(e) => e.key === 'Enter' && !loading && handleSendInvitation()}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  They will receive an email invitation to connect with your organization
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -189,12 +139,15 @@ export function ConnectionDialog({
               Cancel
             </Button>
             <Button 
-              onClick={handleSendRequest}
-              disabled={loading || (!email.trim() && !storeId.trim())}
+              onClick={handleSendInvitation}
+              disabled={loading || !email.trim()}
               className="flex items-center gap-2"
             >
-              <Mail className="h-4 w-4" />
-              {loading ? "Sending..." : "Send Request"}
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+              ) : (
+                <><Mail className="h-4 w-4" /> Send Invitation</>
+              )}
             </Button>
           </div>
         </div>

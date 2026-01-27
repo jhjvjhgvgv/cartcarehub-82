@@ -16,6 +16,7 @@ interface CartFormProps {
   onSubmit: (data: CartFormValues) => void
   onCancel: () => void
   disabled?: boolean
+  stores?: Array<{ id: string; name: string }>
 }
 
 export function CartForm({ 
@@ -23,12 +24,13 @@ export function CartForm({
   onSubmit, 
   onCancel, 
   disabled = false,
+  stores = [],
 }: CartFormProps) {
   const form = useForm<CartFormValues>({
     resolver: zodResolver(cartFormSchema),
     defaultValues: initialData || {
       qr_token: "",
-      store_org_id: "",
+      store_org_id: stores[0]?.id || "",
       status: "in_service",
       notes: "",
       asset_tag: "",
@@ -67,7 +69,7 @@ export function CartForm({
               <FormItem>
                 <FormLabel>QR Token</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Enter QR token" disabled={disabled} />
+                  <Input {...field} placeholder="Enter QR token (auto-generated if empty)" disabled={disabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -93,10 +95,27 @@ export function CartForm({
             name="store_org_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Store Organization ID</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Store org ID" disabled={disabled} />
-                </FormControl>
+                <FormLabel>Store</FormLabel>
+                {stores.length > 0 ? (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={disabled}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a store" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-popover">
+                      {stores.map((store) => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <FormControl>
+                    <Input {...field} placeholder="No stores available" disabled />
+                  </FormControl>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -114,7 +133,7 @@ export function CartForm({
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-popover">
                     <SelectItem value="in_service">Active</SelectItem>
                     <SelectItem value="out_of_service">Maintenance</SelectItem>
                     <SelectItem value="retired">Retired</SelectItem>
@@ -158,7 +177,7 @@ export function CartForm({
           <Button type="button" variant="outline" onClick={onCancel} disabled={disabled}>
             Cancel
           </Button>
-          <Button type="submit" disabled={disabled}>
+          <Button type="submit" disabled={disabled || stores.length === 0}>
             {disabled ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save Changes'}
           </Button>
         </div>

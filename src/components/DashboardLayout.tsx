@@ -4,7 +4,6 @@ import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut } from "lucide-r
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { TestModeIndicator } from "./ui/test-mode-indicator";
 import { useEffect, useState } from "react";
 import { ConnectionService } from "@/services/ConnectionService";
 import { isNewAccountSession, setNewAccountSessionFlag, clearFlagsOnSettingsNavigation } from "@/services/connection/storage-utils";
@@ -181,7 +180,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             {children}
           </div>
         </main>
-        <TestModeIndicator />
       </div>
     </SidebarProvider>
   );

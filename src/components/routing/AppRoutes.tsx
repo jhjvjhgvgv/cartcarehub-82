@@ -19,6 +19,7 @@ import CustomerDashboard from "@/pages/customer/Dashboard";
 import CartStatus from "@/pages/customer/CartStatus";
 import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
+import Inspection from "@/pages/Inspection";
 import { ProfileSetup } from "@/components/auth/ProfileSetup";
 import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
@@ -34,6 +35,9 @@ export const AppRoutes = () => {
       <Route path="/error-recovery" element={<ErrorRecovery error="Authentication error occurred" />} />
       <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} skipOnboardingCheck />} />
       <Route path="/onboarding" element={<ProtectedRoute element={<OnboardingContainer />} skipOnboardingCheck />} />
+      
+      {/* Inspection route - accessible to both roles */}
+      <Route path="/inspection" element={<ProtectedRoute element={<Inspection />} />} />
       
       {/* Master Admin Routes - Separate authentication system */}
       <Route path="/master-admin" element={<MasterAdminLogin />} />
