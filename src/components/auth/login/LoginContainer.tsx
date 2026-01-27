@@ -6,7 +6,6 @@ import { BuildInfo } from "@/components/auth/BuildInfo";
 import { ConnectionWarning } from "./ConnectionWarning";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PortalSelection } from "@/components/auth/PortalSelection";
-import { TestMode } from "@/components/auth/TestMode";
 import { RefreshButton } from "./RefreshButton";
 
 type UserRole = "maintenance" | "store";
@@ -22,7 +21,6 @@ export const LoginContainer = ({ buildVersion, supabaseReady }: LoginContainerPr
   const [selectedPortal, setSelectedPortal] = useState<UserRole | null>(null);
   const { refreshing, handleRefresh } = RefreshButton({ 
     onRefresh: () => {
-      // Force reload the page
       window.location.reload();
     }
   });
@@ -39,21 +37,8 @@ export const LoginContainer = ({ buildVersion, supabaseReady }: LoginContainerPr
     setSelectedPortal(null);
   }, []);
 
-  const enterTestMode = useCallback((role: UserRole) => {
-    // Important: Clear the new account flag when entering test mode
-    localStorage.removeItem('isNewAccountSession');
-    
-    localStorage.setItem("testMode", "true");
-    localStorage.setItem("testRole", role);
-    if (role === "maintenance") {
-      navigate("/dashboard");
-    } else {
-      navigate("/customer/dashboard");
-    }
-  }, [navigate]);
-
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-primary/60">
       <div className="w-full max-w-md px-6 py-8 flex flex-col gap-8">
         <Logo />
         <BuildInfo 
@@ -67,14 +52,11 @@ export const LoginContainer = ({ buildVersion, supabaseReady }: LoginContainerPr
         {selectedPortal ? (
           <AuthForm selectedRole={selectedPortal} onBack={handleBack} />
         ) : (
-          <>
-            <PortalSelection onPortalClick={handlePortalClick} />
-            <TestMode onEnterTestMode={enterTestMode} />
-          </>
+          <PortalSelection onPortalClick={handlePortalClick} />
         )}
       </div>
 
-      <div className="absolute bottom-2 text-xs text-white/40">
+      <div className="absolute bottom-2 text-xs text-primary-foreground/40">
         Version: {buildVersion}
       </div>
     </div>

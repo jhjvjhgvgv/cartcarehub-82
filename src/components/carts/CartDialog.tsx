@@ -30,12 +30,10 @@ export function CartDialog({
   const cartIds = isMultipleEdit ? editingCart?.id.split(",") : []
 
   useEffect(() => {
-    console.log('Dialog state changed:', { isOpen, editingCart })
+    // Dialog state tracking for debugging if needed
   }, [isOpen, editingCart])
 
   const handleSubmit = (data: any) => {
-    console.log('Dialog handleSubmit called with:', data)
-    console.log('Using managedStores:', managedStores)
     
     if (!data.store_org_id) {
       console.error("Missing store selection in form data:", data)
@@ -120,6 +118,7 @@ export function CartDialog({
                   notes: "",
                 }}
                 disabled={isSubmitting}
+                stores={managedStores}
               />
             )}
           </div>
