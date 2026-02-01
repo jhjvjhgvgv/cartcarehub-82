@@ -20,6 +20,7 @@ import CartStatus from "@/pages/customer/CartStatus";
 import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
 import Inspection from "@/pages/Inspection";
+import StoreCarts from "@/pages/store/StoreCarts";
 import { ProfileSetup } from "@/components/auth/ProfileSetup";
 import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
@@ -42,7 +43,7 @@ export const AppRoutes = () => {
       {/* Master Admin Routes - Separate authentication system */}
       <Route path="/master-admin" element={<MasterAdminLogin />} />
       
-      {/* Maintenance Routes - Protected with test mode support */}
+      {/* Maintenance Routes - Protected */}
       <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedRole="maintenance" />} />
       <Route path="/carts" element={<ProtectedRoute element={<Carts />} allowedRole="maintenance" />} />
       <Route path="/carts/:cartId" element={<ProtectedRoute element={<CartDetails />} allowedRole="maintenance" />} />
@@ -55,12 +56,13 @@ export const AppRoutes = () => {
       } />
       <Route path="/store/:id" element={<ProtectedRoute element={<Store />} allowedRole="maintenance" />} />
       
-      {/* Customer routes - Protected with test mode support */}
+      {/* Customer/Store routes - Protected */}
       <Route path="/customer/dashboard" element={<ProtectedRoute element={<CustomerDashboard />} allowedRole="store" />} />
       <Route path="/customer/cart-status" element={<ProtectedRoute element={<CartStatus />} allowedRole="store" />} />
       <Route path="/customer/cart/:cartId" element={<ProtectedRoute element={<CartDetails />} allowedRole="store" />} />
       <Route path="/customer/report-issue" element={<ProtectedRoute element={<ReportIssue />} allowedRole="store" />} />
       <Route path="/customer/settings" element={<ProtectedRoute element={<CustomerSettings />} allowedRole="store" />} />
+      <Route path="/customer/carts" element={<ProtectedRoute element={<StoreCarts />} allowedRole="store" />} />
     </Routes>
   );
 };

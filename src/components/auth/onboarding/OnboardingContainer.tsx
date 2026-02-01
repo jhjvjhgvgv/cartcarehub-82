@@ -97,25 +97,15 @@ export const OnboardingContainer = () => {
   useEffect(() => {
     // Don't calculate until we have both user and status
     if (!user || !status) {
-      console.log('📋 Waiting for user/status...', { user: !!user, status: !!status });
       return;
     }
     
     // Don't recalculate if already redirecting
     if (isRedirecting) {
-      console.log('📋 Already redirecting, skipping calculation');
       return;
     }
     
-    console.log('📋 Onboarding step calculation:', { 
-      status, 
-      userRole,
-      isRedirecting,
-      currentLocalStep: localStep
-    });
-    
     if (status.onboarding_completed || status.skipped_at) {
-      console.log('📋 Onboarding already completed, redirecting...');
       navigateToDashboard();
       return;
     }
@@ -137,13 +127,11 @@ export const OnboardingContainer = () => {
       if (!status.verification_submitted) {
         step = 3;
       } else {
-        console.log('📋 Maintenance onboarding complete, redirecting...');
         navigateToDashboard();
         return;
       }
     }
     
-    console.log('📋 Setting step to:', step);
     setLocalStep(step);
   }, [user, status, userRole, isRedirecting, navigateToDashboard, localStep]);
 
@@ -232,7 +220,6 @@ export const OnboardingContainer = () => {
 
   // Render step content with error handling
   const renderStep = () => {
-    console.log('🎯 Rendering step:', localStep, 'userRole:', userRole);
     
     try {
       switch (localStep) {

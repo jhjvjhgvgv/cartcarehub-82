@@ -1,18 +1,14 @@
-
 import React from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MaintenanceSettings from "@/components/settings/MaintenanceSettings";
-import { StoreMaintenanceManager } from "@/components/settings/StoreMaintenanceManager";
 import { MaintenanceConnectionManager } from "@/components/settings/MaintenanceConnectionManager";
 import { ImprovedConnectionsManager } from "@/components/settings/ImprovedConnectionsManager";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
-import { DevModeInstructions } from "@/components/settings/DevModeInstructions";
 import { ProviderVerificationPanel } from "@/components/settings/ProviderVerificationPanel";
 import { ConnectionStatusDisplay } from "@/components/settings/ConnectionStatusDisplay";
 import { ProfileCompletionCard } from "@/components/settings/ProfileCompletionCard";
@@ -24,9 +20,6 @@ import { DesignNotes } from "@/components/settings/DesignNotes";
 const Settings = () => {
   const { toast } = useToast();
   const { isMaintenanceUser } = useUserProfile();
-  const [testMode, setTestMode] = React.useState(
-    localStorage.getItem("testMode") === "true"
-  );
 
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,24 +27,6 @@ const Settings = () => {
       title: "Settings Updated",
       description: "Your notification settings have been saved.",
     });
-  };
-
-  const toggleTestMode = () => {
-    const newValue = !testMode;
-    setTestMode(newValue);
-    if (newValue) {
-      localStorage.setItem("testMode", "true");
-      toast({
-        title: "Test Mode Enabled",
-        description: "You can now access test features.",
-      });
-    } else {
-      localStorage.removeItem("testMode");
-      toast({
-        title: "Test Mode Disabled",
-        description: "Test features are now hidden.",
-      });
-    }
   };
 
   return (
@@ -145,19 +120,6 @@ const Settings = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="test-mode" className="flex flex-col space-y-1">
-                    <span>Test Mode</span>
-                    <span className="font-normal text-sm text-muted-foreground">
-                      Enable test features and data
-                    </span>
-                  </Label>
-                  <Switch
-                    id="test-mode"
-                    checked={testMode}
-                    onCheckedChange={toggleTestMode}
-                  />
-                </div>
-                <div className="flex items-center justify-between space-x-2">
                   <Label htmlFor="console-logs" className="flex flex-col space-y-1">
                     <span>Verbose Console Logs</span>
                     <span className="font-normal text-sm text-muted-foreground">
@@ -170,8 +132,6 @@ const Settings = () => {
             </Card>
 
             <AppDataManager />
-
-            <DevModeInstructions show={testMode} />
           </TabsContent>
         </Tabs>
         

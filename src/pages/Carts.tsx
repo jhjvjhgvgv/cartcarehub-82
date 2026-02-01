@@ -35,7 +35,6 @@ const filterCarts = (carts: Cart[], filters: CartFilters): Cart[] => {
 
 const Carts = () => {
   const { data: managedStores = [], isLoading: storesLoading } = useManagedStores()
-  console.log("Available managed stores:", managedStores)
   
   const { carts, isLoading, error, isRetrying, retryFetchCarts, handleSubmit, handleDeleteCart, isSubmitting } = useCarts()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)

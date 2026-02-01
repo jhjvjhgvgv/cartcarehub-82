@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode"
 import { useToast } from "@/hooks/use-toast"
@@ -42,29 +41,34 @@ export function useQRScanner({
           }
           setIsScanning(false)
           
-          // Check if the QR code format is valid
-          if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
-            // Super aggressive cache busting with multiple parameters
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(2);
-            const random2 = Math.random().toString(36).substring(2);
-            onQRCodeDetected(decodedText + 
-              `?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`)
-          } else if (decodedText.includes("/carts/")) {
-            // Handle URL format with hyper-aggressive cache busting
-            const separator = decodedText.includes("?") ? "&" : "?";
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(2);
-            const random2 = Math.random().toString(36).substring(2);
-            onQRCodeDetected(decodedText + 
-              `${separator}_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`)
-          } else {
-            toast({
-              title: "Invalid QR Code",
-              description: "The scanned QR code doesn't match the expected format for a cart.",
-              variant: "destructive",
-            })
+          // Extract QR token from scanned text
+          let qrToken = decodedText;
+          
+          // Handle URL format (e.g., https://domain.com/inspection?qr=CART-xxx)
+          if (decodedText.includes('/inspection?qr=')) {
+            try {
+              const url = new URL(decodedText);
+              qrToken = url.searchParams.get('qr') || decodedText;
+            } catch {
+              // If URL parsing fails, continue with original text
+            }
           }
+          // Handle direct cart QR codes
+          else if (decodedText.startsWith("CART-") || decodedText.startsWith("QR-")) {
+            qrToken = decodedText.split('?')[0]; // Remove cache-busting params
+          }
+          // Handle URL format with cart path
+          else if (decodedText.includes("/carts/")) {
+            // Extract cart ID from URL
+            const match = decodedText.match(/\/carts\/([^/?]+)/);
+            if (match) {
+              qrToken = match[1];
+            }
+          }
+          
+          // Navigate to inspection page with QR token
+          window.location.href = `/inspection?qr=${encodeURIComponent(qrToken)}`;
+          
         } catch (error) {
           console.error("Error during QR scan:", error)
           toast({
@@ -82,11 +86,6 @@ export function useQRScanner({
             !errorMessage.includes("no barcode") && 
             !errorMessage.includes("no multiformat readers")) {
           console.error("QR Scanner error:", err)
-          toast({
-            title: "Scan Error", 
-            description: "Failed to scan QR code. Please try again.",
-            variant: "destructive",
-          })
         }
       }
 
@@ -105,15 +104,14 @@ export function useQRScanner({
         }
       }
     }
-  }, [isScanning, onQRCodeDetected, toast])
+  }, [isScanning, toast])
 
   const handleTestScan = () => {
-    // Generate a valid QR code for testing with super aggressive cache busting
+    // Generate a valid QR code for testing and navigate to inspection
     const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2);
-    const random2 = Math.random().toString(36).substring(2);
-    const testCode = `CART-${random.substring(0,8)}-${timestamp.toString().substring(8)}?_t=${timestamp}&_r=${random}&_v=${timestamp}_${random}&_ts=${timestamp}&_rnd=${random2}&forceUpdate=true&nocache=true&flush=cache&invalidate=${timestamp}_${random}`;
-    onQRCodeDetected(testCode)
+    const random = Math.random().toString(36).substring(2, 10);
+    const testCode = `CART-${random}-${timestamp.toString().substring(8)}`;
+    window.location.href = `/inspection?qr=${encodeURIComponent(testCode)}`;
   }
 
   return {
