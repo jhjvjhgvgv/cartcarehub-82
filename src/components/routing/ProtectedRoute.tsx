@@ -11,8 +11,6 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = false }: ProtectedRouteProps) => {
-  const testMode = localStorage.getItem("testMode");
-  const testRole = localStorage.getItem("testRole");
   const { user, isLoading } = useAuth();
   const { isAuthenticated, isVerified, roleCheckComplete } = useAuthCheck(allowedRole);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
@@ -21,7 +19,7 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   // Check onboarding status
   useEffect(() => {
     const checkOnboarding = async () => {
-      if (!user || skipOnboardingCheck || testMode === "true") {
+      if (!user || skipOnboardingCheck) {
         setOnboardingChecked(true);
         return;
       }
@@ -34,7 +32,6 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
           .maybeSingle();
         
         if (error) {
-          console.error('Error checking onboarding:', error);
           setOnboardingChecked(true);
           return;
         }
@@ -45,7 +42,6 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
         }
         setOnboardingChecked(true);
       } catch (err) {
-        console.error('Onboarding check failed:', err);
         setOnboardingChecked(true);
       }
     };
@@ -53,27 +49,10 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
     if (isAuthenticated && user) {
       checkOnboarding();
     }
-  }, [user, isAuthenticated, skipOnboardingCheck, testMode]);
-  
-  console.log("🛡️ ProtectedRoute", { allowedRole, isAuthenticated, isVerified, roleCheckComplete, testMode, isLoading, onboardingChecked, needsOnboarding });
-  
-  // If test mode is enabled, allow access with the correct role
-  if (testMode === "true") {
-    console.log("🧪 Test mode active, role:", testRole);
-    if (!allowedRole || allowedRole === testRole) {
-      return <>{element}</>;
-    } else {
-      // If test mode is enabled but wrong role, redirect to appropriate dashboard
-      const redirectPath = testRole === "maintenance" ? "/dashboard" : 
-                          testRole === "admin" ? "/admin" : "/customer/dashboard";
-      console.log("🔀 Test mode redirect to:", redirectPath);
-      return <Navigate to={redirectPath} replace />;
-    }
-  }
+  }, [user, isAuthenticated, skipOnboardingCheck]);
   
   // Still checking auth status - wait for complete verification
   if (isLoading || !roleCheckComplete || isAuthenticated === null || isVerified === null) {
-    console.log("⏳ Still verifying access...", { isLoading, roleCheckComplete, isAuthenticated, isVerified });
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -86,7 +65,6 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   
   // Not authenticated, redirect to login
   if (!isAuthenticated) {
-    console.log("❌ Not authenticated, redirecting to login");
     return <Navigate to="/" replace />;
   }
   
@@ -104,20 +82,15 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   
   // Redirect to onboarding if needed
   if (needsOnboarding) {
-    console.log("📋 Redirecting to onboarding");
     return <Navigate to="/onboarding" replace />;
   }
   
   // If verification failed, handle gracefully
   if (isVerified === false) {
-    console.log("❌ Verification failed");
-    
     // If we have a user but wrong role, redirect to appropriate dashboard
     if (user && isAuthenticated) {
-      // Redirect based on allowed role
       const redirectPath = allowedRole === "maintenance" ? "/customer/dashboard" : 
                           allowedRole === "admin" ? "/customer/dashboard" : "/dashboard";
-      console.log("🔀 Redirecting to:", redirectPath);
       return <Navigate to={redirectPath} replace />;
     }
     
@@ -126,6 +99,5 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   }
   
   // All checks passed, render the protected element
-  console.log("✅ Access granted");
   return <>{element}</>;
 };
