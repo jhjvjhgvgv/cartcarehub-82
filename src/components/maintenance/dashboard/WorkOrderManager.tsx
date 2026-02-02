@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ClipboardList, 
   Clock, 
@@ -17,10 +18,13 @@ import {
   Play,
   Square,
   Search,
+  Plus,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useManagedStores } from "@/hooks/use-managed-stores";
 
 interface WorkOrder {
   id: string;
@@ -47,7 +51,13 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('new');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newOrderStoreId, setNewOrderStoreId] = useState('');
+  const [newOrderSummary, setNewOrderSummary] = useState('');
+  const [newOrderNotes, setNewOrderNotes] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const { data: managedStores = [] } = useManagedStores();
 
   useEffect(() => {
     const fetchWorkOrders = async () => {
@@ -190,19 +200,155 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
     );
   }
 
+  const createWorkOrder = async () => {
+    if (!newOrderStoreId) {
+      toast({
+        title: "Error",
+        description: "Please select a store",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from('work_orders')
+        .insert({
+          store_org_id: newOrderStoreId,
+          summary: newOrderSummary || 'New Work Order',
+          notes: newOrderNotes || null,
+          status: 'new'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const selectedStore = managedStores.find(s => s.id === newOrderStoreId);
+      
+      setWorkOrders(prev => [{
+        id: data.id,
+        store_org_id: data.store_org_id,
+        store_name: selectedStore?.name || 'Unknown Store',
+        status: data.status as WorkOrder['status'],
+        summary: data.summary || undefined,
+        notes: data.notes || undefined,
+        scheduled_at: data.scheduled_at || undefined,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      }, ...prev]);
+
+      toast({
+        title: "Work Order Created",
+        description: "New work order has been created successfully",
+      });
+
+      setIsCreateDialogOpen(false);
+      setNewOrderStoreId('');
+      setNewOrderSummary('');
+      setNewOrderNotes('');
+    } catch (error) {
+      console.error('Error creating work order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create work order",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5" />
-          Work Order Manager
-        </CardTitle>
-        <CardDescription>
-          Manage and track maintenance work orders across all locations
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />
+              Work Order Manager
+            </CardTitle>
+            <CardDescription>
+              Manage and track maintenance work orders across all locations
+            </CardDescription>
+          </div>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Work Order
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Work Order</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="store">Store *</Label>
+                  <Select value={newOrderStoreId} onValueChange={setNewOrderStoreId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a store" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {managedStores.map(store => (
+                        <SelectItem key={store.id} value={store.id}>
+                          {store.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="summary">Summary</Label>
+                  <Input
+                    id="summary"
+                    value={newOrderSummary}
+                    onChange={(e) => setNewOrderSummary(e.target.value)}
+                    placeholder="Brief description of the work"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={newOrderNotes}
+                    onChange={(e) => setNewOrderNotes(e.target.value)}
+                    placeholder="Additional details..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={createWorkOrder} disabled={isCreating || !newOrderStoreId}>
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
         
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
           <div className="space-y-2">
             <Label htmlFor="search">Search Orders</Label>
             <div className="relative">
@@ -226,9 +372,9 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="new">New</SelectItem>
-                <SelectItem value="assigned">Assigned</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
                 <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="complete">Complete</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>
