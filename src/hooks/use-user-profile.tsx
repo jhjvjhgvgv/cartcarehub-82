@@ -11,6 +11,8 @@ export interface UserProfile {
   // Derived from org_memberships
   portal?: 'store' | 'provider' | 'corp';
   membership_role?: string;
+  org_id?: string;
+  org_name?: string;
   // Legacy compatibility fields (mapped from new schema)
   display_name?: string;
   company_name?: string;
@@ -61,19 +63,19 @@ export const useUserProfile = () => {
         setError(fetchError.message);
       }
 
-      // Fetch memberships to determine role/portal
+      // Fetch memberships to determine role/portal and get org info
       const { data: memberships } = await supabase
         .from('org_memberships')
-        .select('role, org_id')
+        .select('role, org_id, organizations(id, name)')
         .eq('user_id', user.id)
         .limit(1);
 
-      console.log('🔍 User memberships:', memberships);
-
-      const membershipRole = memberships?.[0]?.role || undefined;
+      const membership = memberships?.[0];
+      const membershipRole = membership?.role || undefined;
+      const orgId = membership?.org_id || undefined;
+      const orgData = membership?.organizations as { id: string; name: string } | null;
+      const orgName = orgData?.name || undefined;
       const portal = membershipRole ? getPortalFromMembership(membershipRole) : undefined;
-
-      console.log('🔍 Derived portal:', portal, 'from role:', membershipRole);
 
       // Get role from user metadata if no membership yet (new user during onboarding)
       const metaRole = user.user_metadata?.role;
@@ -98,8 +100,11 @@ export const useUserProfile = () => {
         updated_at: profileData?.updated_at,
         portal: derivedPortal,
         membership_role: membershipRole,
+        org_id: orgId,
+        org_name: orgName,
         // Legacy compatibility mappings
         display_name: profileData?.full_name || undefined,
+        company_name: orgName,
         contact_phone: profileData?.phone || undefined,
         role: legacyRole,
         email: user.email,

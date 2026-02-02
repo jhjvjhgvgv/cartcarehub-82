@@ -71,6 +71,7 @@ export function StoreConnectionsManager() {
         setIsDialogOpen={setIsDialogOpen}
         isMaintenance={isMaintenance}
         currentUserId={currentUser.id}
+        userOrgId={profile?.org_id}
       />
     </Card>
   );
