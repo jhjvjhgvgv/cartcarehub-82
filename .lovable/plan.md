@@ -65,6 +65,34 @@ Added route in `src/components/routing/AppRoutes.tsx`:
 
 ---
 
+## Phase 6: Store-Provider Connection Fix ✅
+
+Fixed connection management to use proper org IDs:
+
+**`src/hooks/use-user-profile.tsx`**:
+- Added `org_id` and `org_name` to UserProfile interface
+- Fetches organization data with memberships via join
+- Sets `company_name` from organization name
+
+**`src/components/settings/StoreConnectionsManager.tsx`**:
+- Now passes `userOrgId={profile?.org_id}` to ConnectionDialog
+
+**`src/components/settings/MaintenanceConnectionManager.tsx`**:
+- Now passes `userOrgId={profile?.org_id}` to ConnectionDialog
+
+**`src/components/settings/ConnectedStoresList.tsx`**:
+- Uses `profile.org_id` instead of `profile.id` for loading connections
+- Displays organization names instead of UUIDs
+
+**`src/services/connection/database-connection-service.ts`**:
+- Updated `getStoreConnections` to fetch provider org names via join
+- Updated `getMaintenanceRequests` to fetch store org names via join
+
+**`src/services/connection/types.ts`**:
+- Added `storeName` and `providerName` optional fields to StoreConnection
+
+---
+
 ## Summary
 
 The application is now production-ready with:
@@ -75,3 +103,5 @@ The application is now production-ready with:
 - ✅ Clean codebase without debug artifacts
 - ✅ Store users can access their carts page
 - ✅ Proper authentication flows using server-side validation
+- ✅ Store-provider connections use proper org IDs
+- ✅ Connection UI displays organization names

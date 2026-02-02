@@ -23,7 +23,9 @@ export interface UserAccount {
 export interface StoreConnection {
   id: string;
   storeId: string;
+  storeName?: string;
   maintenanceId: string;
+  providerName?: string;
   status: "pending" | "active" | "rejected";
   requestedAt: string;
   connectedAt?: string;

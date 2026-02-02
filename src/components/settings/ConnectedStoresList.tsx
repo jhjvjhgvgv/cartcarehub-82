@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { StoreForm } from "./store/StoreForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRealtimeConnections } from "@/hooks/use-realtime-connections";
-import { getConnectionStatusInfo, getStoreDisplayInfo } from "@/utils/connection-display-utils";
+import { getConnectionStatusInfo } from "@/utils/connection-display-utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface ConnectedStoresListProps {
@@ -29,34 +29,18 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
   const { toast } = useToast();
 
   const loadConnections = useCallback(async () => {
-    if (!profile?.id) return;
+    if (!profile?.org_id) return;
     
     setLoading(true);
     try {
       let connectionData: StoreConnection[] = [];
       
       if (isMaintenance) {
-        // For maintenance users, get their connection requests
-        connectionData = await DatabaseConnectionService.getMaintenanceRequests(profile.id);
+        // For maintenance users, get their provider org's connected stores
+        connectionData = await DatabaseConnectionService.getMaintenanceRequests(profile.org_id);
       } else {
-        // For store users, get their connections with maintenance providers
-        // Use both company name and email domain to search for connections
-        const possibleStoreIds = [
-          profile.company_name || "default-store",
-          profile.email?.split('@')[1] || "default-store",
-          `store-${profile.id}` // fallback using user ID
-        ];
-        
-        // Try to get connections using any of the possible store IDs
-        for (const storeId of possibleStoreIds) {
-          const storeConnections = await DatabaseConnectionService.getStoreConnections(storeId);
-          connectionData = connectionData.concat(storeConnections);
-        }
-        
-        // Remove duplicates based on connection ID
-        connectionData = connectionData.filter((conn, index, self) => 
-          index === self.findIndex(c => c.id === conn.id)
-        );
+        // For store users, get their store org's connected providers
+        connectionData = await DatabaseConnectionService.getStoreConnections(profile.org_id);
       }
       
       setConnections(connectionData);
@@ -70,7 +54,7 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
     } finally {
       setLoading(false);
     }
-  }, [profile?.id, profile?.company_name, profile?.email, isMaintenance, toast]);
+  }, [profile?.org_id, isMaintenance, toast]);
 
   const { isConnected: realtimeConnected } = useRealtimeConnections(loadConnections);
 
@@ -164,10 +148,12 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                         <Store className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <div className="font-medium">
-                            {isMaintenance ? getStoreDisplayInfo(connection.storeId).name : `Provider ${connection.maintenanceId.slice(0, 8)}`}
+                            {isMaintenance 
+                              ? (connection.storeName || 'Unknown Store')
+                              : (connection.providerName || 'Unknown Provider')}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {isMaintenance ? connection.storeId : connection.maintenanceId.slice(0, 8)}
+                            ID: {(isMaintenance ? connection.storeId : connection.maintenanceId).slice(0, 8)}...
                           </div>
                         </div>
                       </div>

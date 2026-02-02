@@ -84,12 +84,15 @@ export const DatabaseConnectionService = {
     }
   },
 
-  // Get connections for a specific store
+  // Get connections for a specific store org
   async getStoreConnections(storeOrgId: string): Promise<StoreConnection[]> {
     try {
       const { data, error } = await supabase
         .from('provider_store_links')
-        .select('id, store_org_id, provider_org_id, status, created_at')
+        .select(`
+          id, store_org_id, provider_org_id, status, created_at,
+          provider:organizations!provider_store_links_provider_org_id_fkey(id, name)
+        `)
         .eq('store_org_id', storeOrgId);
 
       if (error) {
@@ -101,6 +104,7 @@ export const DatabaseConnectionService = {
         id: conn.id,
         storeId: conn.store_org_id,
         maintenanceId: conn.provider_org_id,
+        providerName: (conn.provider as any)?.name,
         status: conn.status === 'active' ? 'active' : 'pending' as "pending" | "active" | "rejected",
         requestedAt: conn.created_at,
         connectedAt: conn.status === 'active' ? conn.created_at : undefined
@@ -111,12 +115,15 @@ export const DatabaseConnectionService = {
     }
   },
 
-  // Get maintenance requests for a specific provider
+  // Get maintenance requests for a specific provider org
   async getMaintenanceRequests(providerOrgId: string): Promise<StoreConnection[]> {
     try {
       const { data, error } = await supabase
         .from('provider_store_links')
-        .select('id, store_org_id, provider_org_id, status, created_at')
+        .select(`
+          id, store_org_id, provider_org_id, status, created_at,
+          store:organizations!provider_store_links_store_org_id_fkey(id, name)
+        `)
         .eq('provider_org_id', providerOrgId);
 
       if (error) {
@@ -127,6 +134,7 @@ export const DatabaseConnectionService = {
       return (data || []).map(conn => ({
         id: conn.id,
         storeId: conn.store_org_id,
+        storeName: (conn.store as any)?.name,
         maintenanceId: conn.provider_org_id,
         status: conn.status === 'active' ? 'active' : 'pending' as "pending" | "active" | "rejected",
         requestedAt: conn.created_at,
