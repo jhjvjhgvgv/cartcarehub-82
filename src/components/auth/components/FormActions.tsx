@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuthForm } from "../context/AuthFormContext";
 import { SignUpMessage } from "./SignUpMessage";
+import { SocialLoginButtons } from "./SocialLoginButtons";
 import { Loader2 } from "lucide-react";
 
 export const FormActions = () => {
@@ -38,6 +38,8 @@ export const FormActions = () => {
           isSignUp ? "Sign Up" : "Log In"
         )}
       </Button>
+
+      <SocialLoginButtons />
       
       <div className="text-center mt-4 pt-2">
         <Button
