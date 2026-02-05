@@ -11,7 +11,8 @@ export const FormActions = () => {
     setIsSignUp, 
     isLoading, 
     setConfirmPassword, 
-    handleAuth 
+    handleAuth,
+    selectedRole
   } = useAuthForm();
 
   return (
@@ -39,13 +40,13 @@ export const FormActions = () => {
         )}
       </Button>
 
-      <SocialLoginButtons />
+      <SocialLoginButtons selectedRole={selectedRole} />
       
       <div className="text-center mt-4 pt-2">
         <Button
           type="button"
           variant="ghost"
-          className="w-full text-gray-600"
+          className="w-full text-muted-foreground"
           onClick={() => {
             setIsSignUp(!isSignUp);
             setConfirmPassword("");
