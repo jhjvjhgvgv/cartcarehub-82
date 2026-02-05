@@ -4,9 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConnectionService } from "@/services/ConnectionService";
 import { StoreManagerSummary, ManagedStore, StoreMaintenanceConnection } from "./types";
-import { UserAccount } from "@/services/connection/types";
 import { Building, Users, LinkIcon, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+interface ProviderInfo {
+  id: string;
+  name: string;
+}
 
 export function StoreMaintenanceSummary() {
   const [summary, setSummary] = useState<StoreManagerSummary>({
@@ -18,44 +22,50 @@ export function StoreMaintenanceSummary() {
   const [selectedTab, setSelectedTab] = useState("stores");
   const [stores, setStores] = useState<ManagedStore[]>([]);
   const [connections, setConnections] = useState<StoreMaintenanceConnection[]>([]);
-  const [maintenanceProviders, setMaintenanceProviders] = useState<UserAccount[]>([]);
-  // Using demo user for summary
-  const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
+  const [maintenanceProviders, setMaintenanceProviders] = useState<ProviderInfo[]>([]);
 
   useEffect(() => {
-    // Fetch all managed stores for this store manager
     const fetchManagedStores = async () => {
       try {
-        // In a real implementation, this would filter stores by the current manager ID
-        const storeConnections = await ConnectionService.getStoreConnections(ConnectionService.getCurrentUserId());
-        const allStores = storeConnections.reduce((stores: ManagedStore[], connection) => {
-            // Find store details
-            const storeDetails = ConnectionService.getStoreById(connection.storeId);
+        // Get current user ID
+        const currentUserId = await ConnectionService.getCurrentUserId();
+        if (!currentUserId) return;
+
+        // Fetch connections for this user
+        const storeConnections = await ConnectionService.getStoreConnections(currentUserId);
+        
+        // Build stores list from connections
+        const storeMap = new Map<string, ManagedStore>();
+        for (const connection of storeConnections) {
+          if (!storeMap.has(connection.storeId)) {
+            const storeDetails = await ConnectionService.getStoreById(connection.storeId);
             if (storeDetails) {
-              const existingStore = stores.find(s => s.id === connection.storeId);
-              if (!existingStore) {
-                stores.push({
-                  id: connection.storeId,
-                  name: storeDetails.name,
-                  status: "active",
-                  createdAt: connection.requestedAt,
-                  managerId: currentUser.id
-                });
-              }
+              storeMap.set(connection.storeId, {
+                id: connection.storeId,
+                name: storeDetails.name,
+                status: "active",
+                createdAt: connection.requestedAt,
+                managerId: currentUserId
+              });
             }
-            return stores;
-          }, []);
-          
+          }
+        }
+        
+        const allStores = Array.from(storeMap.values());
         setStores(allStores);
         
         // Calculate summary data
         const activeStores = allStores.filter(s => s.status === "active").length;
         
-        // Get all maintenance providers connected to any of the stores
-        
         // Get unique maintenance providers
-        const uniqueProviderIds = [...new Set(storeConnections.map(conn => conn.maintenanceId))] as string[];
-        const providers = uniqueProviderIds.map(id => ConnectionService.getMaintenanceById(id)).filter(Boolean) as UserAccount[];
+        const uniqueProviderIds = [...new Set(storeConnections.map(conn => conn.maintenanceId))];
+        const providers: ProviderInfo[] = [];
+        for (const id of uniqueProviderIds) {
+          const provider = await ConnectionService.getMaintenanceById(id);
+          if (provider) {
+            providers.push(provider);
+          }
+        }
         
         // Count pending connections
         const pendingCount = storeConnections.filter(conn => conn.status === "pending").length;
@@ -83,7 +93,7 @@ export function StoreMaintenanceSummary() {
     };
     
     fetchManagedStores();
-  }, [currentUser.id]);
+  }, []);
 
   const getMaintenanceProviderName = (maintenanceId: string) => {
     const provider = maintenanceProviders.find(p => p.id === maintenanceId);
@@ -152,8 +162,6 @@ export function StoreMaintenanceSummary() {
                     stores.map((store) => {
                       const storeConnections = connections.filter(c => c.storeId === store.id);
                       const activeConnections = storeConnections.filter(c => c.status === "active").length;
-
-                      // Ensure createdAt is a string before using Date constructor
                       const createdAtDate = typeof store.createdAt === "string" ? new Date(store.createdAt) : new Date();
 
                       return (
