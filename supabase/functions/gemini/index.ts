@@ -1,6 +1,4 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+// Gemini AI edge function
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
 // Using the correct model name for the v1beta API - "gemini-1.5-flash" is one of the latest models
@@ -11,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
