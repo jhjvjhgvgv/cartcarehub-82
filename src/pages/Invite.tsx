@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ConnectionService } from "@/services/connection"; // Updated import path
+import { ConnectionService } from "@/services/connection";
 
 export default function Invite() {
   const [searchParams] = useSearchParams();
@@ -25,27 +25,30 @@ export default function Invite() {
       }
       
       try {
-        // Get current user - using demo user for invite page
-        const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
+        // Get current user ID
+        const currentUserId = await ConnectionService.getCurrentUserId();
+        if (!currentUserId) {
+          throw new Error("Not authenticated");
+        }
         
         // Get inviter name
         let inviterName = "";
         if (type === "store") {
-          const provider = ConnectionService.getMaintenanceById(inviterId);
-          inviterName = provider ? provider.name : inviterId;
+          const provider = await ConnectionService.getMaintenanceById(inviterId);
+          inviterName = provider?.name || inviterId;
           setInvitingEntityName(inviterName);
           
           // Process connection - store accepting invitation from maintenance
           const success = await ConnectionService.requestConnection(
-            currentUser.id, // Store ID
+            currentUserId, // Store ID
             inviterId // Maintenance ID
           );
           
           if (success) {
             // Auto-accept the connection since it's from an invitation
-            const connections = await ConnectionService.getStoreConnections(currentUser.id);
+            const connections = await ConnectionService.getStoreConnections(currentUserId);
             const connection = connections.find(
-              conn => conn.storeId === currentUser.id && conn.maintenanceId === inviterId
+              conn => conn.storeId === currentUserId && conn.maintenanceId === inviterId
             );
             
             if (connection) {
@@ -59,14 +62,14 @@ export default function Invite() {
           }
         } else {
           // Handle store inviting maintenance
-          const store = ConnectionService.getStoreById(inviterId);
-          inviterName = store ? store.name : inviterId;
+          const store = await ConnectionService.getStoreById(inviterId);
+          inviterName = store?.name || inviterId;
           setInvitingEntityName(inviterName);
           
           // Process connection - maintenance accepting invitation from store
           const success = await ConnectionService.requestConnection(
             inviterId, // Store ID
-            currentUser.id // Maintenance ID
+            currentUserId // Maintenance ID
           );
           
           if (success) {

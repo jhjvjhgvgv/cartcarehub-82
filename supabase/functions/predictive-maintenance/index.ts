@@ -19,50 +19,79 @@ serve(async (req) => {
 
     const { cart_id } = await req.json()
 
-    // Fetch cart analytics data
-    const { data: analytics, error: analyticsError } = await supabaseClient
-      .from('cart_analytics')
-      .select('*')
-      .eq('cart_id', cart_id)
-      .order('metric_date', { ascending: false })
-      .limit(30)
+    if (!cart_id) {
+      throw new Error('cart_id is required')
+    }
 
-    if (analyticsError) throw analyticsError
-
-    // Fetch cart details
+    // Fetch cart details from the carts table
     const { data: cart, error: cartError } = await supabaseClient
       .from('carts')
-      .select('*, maintenance_schedules(*)')
+      .select('id, status, store_org_id, asset_tag, qr_token, model, notes, created_at, updated_at')
       .eq('id', cart_id)
       .single()
 
     if (cartError) throw cartError
+    if (!cart) throw new Error('Cart not found')
 
-    // Prepare data summary for AI analysis
-    const analyticsData = analytics || []
-    const totalUsageHours = analyticsData.reduce((sum, a) => sum + (Number(a.usage_hours) || 0), 0)
-    const totalIssues = analyticsData.reduce((sum, a) => sum + (Number(a.issues_reported) || 0), 0)
-    const avgDowntime = analyticsData.reduce((sum, a) => sum + (Number(a.downtime_minutes) || 0), 0) / Math.max(analyticsData.length, 1)
-    const totalCost = analyticsData.reduce((sum, a) => sum + (Number(a.maintenance_cost) || 0), 0)
+    // Fetch recent inspections for this cart
+    const { data: inspections, error: inspectionsError } = await supabaseClient
+      .from('inspections')
+      .select('*')
+      .eq('cart_id', cart_id)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    if (inspectionsError) throw inspectionsError
+
+    // Fetch open issues for this cart
+    const { data: issues, error: issuesError } = await supabaseClient
+      .from('issues')
+      .select('*')
+      .eq('cart_id', cart_id)
+      .eq('status', 'open')
+
+    if (issuesError) throw issuesError
+
+    // Calculate metrics from actual data
+    const inspectionData = inspections || []
+    const openIssues = issues || []
+    
+    const avgHealthScore = inspectionData.length > 0 
+      ? inspectionData.reduce((sum, i) => sum + (i.health_score || 100), 0) / inspectionData.length 
+      : 100
+    
+    const totalInspections = inspectionData.length
+    const totalOpenIssues = openIssues.length
+    const highSeverityIssues = openIssues.filter(i => i.severity === 'high' || i.severity === 'critical').length
+    
+    // Calculate days since last inspection
+    const lastInspection = inspectionData[0]
+    const daysSinceLastInspection = lastInspection 
+      ? Math.floor((new Date().getTime() - new Date(lastInspection.created_at).getTime()) / (1000 * 60 * 60 * 24))
+      : null
 
     const prompt = `Analyze this shopping cart's maintenance data and predict maintenance needs:
 
 Cart ID: ${cart_id}
+Asset Tag: ${cart.asset_tag || 'Not set'}
+Model: ${cart.model || 'Unknown'}
 Current Status: ${cart.status}
-Last Maintenance: ${cart.last_maintenance}
+Created: ${cart.created_at}
 
-30-Day Usage Statistics:
-- Total Usage Hours: ${totalUsageHours.toFixed(1)}
-- Total Issues Reported: ${totalIssues}
-- Average Downtime (minutes): ${avgDowntime.toFixed(1)}
-- Total Maintenance Cost: $${totalCost.toFixed(2)}
+Inspection History (last 30 days):
+- Total Inspections: ${totalInspections}
+- Average Health Score: ${avgHealthScore.toFixed(1)}%
+- Days Since Last Inspection: ${daysSinceLastInspection ?? 'Never inspected'}
 
-Recent Daily Data (last 7 days):
-${analyticsData.slice(0, 7).map(a => 
-  `- ${a.metric_date}: ${a.usage_hours}h usage, ${a.issues_reported} issues, ${a.downtime_minutes}min downtime`
+Open Issues:
+- Total Open Issues: ${totalOpenIssues}
+- High/Critical Severity Issues: ${highSeverityIssues}
+${openIssues.slice(0, 5).map(i => `  - ${i.category || 'General'}: ${i.description || 'No description'} (${i.severity})`).join('\n')}
+
+Recent Inspections:
+${inspectionData.slice(0, 5).map(i => 
+  `- ${new Date(i.created_at).toLocaleDateString()}: Score ${i.health_score}, Status: ${i.reported_status}`
 ).join('\n')}
-
-Current Issues: ${cart.issues?.join(', ') || 'None reported'}
 
 Based on this data, provide:
 1. Maintenance risk level (low/medium/high/critical)
@@ -110,13 +139,12 @@ Keep your response concise and actionable.`
     const aiData = await aiResponse.json()
     const prediction = aiData.choices[0].message.content
 
-    // Calculate simple risk score based on metrics
+    // Calculate simple risk score based on actual metrics
     const riskScore = calculateRiskScore({
-      usageHours: totalUsageHours,
-      issuesCount: totalIssues,
-      downtime: avgDowntime,
-      daysSinceLastMaintenance: cart.last_maintenance ? 
-        Math.floor((new Date().getTime() - new Date(cart.last_maintenance).getTime()) / (1000 * 60 * 60 * 24)) : 999
+      healthScore: avgHealthScore,
+      openIssues: totalOpenIssues,
+      highSeverityIssues: highSeverityIssues,
+      daysSinceLastInspection: daysSinceLastInspection ?? 999
     })
 
     return new Response(
@@ -127,12 +155,11 @@ Keep your response concise and actionable.`
         risk_level: getRiskLevel(riskScore),
         ai_prediction: prediction,
         metrics: {
-          total_usage_hours: totalUsageHours,
-          total_issues: totalIssues,
-          avg_downtime: avgDowntime,
-          total_cost: totalCost,
-          days_since_maintenance: cart.last_maintenance ? 
-            Math.floor((new Date().getTime() - new Date(cart.last_maintenance).getTime()) / (1000 * 60 * 60 * 24)) : null
+          avg_health_score: avgHealthScore,
+          total_inspections: totalInspections,
+          total_open_issues: totalOpenIssues,
+          high_severity_issues: highSeverityIssues,
+          days_since_last_inspection: daysSinceLastInspection
         }
       }),
       {
@@ -155,32 +182,31 @@ Keep your response concise and actionable.`
 })
 
 function calculateRiskScore(data: {
-  usageHours: number
-  issuesCount: number
-  downtime: number
-  daysSinceLastMaintenance: number
+  healthScore: number
+  openIssues: number
+  highSeverityIssues: number
+  daysSinceLastInspection: number
 }): number {
   let score = 0
   
-  // Usage hours contribution (0-30 points)
-  if (data.usageHours > 200) score += 30
-  else if (data.usageHours > 150) score += 20
-  else if (data.usageHours > 100) score += 10
+  // Health score contribution (0-30 points) - lower health = higher risk
+  if (data.healthScore < 50) score += 30
+  else if (data.healthScore < 70) score += 20
+  else if (data.healthScore < 85) score += 10
   
-  // Issues reported contribution (0-30 points)
-  if (data.issuesCount > 5) score += 30
-  else if (data.issuesCount > 3) score += 20
-  else if (data.issuesCount > 1) score += 10
+  // Open issues contribution (0-30 points)
+  if (data.openIssues > 5) score += 30
+  else if (data.openIssues > 3) score += 20
+  else if (data.openIssues > 1) score += 10
   
-  // Downtime contribution (0-20 points)
-  if (data.downtime > 120) score += 20
-  else if (data.downtime > 60) score += 15
-  else if (data.downtime > 30) score += 10
+  // High severity issues contribution (0-20 points)
+  if (data.highSeverityIssues > 2) score += 20
+  else if (data.highSeverityIssues > 0) score += 15
   
-  // Days since maintenance contribution (0-20 points)
-  if (data.daysSinceLastMaintenance > 90) score += 20
-  else if (data.daysSinceLastMaintenance > 60) score += 15
-  else if (data.daysSinceLastMaintenance > 30) score += 10
+  // Days since inspection contribution (0-20 points)
+  if (data.daysSinceLastInspection > 30) score += 20
+  else if (data.daysSinceLastInspection > 14) score += 15
+  else if (data.daysSinceLastInspection > 7) score += 10
   
   return Math.min(score, 100)
 }

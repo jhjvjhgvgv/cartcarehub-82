@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
   const [connections, setConnections] = useState<StoreConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [nameCache, setNameCache] = useState<Record<string, string>>({});
   const { profile } = useUserProfile();
   const currentUserId = profile?.id || '';
 
@@ -30,6 +30,18 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
           results = await ConnectionService.getStoreConnections(currentUserId);
         }
         
+        // Build name cache for all connections
+        const newCache: Record<string, string> = {};
+        for (const conn of results) {
+          if (isMaintenance && conn.storeId) {
+            const store = await ConnectionService.getStoreById(conn.storeId);
+            newCache[conn.storeId] = store?.name || conn.storeId;
+          } else if (!isMaintenance && conn.maintenanceId) {
+            const provider = await ConnectionService.getMaintenanceById(conn.maintenanceId);
+            newCache[conn.maintenanceId] = provider?.name || conn.maintenanceId;
+          }
+        }
+        setNameCache(newCache);
         setConnections(results);
       } catch (error) {
         console.error("Failed to fetch connections:", error);
@@ -71,15 +83,9 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
     setRefreshKey(prevKey => prevKey + 1);
   };
 
-  // Helper to get name from ID
-  const getNameFromId = (id: string, isStore: boolean) => {
-    if (isStore) {
-      const store = ConnectionService.getStoreById(id);
-      return store ? store.name : id;
-    } else {
-      const provider = ConnectionService.getMaintenanceById(id);
-      return provider ? provider.name : id;
-    }
+  // Helper to get name from cache
+  const getNameFromId = (id: string) => {
+    return nameCache[id] || id;
   };
 
   const handleAcceptConnection = async (connectionId: string) => {
@@ -135,8 +141,8 @@ export function ConnectionStatus({ isMaintenance }: ConnectionStatusProps) {
                   <div>
                     <p className="font-medium">
                       {isMaintenance 
-                        ? `${getNameFromId(connection.storeId, true)} (${connection.storeId})` 
-                        : `${getNameFromId(connection.maintenanceId, false)} (${connection.maintenanceId})`}
+                        ? getNameFromId(connection.storeId)
+                        : getNameFromId(connection.maintenanceId)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {getStatusText(connection.status)}

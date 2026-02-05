@@ -164,6 +164,48 @@ export const DatabaseConnectionService = {
     return (data || []).map(org => ({ id: org.id, name: org.name }));
   },
 
+  // Get store by ID
+  async getStoreById(id: string): Promise<{ id: string, name: string } | null> {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .eq('id', id)
+        .eq('type', 'store')
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return { id: data.id, name: data.name };
+    } catch (error) {
+      console.error('Error in getStoreById:', error);
+      return null;
+    }
+  },
+
+  // Get maintenance provider by ID
+  async getMaintenanceById(id: string): Promise<{ id: string, name: string } | null> {
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .eq('id', id)
+        .eq('type', 'provider')
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return { id: data.id, name: data.name };
+    } catch (error) {
+      console.error('Error in getMaintenanceById:', error);
+      return null;
+    }
+  },
+
+  // Get current user ID from Supabase auth
+  async getCurrentUserId(): Promise<string | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  },
+
   // Get maintenance provider by user ID
   async getMaintenanceProviderByUserId(userId: string): Promise<{ id: string, name: string } | null> {
     try {
