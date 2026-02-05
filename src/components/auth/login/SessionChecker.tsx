@@ -14,7 +14,22 @@ export const SessionChecker = () => {
     
     const checkSession = async () => {
       try {
-        // FIRST: Check onboarding status before anything else
+        // FIRST: Apply any pending role from OAuth BEFORE setup
+        const pendingRole = localStorage.getItem('pending_signup_role');
+        if (pendingRole && (pendingRole === 'store' || pendingRole === 'maintenance')) {
+          console.log('🔄 Applying pending role in SessionChecker:', pendingRole);
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { role: pendingRole }
+          });
+          if (updateError) {
+            console.error('Failed to apply pending role:', updateError);
+          } else {
+            console.log('✅ Role applied successfully:', pendingRole);
+          }
+          localStorage.removeItem('pending_signup_role');
+        }
+        
+        // Check onboarding status
         const { data: onboardingData } = await supabase
           .from('user_onboarding')
           .select('onboarding_completed, skipped_at')
@@ -28,7 +43,7 @@ export const SessionChecker = () => {
           return;
         }
         
-        // Ensure user profile + org exists
+        // Ensure user profile + org exists (AFTER role is applied)
         const setupResult = await supabase.rpc('safe_user_setup', { user_id_param: user.id });
         if (setupResult.error) {
           console.warn("User setup warning:", setupResult.error.message);
