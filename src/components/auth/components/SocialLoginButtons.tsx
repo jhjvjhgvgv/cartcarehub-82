@@ -3,13 +3,24 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { UserRole } from "../context/types";
 
-export const SocialLoginButtons = () => {
+interface SocialLoginButtonsProps {
+  selectedRole: UserRole | null;
+}
+
+export const SocialLoginButtons = ({ selectedRole }: SocialLoginButtonsProps) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { toast } = useToast();
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
+    
+    // Store the selected role in localStorage before OAuth redirect
+    if (selectedRole) {
+      localStorage.setItem('pending_signup_role', selectedRole);
+    }
+    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -19,6 +30,8 @@ export const SocialLoginButtons = () => {
       });
 
       if (error) {
+        // Clear the stored role if OAuth fails
+        localStorage.removeItem('pending_signup_role');
         toast({
           title: "Error",
           description: error.message,
@@ -26,6 +39,7 @@ export const SocialLoginButtons = () => {
         });
       }
     } catch (error: any) {
+      localStorage.removeItem('pending_signup_role');
       toast({
         title: "Error",
         description: error.message || "Failed to sign in with Google",

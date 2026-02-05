@@ -40,6 +40,42 @@ export const OnboardingContainer = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [shouldRedirectToLogin, setShouldRedirectToLogin] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const [pendingRoleApplied, setPendingRoleApplied] = useState(false);
+
+  // Handle pending role from OAuth callback (stored in localStorage before redirect)
+  useEffect(() => {
+    const applyPendingRole = async () => {
+      if (!user || pendingRoleApplied) return;
+      
+      const pendingRole = localStorage.getItem('pending_signup_role');
+      if (pendingRole && (pendingRole === 'store' || pendingRole === 'maintenance')) {
+        console.log('🔄 Applying pending role from OAuth:', pendingRole);
+        
+        try {
+          // Update user metadata with the stored role
+          const { error } = await supabase.auth.updateUser({
+            data: { role: pendingRole }
+          });
+          
+          if (error) {
+            console.error('Failed to apply pending role:', error);
+          } else {
+            console.log('✅ Role applied successfully:', pendingRole);
+          }
+        } catch (err) {
+          console.error('Error applying pending role:', err);
+        } finally {
+          // Always clear localStorage after attempting
+          localStorage.removeItem('pending_signup_role');
+          setPendingRoleApplied(true);
+        }
+      } else {
+        setPendingRoleApplied(true);
+      }
+    };
+    
+    applyPendingRole();
+  }, [user, pendingRoleApplied]);
 
   // Derive userRole directly from user metadata - no profile dependency
   const userRole: 'store' | 'maintenance' = useMemo(() => {
