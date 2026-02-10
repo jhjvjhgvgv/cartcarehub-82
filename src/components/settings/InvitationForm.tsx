@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -7,11 +6,11 @@ import { Plus, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Invitation, InvitationFormProps } from "./types"
 import { supabase } from "@/integrations/supabase/client"
-import { ConnectionService } from "@/services/ConnectionService"
 import { InvitationError } from "./InvitationError"
 import { InvitationConfirmation } from "./InvitationConfirmation"
 import { DevModeInstructions } from "./DevModeInstructions"
 import { sendInvitation } from "./invitationService"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 export function InvitationForm({ isMaintenance, invitations, setInvitations }: InvitationFormProps) {
   const [inviteEmail, setInviteEmail] = useState("")
@@ -21,10 +20,16 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<string | null>(null)
   const { toast } = useToast()
+  const { profile } = useUserProfile()
 
   const pendingInvitations = invitations.filter(inv => inv.status === "pending" || inv.status === "sent")
-  // Using demo user for invitation form
-  const currentUser = { id: 'demo-user', name: 'Demo User', type: 'store' as const };
+
+  // Use real authenticated user data
+  const currentUser = {
+    id: profile?.org_id || profile?.id || '',
+    name: profile?.org_name || profile?.display_name || profile?.email || 'Unknown',
+    type: (isMaintenance ? 'maintenance' : 'store') as 'store' | 'maintenance'
+  }
 
   const handleSendInvitation = async () => {
     if (!inviteEmail) {
@@ -36,7 +41,6 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       return
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(inviteEmail)) {
       toast({
@@ -47,7 +51,15 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       return
     }
 
-    // Clear any previous errors
+    if (!currentUser.id) {
+      toast({
+        title: "Profile not ready",
+        description: "Please complete your profile setup first.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setErrorMessage(null)
     setErrorDetails(null)
     setIsSending(true)
@@ -64,7 +76,6 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
       );
       
       if (result.success) {
-        // Save the invitation in our local state
         setInvitations([...invitations, {
           email: inviteEmail,
           type,
@@ -84,7 +95,6 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
     } catch (error: any) {
       console.error("Error sending invitation:", error);
       
-      // Only show toast for general errors, not development mode errors handled separately
       if (!errorMessage) {
         toast({
           title: "Error sending invitation",
@@ -133,7 +143,7 @@ export function InvitationForm({ isMaintenance, invitations, setInvitations }: I
               />
               <Button 
                 onClick={handleSendInvitation}
-                disabled={isSending}
+                disabled={isSending || !currentUser.id}
               >
                 {isSending ? (
                   <>Sending...</>

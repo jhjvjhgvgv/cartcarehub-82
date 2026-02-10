@@ -2,7 +2,8 @@ import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface InvitationRequest {
@@ -17,28 +18,21 @@ interface InvitationRequest {
 
 const handler = async (req: Request): Promise<Response> => {
   console.log("Processing invitation request");
-  
-  // Handle CORS preflight requests
+
   if (req.method === "OPTIONS") {
-    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      const error = "RESEND_API_KEY is not configured";
-      console.error(error);
+      console.error("RESEND_API_KEY is not configured");
       return new Response(
-        JSON.stringify({ success: false, error }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ success: false, error: "RESEND_API_KEY is not configured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Parse and validate request
     let requestData: InvitationRequest;
     try {
       requestData = await req.json();
@@ -47,40 +41,31 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Failed to parse request body:", parseError);
       return new Response(
         JSON.stringify({ success: false, error: "Invalid request format" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
+
     const { email, type, invitedBy } = requestData;
-    
-    // Validate required fields
+
     if (!email || !type || !invitedBy?.id || !invitedBy?.name || !invitedBy?.type) {
-      const error = "Missing required fields";
-      console.error(error, { email, type, invitedBy });
       return new Response(
-        JSON.stringify({ success: false, error }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ success: false, error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
+
     console.log(`Sending invitation to ${email} as ${type} from ${invitedBy.name}`);
-    
+
     const resend = new Resend(resendApiKey);
     const inviterType = invitedBy.type === "maintenance" ? "Maintenance Provider" : "Store";
     const inviteeType = type === "maintenance" ? "Maintenance Provider" : "Store";
-    
-    // Use the new domain instead of the origin or default domain
-    const domain = "https://cartrepairpros.com";
-    const inviteUrl = `${domain}/invite?id=${invitedBy.id}&type=${type}`;
-    
+
+    // Use SITE_URL env var, fall back to Supabase project URL
+    const siteUrl = Deno.env.get("SITE_URL") || Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app') || "https://cartcarehub-82.lovable.app";
+    const inviteUrl = `${siteUrl}/invite?id=${invitedBy.id}&type=${type}`;
+
     console.log(`Invitation URL: ${inviteUrl}`);
-    
+
     const { data, error } = await resend.emails.send({
       from: "Cart Tracker <onboarding@resend.dev>",
       to: [email],
@@ -99,70 +84,50 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
       `,
     });
-    
+
     if (error) {
       console.error("Error sending email:", error);
-      
-      // Check for common Resend errors and provide better error messages
-      if (error.message && error.message.includes("You can only send testing emails to your own email address")) {
-        console.warn("Development mode restriction detected");
+
+      if (error.message?.includes("You can only send testing emails to your own email address")) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
+          JSON.stringify({
+            success: false,
             error: "Development mode: To send emails to other addresses, please verify a domain in Resend.",
             details: "In development, you can only send to your own email address. Visit https://resend.com/domains to verify a domain."
           }),
-          {
-            status: 403,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
-      
-      if (error.message && error.message.includes("rate limit")) {
+
+      if (error.message?.includes("rate limit")) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Rate limit exceeded. Please try again later."
-          }),
-          {
-            status: 429,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
+          JSON.stringify({ success: false, error: "Rate limit exceeded. Please try again later." }),
+          { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ success: false, error: error.message }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
+
     console.log("Email sent successfully:", data);
-    
+
     return new Response(
       JSON.stringify({ success: true, data }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error) {
     console.error("Unhandled error in send-invitation function:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : "An unexpected error occurred",
-        stack: error instanceof Error ? error.stack : undefined
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "An unexpected error occurred"
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };
+
 Deno.serve(handler);
