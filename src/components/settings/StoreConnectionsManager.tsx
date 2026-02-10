@@ -72,6 +72,7 @@ export function StoreConnectionsManager() {
         isMaintenance={isMaintenance}
         currentUserId={currentUser.id}
         userOrgId={profile?.org_id}
+        userOrgName={profile?.org_name}
       />
     </Card>
   );

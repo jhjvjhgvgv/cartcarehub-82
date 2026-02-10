@@ -77,6 +77,8 @@ export function StoreMaintenanceManager({ isMaintenance }: StoreMaintenanceManag
         setIsDialogOpen={setIsDialogOpen}
         isMaintenance={isMaintenance}
         currentUserId={currentUser.id}
+        userOrgId={profile?.org_id}
+        userOrgName={profile?.org_name}
       />
     </Card>
   )

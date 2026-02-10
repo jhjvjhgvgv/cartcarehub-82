@@ -2,12 +2,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { StoreConnection } from "./types";
 
 export const DatabaseConnectionService = {
-  // Request a connection between a store and maintenance provider
+  // Request a connection between a store and maintenance provider (starts as pending)
   async requestConnection(storeOrgId: string, providerOrgId: string): Promise<boolean> {
     try {
       console.log(`Requesting connection between store ${storeOrgId} and provider ${providerOrgId}`);
       
-      // Check if connection already exists using provider_store_links
+      // Check if connection already exists
       const { data: existingConnection, error: checkError } = await supabase
         .from('provider_store_links')
         .select('*')
@@ -25,19 +25,22 @@ export const DatabaseConnectionService = {
         return false;
       }
 
-      // Create new connection
+      // Create new connection as pending
       const { error: insertError } = await supabase
         .from('provider_store_links')
         .insert([{
           store_org_id: storeOrgId,
           provider_org_id: providerOrgId,
-          status: 'active'
+          status: 'pending'
         }]);
 
       if (insertError) {
         console.error("Error creating connection:", insertError);
         return false;
       }
+
+      // Send notification
+      await this.sendConnectionNotification('request', storeOrgId, providerOrgId);
 
       return true;
     } catch (error) {
@@ -49,6 +52,12 @@ export const DatabaseConnectionService = {
   // Accept a connection request
   async acceptConnection(connectionId: string): Promise<boolean> {
     try {
+      const { data: link, error: fetchError } = await supabase
+        .from('provider_store_links')
+        .select('store_org_id, provider_org_id')
+        .eq('id', connectionId)
+        .maybeSingle();
+
       const { error } = await supabase
         .from('provider_store_links')
         .update({ status: 'active' })
@@ -58,6 +67,11 @@ export const DatabaseConnectionService = {
         console.error("Error accepting connection:", error);
         return false;
       }
+
+      if (link) {
+        await this.sendConnectionNotification('accepted', link.store_org_id, link.provider_org_id);
+      }
+
       return true;
     } catch (error) {
       console.error("Failed to accept connection:", error);
@@ -68,6 +82,12 @@ export const DatabaseConnectionService = {
   // Reject a connection request
   async rejectConnection(connectionId: string): Promise<boolean> {
     try {
+      const { data: link } = await supabase
+        .from('provider_store_links')
+        .select('store_org_id, provider_org_id')
+        .eq('id', connectionId)
+        .maybeSingle();
+
       const { error } = await supabase
         .from('provider_store_links')
         .delete()
@@ -77,6 +97,11 @@ export const DatabaseConnectionService = {
         console.error("Error rejecting connection:", error);
         return false;
       }
+
+      if (link) {
+        await this.sendConnectionNotification('rejected', link.store_org_id, link.provider_org_id);
+      }
+
       return true;
     } catch (error) {
       console.error("Failed to reject connection:", error);
@@ -247,8 +272,17 @@ export const DatabaseConnectionService = {
     };
   },
 
-  // Send connection notification - stub
-  async sendConnectionNotification(type: string, storeId: string, providerId: string): Promise<void> {
-    console.log('Connection notification:', { type, storeId, providerId });
+  // Send connection notification via edge function
+  async sendConnectionNotification(type: string, storeOrgId: string, providerOrgId: string): Promise<void> {
+    try {
+      const { error } = await supabase.functions.invoke('connection-notification', {
+        body: { type, storeOrgId, providerOrgId }
+      });
+      if (error) {
+        console.warn('Connection notification failed (non-fatal):', error);
+      }
+    } catch (err) {
+      console.warn('Connection notification error (non-fatal):', err);
+    }
   }
 };

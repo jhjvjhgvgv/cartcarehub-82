@@ -14,6 +14,7 @@ interface ConnectionDialogProps {
   isMaintenance: boolean
   currentUserId: string
   userOrgId?: string
+  userOrgName?: string
 }
 
 export function ConnectionDialog({ 
@@ -21,7 +22,8 @@ export function ConnectionDialog({
   setIsDialogOpen, 
   isMaintenance, 
   currentUserId,
-  userOrgId
+  userOrgId,
+  userOrgName
 }: ConnectionDialogProps) {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
@@ -48,9 +50,12 @@ export function ConnectionDialog({
 
     setLoading(true)
     try {
-      // Use the invite_user_to_org RPC
+      // Determine the correct role for the invitation
+      // If current user is maintenance provider, they're inviting a store user
+      // If current user is a store, they're inviting a provider tech
       const role = isMaintenance ? 'store_admin' : 'provider_tech'
       
+      // Call the invite_user_to_org RPC with correct parameters
       const { data, error } = await supabase.rpc('invite_user_to_org', {
         p_org_id: userOrgId,
         p_email: email.trim().toLowerCase(),
@@ -59,6 +64,26 @@ export function ConnectionDialog({
       })
 
       if (error) throw error
+
+      // Also send the invitation email via edge function
+      const inviterType = isMaintenance ? 'maintenance' : 'store'
+      const inviteeType = isMaintenance ? 'store' : 'maintenance'
+      
+      const { error: emailError } = await supabase.functions.invoke('send-invitation', {
+        body: {
+          email: email.trim().toLowerCase(),
+          type: inviteeType,
+          invitedBy: {
+            id: userOrgId,
+            name: userOrgName || 'Your organization',
+            type: inviterType
+          }
+        }
+      })
+
+      if (emailError) {
+        console.warn("Email sending failed but invitation was created:", emailError)
+      }
 
       toast({
         title: "Invitation sent",
