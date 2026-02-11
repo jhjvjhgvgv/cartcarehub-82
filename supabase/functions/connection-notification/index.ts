@@ -67,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       try {
         const { data, error } = await resend.emails.send({
-          from: "Cart Tracker <onboarding@resend.dev>",
+          from: "Cart Tracker <noreply@cartrepairpros.com>",
           to: [recipientEmail],
           subject,
           html: `
