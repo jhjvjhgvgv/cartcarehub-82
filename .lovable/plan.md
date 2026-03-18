@@ -1,19 +1,14 @@
 
 
-## Verification Plan
+## Plan: Redeploy and Test Email Sending
 
-The domain `cartrepairpros.com` is fully verified in Resend. The edge functions (`send-invitation` and `connection-notification`) were previously updated to use `from: "Cart Tracker <noreply@cartrepairpros.com>"`.
+You've updated the Resend API key. Now we need to redeploy the edge functions so they pick up the new secret, then test that emails send successfully.
 
-### What to do
+### Steps
 
-1. **Redeploy both edge functions** to ensure the latest code with the correct `from` address is live:
-   - `send-invitation`
-   - `connection-notification`
+1. **Redeploy `send-invitation` edge function** — so it uses the new API key
+2. **Redeploy `connection-notification` edge function** — same reason
+3. **Test `send-invitation`** with a real POST request to confirm the 403 error is resolved and emails are delivered
 
-2. **Test the send-invitation function** with a real call to confirm emails are delivered successfully.
-
-3. **Confirm success** to the user and verify end-to-end email delivery.
-
-### No code changes needed
-The code already uses `noreply@cartrepairpros.com` as the sender. This is purely a deploy + test step.
+No code changes needed — this is purely deploy + test.
 
