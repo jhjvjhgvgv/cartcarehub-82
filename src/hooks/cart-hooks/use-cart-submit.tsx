@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Cart } from "@/types/cart";
 import { updateCart, createCart } from "@/api/carts/cart-api";
 import { useToast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from "uuid";
+
 
 interface CartFormData {
   qr_token?: string;
@@ -58,19 +58,13 @@ export const useCartSubmit = () => {
           return { success: true, message: "Cart has been updated successfully." };
         }
 
-        // Check for duplicate qr_token
-        if (data.qr_token) {
-          const existingCart = queryClient
-            .getQueryData<Cart[]>(["carts"])
-            ?.find((cart) => cart.qr_token === data.qr_token);
-          if (existingCart) {
-            throw new Error("A cart with this QR token already exists");
-          }
-        }
+        // NOTE: client-side duplicate check removed.
+        // The DB UNIQUE constraint on carts.qr_token is now the single source of truth;
+        // createCart() surfaces the 23505 error as a friendly message.
 
-        // Create new cart
+        // Create new cart – createCart enforces qr_token format + normalizes asset_tag.
         await createCart({
-          qr_token: data.qr_token || uuidv4(),
+          qr_token: data.qr_token,
           store_org_id: data.store_org_id,
           status: data.status,
           model: data.model || null,
