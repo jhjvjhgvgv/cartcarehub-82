@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
+import { purgeLocalAuthState } from "@/services/connection/storage-utils";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,10 +27,9 @@ export const useAuth = () => {
             setIsLoading(false);
           }
           
-          if (event === 'SIGNED_OUT') {
-            console.log("🚪 User signed out, clearing session data");
-            localStorage.removeItem('supabase.auth.token');
-            localStorage.removeItem('sb-qxutldpiaxfdicdsiomt-auth-token');
+          if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+            console.log(`🧨 ${event}: nuclear purge of cached client state`);
+            purgeLocalAuthState();
           }
         });
         
