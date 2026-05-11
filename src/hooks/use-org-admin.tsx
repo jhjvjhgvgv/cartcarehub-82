@@ -6,7 +6,7 @@ export type MembershipRole =
   | "corp_admin"
   | "corp_viewer"
   | "store_admin"
-  | "store_staff"
+  | "store_viewer"
   | "provider_admin"
   | "provider_tech";
 
@@ -73,7 +73,7 @@ export function useAdminUsersWithMemberships(enabled: boolean) {
         "admin_list_users_with_memberships"
       );
       if (error) throw error;
-      return (data ?? []) as AdminUserRow[];
+      return (data ?? []) as unknown as AdminUserRow[];
     },
   });
 }
@@ -196,7 +196,7 @@ export const MEMBERSHIP_ROLES: MembershipRole[] = [
   "corp_admin",
   "corp_viewer",
   "store_admin",
-  "store_staff",
+  "store_viewer",
   "provider_admin",
   "provider_tech",
 ];
