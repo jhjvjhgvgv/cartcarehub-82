@@ -3184,6 +3184,35 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      admin_assign_membership: {
+        Args: {
+          p_org_id: string
+          p_role: Database["public"]["Enums"]["membership_role"]
+          p_user_id: string
+        }
+        Returns: string
+      }
+      admin_create_organization: {
+        Args: {
+          p_market?: string
+          p_name: string
+          p_parent_org_id?: string
+          p_region?: string
+          p_type: Database["public"]["Enums"]["org_type"]
+        }
+        Returns: string
+      }
+      admin_list_users_with_memberships: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          last_sign_in_at: string
+          memberships: Json
+          user_id: string
+        }[]
+      }
       admin_manage_user: {
         Args: {
           p_action: string
@@ -3193,6 +3222,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_remove_membership: {
+        Args: { p_membership_id: string }
+        Returns: boolean
+      }
       authenticate_admin: {
         Args: {
           p_ip_address?: unknown
@@ -3201,6 +3234,10 @@ export type Database = {
           p_username: string
         }
         Returns: Json
+      }
+      bootstrap_first_corp_admin: {
+        Args: { p_org_name?: string }
+        Returns: string
       }
       bulk_update_cart_status: {
         Args: { cart_ids: string[]; new_status: string; updated_by?: string }
@@ -3261,6 +3298,7 @@ export type Database = {
         }
         Returns: Json
       }
+      is_corp_admin: { Args: never; Returns: boolean }
       is_member: { Args: { _org: string }; Returns: boolean }
       is_org_admin: { Args: { _org: string }; Returns: boolean }
       log_admin_activity: {
