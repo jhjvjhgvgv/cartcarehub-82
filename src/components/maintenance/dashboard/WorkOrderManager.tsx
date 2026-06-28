@@ -122,30 +122,42 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
 
   const updateWorkOrderStatus = async (orderId: string, newStatus: WorkOrder['status']) => {
     try {
-      const { error } = await supabase
-        .from('work_orders')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
+      // Use the state-machine RPC instead of a raw UPDATE so invalid
+      // transitions are rejected at the database layer.
+      const { data, error } = await supabase.rpc('transition_work_order', {
+        p_work_order_id: orderId,
+        p_to_status: newStatus,
+      });
 
       if (error) throw error;
 
-      setWorkOrders(prev => 
-        prev.map(order => 
-          order.id === orderId 
-            ? { ...order, status: newStatus, updated_at: new Date().toISOString() }
+      const updated = Array.isArray(data) ? data[0] : data;
+
+      setWorkOrders(prev =>
+        prev.map(order =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: (updated?.status ?? newStatus) as WorkOrder['status'],
+                updated_at: updated?.updated_at ?? new Date().toISOString(),
+              }
             : order
         )
       );
-      
+
       toast({
         title: "Work Order Updated",
-        description: `Status changed to ${newStatus}`,
+        description: `Status changed to ${newStatus.replace('_', ' ')}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating work order:', error);
+      const msg = String(error?.message || '');
+      const friendly = msg.startsWith('invalid_transition_')
+        ? `That transition isn't allowed (${msg.replace('invalid_transition_', '').replace('_to_', ' → ')}).`
+        : "Failed to update work order";
       toast({
         title: "Error",
-        description: "Failed to update work order",
+        description: friendly,
         variant: "destructive"
       });
     }

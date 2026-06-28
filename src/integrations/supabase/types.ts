@@ -1253,11 +1253,13 @@ export type Database = {
       work_orders: {
         Row: {
           assigned_to: string | null
+          cart_id: string | null
           created_at: string
           id: string
           notes: string | null
           provider_org_id: string | null
           scheduled_at: string | null
+          source_issue_id: string | null
           status: Database["public"]["Enums"]["work_order_status"]
           store_org_id: string
           summary: string | null
@@ -1265,11 +1267,13 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          cart_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           provider_org_id?: string | null
           scheduled_at?: string | null
+          source_issue_id?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
           store_org_id: string
           summary?: string | null
@@ -1277,17 +1281,68 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          cart_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
           provider_org_id?: string | null
           scheduled_at?: string | null
+          source_issue_id?: string | null
           status?: Database["public"]["Enums"]["work_order_status"]
           store_org_id?: string
           summary?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_alerts"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_last_inspection"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "cart_predictions"
+            referencedColumns: ["cart_id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_enriched"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_with_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts_with_store"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "work_orders_provider_org_id_fkey"
             columns: ["provider_org_id"]
@@ -1343,6 +1398,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "store_uptime_kpis_30d"
             referencedColumns: ["store_org_id"]
+          },
+          {
+            foreignKeyName: "work_orders_source_issue_id_fkey"
+            columns: ["source_issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_source_issue_id_fkey"
+            columns: ["source_issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues_with_cart"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "work_orders_store_org_id_fkey"
@@ -3351,6 +3420,36 @@ export type Database = {
           issue_id: string
           store_org_id: string
         }[]
+      }
+      transition_work_order: {
+        Args: {
+          p_assigned_to?: string
+          p_notes?: string
+          p_provider_org_id?: string
+          p_scheduled_at?: string
+          p_to_status: Database["public"]["Enums"]["work_order_status"]
+          p_work_order_id: string
+        }
+        Returns: {
+          assigned_to: string | null
+          cart_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          provider_org_id: string | null
+          scheduled_at: string | null
+          source_issue_id: string | null
+          status: Database["public"]["Enums"]["work_order_status"]
+          store_org_id: string
+          summary: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "work_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       user_can_access_store: { Args: { _store_org: string }; Returns: boolean }
       verify_admin_session: { Args: { p_session_token: string }; Returns: Json }
