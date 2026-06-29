@@ -70,49 +70,76 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const { toast } = useToast();
   const { data: managedStores = [] } = useManagedStores();
 
+  const fetchWorkOrders = React.useCallback(async (showSpinner = true) => {
+    try {
+      if (showSpinner) setLoading(true);
+      const { data: orders, error } = await supabase
+        .from('work_orders_with_store')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedOrders: WorkOrder[] = (orders || []).map((wo: any) => ({
+        id: wo.id,
+        store_org_id: wo.store_org_id,
+        store_name: wo.store_name || 'Unknown Store',
+        provider_org_id: wo.provider_org_id || undefined,
+        assigned_to: wo.assigned_to || undefined,
+        status: wo.status as WorkOrder['status'],
+        summary: wo.summary || undefined,
+        notes: wo.notes || undefined,
+        scheduled_at: wo.scheduled_at || undefined,
+        source_issue_id: wo.source_issue_id ?? null,
+        created_at: wo.created_at,
+        updated_at: wo.updated_at,
+      }));
+
+      setWorkOrders(mappedOrders);
+      setFilteredOrders(mappedOrders);
+    } catch (error) {
+      console.error('Error fetching work orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load work orders",
+        variant: "destructive"
+      });
+    } finally {
+      if (showSpinner) setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
-    const fetchWorkOrders = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch work orders with store info
-        const { data: orders, error } = await supabase
-          .from('work_orders_with_store')
-          .select('*')
-          .order('created_at', { ascending: false });
+    fetchWorkOrders(true);
+  }, [providerId, fetchWorkOrders]);
 
-        if (error) throw error;
+  // Realtime: surface auto-created / updated work orders without a manual refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel('work-orders-realtime')
+      .on(
+        'postgres_changes' as any,
+        { event: '*', schema: 'public', table: 'work_orders' } as any,
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            const isAuto = !!payload.new?.source_issue_id;
+            toast({
+              title: isAuto ? 'Auto-created work order' : 'New work order',
+              description: isAuto
+                ? 'A high/critical issue spawned a work order.'
+                : 'A new work order was created.',
+            });
+          }
+          fetchWorkOrders(false);
+        }
+      )
+      .subscribe();
 
-        const mappedOrders: WorkOrder[] = (orders || []).map(wo => ({
-          id: wo.id,
-          store_org_id: wo.store_org_id,
-          store_name: wo.store_name || 'Unknown Store',
-          provider_org_id: wo.provider_org_id || undefined,
-          assigned_to: wo.assigned_to || undefined,
-          status: wo.status as WorkOrder['status'],
-          summary: wo.summary || undefined,
-          notes: wo.notes || undefined,
-          scheduled_at: wo.scheduled_at || undefined,
-          created_at: wo.created_at,
-          updated_at: wo.updated_at,
-        }));
-
-        setWorkOrders(mappedOrders);
-        setFilteredOrders(mappedOrders);
-      } catch (error) {
-        console.error('Error fetching work orders:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load work orders",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [fetchWorkOrders, toast]);
 
-    fetchWorkOrders();
-  }, [providerId, toast]);
 
   useEffect(() => {
     let filtered = workOrders;
