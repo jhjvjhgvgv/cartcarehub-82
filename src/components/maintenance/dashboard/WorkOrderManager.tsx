@@ -36,8 +36,14 @@ interface WorkOrder {
   summary?: string;
   notes?: string;
   scheduled_at?: string;
+  source_issue_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface ProviderOption {
+  id: string;
+  name: string;
 }
 
 interface WorkOrderManagerProps {
@@ -56,6 +62,11 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const [newOrderSummary, setNewOrderSummary] = useState('');
   const [newOrderNotes, setNewOrderNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [assignDialogFor, setAssignDialogFor] = useState<WorkOrder | null>(null);
+  const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
+  const [isAssigning, setIsAssigning] = useState(false);
+
   const { toast } = useToast();
   const { data: managedStores = [] } = useManagedStores();
 
