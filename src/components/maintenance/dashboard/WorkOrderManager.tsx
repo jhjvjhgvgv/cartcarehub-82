@@ -486,7 +486,24 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
             </Select>
           </div>
           
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2">
+            <Label htmlFor="mine-only">Assignment</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border">
+              <input
+                id="mine-only"
+                type="checkbox"
+                checked={mineOnly}
+                onChange={(e) => setMineOnly(e.target.checked)}
+                className="h-4 w-4"
+                disabled={!currentUserId}
+              />
+              <label htmlFor="mine-only" className="text-sm cursor-pointer select-none">
+                Assigned to me only
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label>Total Orders</Label>
             <div className="text-2xl font-bold">{filteredOrders.length}</div>
           </div>
