@@ -201,6 +201,52 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
     }
   };
 
+  const openAssignDialog = async (order: WorkOrder) => {
+    setAssignDialogFor(order);
+    setSelectedProviderId(order.provider_org_id || '');
+    setProviderOptions([]);
+    try {
+      const { data, error } = await supabase
+        .from('provider_store_links')
+        .select('provider_org_id, organizations:provider_org_id(id, name)')
+        .eq('store_org_id', order.store_org_id)
+        .eq('status', 'active');
+      if (error) throw error;
+      const opts = (data || [])
+        .map((row: any) => row.organizations)
+        .filter(Boolean)
+        .map((o: any) => ({ id: o.id, name: o.name }));
+      setProviderOptions(opts);
+    } catch (e) {
+      console.error('Failed to load providers', e);
+      toast({ title: 'Error', description: 'Could not load linked providers', variant: 'destructive' });
+    }
+  };
+
+  const assignProvider = async () => {
+    if (!assignDialogFor || !selectedProviderId) return;
+    setIsAssigning(true);
+    try {
+      const { data, error } = await supabase.rpc('transition_work_order', {
+        p_work_order_id: assignDialogFor.id,
+        p_to_status: assignDialogFor.status,
+        p_provider_org_id: selectedProviderId,
+      });
+      if (error) throw error;
+      const updated = Array.isArray(data) ? data[0] : data;
+      setWorkOrders(prev => prev.map(o => o.id === assignDialogFor.id
+        ? { ...o, provider_org_id: updated?.provider_org_id ?? selectedProviderId, updated_at: updated?.updated_at ?? new Date().toISOString() }
+        : o));
+      toast({ title: 'Provider assigned', description: 'Work order updated.' });
+      setAssignDialogFor(null);
+    } catch (error: any) {
+      console.error('assignProvider error', error);
+      toast({ title: 'Error', description: error?.message || 'Failed to assign provider', variant: 'destructive' });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, string> = {
       'new': 'bg-gray-100 text-gray-800',
