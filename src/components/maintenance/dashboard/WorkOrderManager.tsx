@@ -36,8 +36,14 @@ interface WorkOrder {
   summary?: string;
   notes?: string;
   scheduled_at?: string;
+  source_issue_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface ProviderOption {
+  id: string;
+  name: string;
 }
 
 interface WorkOrderManagerProps {
@@ -56,52 +62,84 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const [newOrderSummary, setNewOrderSummary] = useState('');
   const [newOrderNotes, setNewOrderNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [assignDialogFor, setAssignDialogFor] = useState<WorkOrder | null>(null);
+  const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([]);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
+  const [isAssigning, setIsAssigning] = useState(false);
+
   const { toast } = useToast();
   const { data: managedStores = [] } = useManagedStores();
 
+  const fetchWorkOrders = React.useCallback(async (showSpinner = true) => {
+    try {
+      if (showSpinner) setLoading(true);
+      const { data: orders, error } = await supabase
+        .from('work_orders_with_store')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedOrders: WorkOrder[] = (orders || []).map((wo: any) => ({
+        id: wo.id,
+        store_org_id: wo.store_org_id,
+        store_name: wo.store_name || 'Unknown Store',
+        provider_org_id: wo.provider_org_id || undefined,
+        assigned_to: wo.assigned_to || undefined,
+        status: wo.status as WorkOrder['status'],
+        summary: wo.summary || undefined,
+        notes: wo.notes || undefined,
+        scheduled_at: wo.scheduled_at || undefined,
+        source_issue_id: wo.source_issue_id ?? null,
+        created_at: wo.created_at,
+        updated_at: wo.updated_at,
+      }));
+
+      setWorkOrders(mappedOrders);
+      setFilteredOrders(mappedOrders);
+    } catch (error) {
+      console.error('Error fetching work orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load work orders",
+        variant: "destructive"
+      });
+    } finally {
+      if (showSpinner) setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
-    const fetchWorkOrders = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch work orders with store info
-        const { data: orders, error } = await supabase
-          .from('work_orders_with_store')
-          .select('*')
-          .order('created_at', { ascending: false });
+    fetchWorkOrders(true);
+  }, [providerId, fetchWorkOrders]);
 
-        if (error) throw error;
+  // Realtime: surface auto-created / updated work orders without a manual refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel('work-orders-realtime')
+      .on(
+        'postgres_changes' as any,
+        { event: '*', schema: 'public', table: 'work_orders' } as any,
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            const isAuto = !!payload.new?.source_issue_id;
+            toast({
+              title: isAuto ? 'Auto-created work order' : 'New work order',
+              description: isAuto
+                ? 'A high/critical issue spawned a work order.'
+                : 'A new work order was created.',
+            });
+          }
+          fetchWorkOrders(false);
+        }
+      )
+      .subscribe();
 
-        const mappedOrders: WorkOrder[] = (orders || []).map(wo => ({
-          id: wo.id,
-          store_org_id: wo.store_org_id,
-          store_name: wo.store_name || 'Unknown Store',
-          provider_org_id: wo.provider_org_id || undefined,
-          assigned_to: wo.assigned_to || undefined,
-          status: wo.status as WorkOrder['status'],
-          summary: wo.summary || undefined,
-          notes: wo.notes || undefined,
-          scheduled_at: wo.scheduled_at || undefined,
-          created_at: wo.created_at,
-          updated_at: wo.updated_at,
-        }));
-
-        setWorkOrders(mappedOrders);
-        setFilteredOrders(mappedOrders);
-      } catch (error) {
-        console.error('Error fetching work orders:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load work orders",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [fetchWorkOrders, toast]);
 
-    fetchWorkOrders();
-  }, [providerId, toast]);
 
   useEffect(() => {
     let filtered = workOrders;
@@ -160,6 +198,52 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
         description: friendly,
         variant: "destructive"
       });
+    }
+  };
+
+  const openAssignDialog = async (order: WorkOrder) => {
+    setAssignDialogFor(order);
+    setSelectedProviderId(order.provider_org_id || '');
+    setProviderOptions([]);
+    try {
+      const { data, error } = await supabase
+        .from('provider_store_links')
+        .select('provider_org_id, organizations:provider_org_id(id, name)')
+        .eq('store_org_id', order.store_org_id)
+        .eq('status', 'active');
+      if (error) throw error;
+      const opts = (data || [])
+        .map((row: any) => row.organizations)
+        .filter(Boolean)
+        .map((o: any) => ({ id: o.id, name: o.name }));
+      setProviderOptions(opts);
+    } catch (e) {
+      console.error('Failed to load providers', e);
+      toast({ title: 'Error', description: 'Could not load linked providers', variant: 'destructive' });
+    }
+  };
+
+  const assignProvider = async () => {
+    if (!assignDialogFor || !selectedProviderId) return;
+    setIsAssigning(true);
+    try {
+      const { data, error } = await supabase.rpc('transition_work_order', {
+        p_work_order_id: assignDialogFor.id,
+        p_to_status: assignDialogFor.status,
+        p_provider_org_id: selectedProviderId,
+      });
+      if (error) throw error;
+      const updated = Array.isArray(data) ? data[0] : data;
+      setWorkOrders(prev => prev.map(o => o.id === assignDialogFor.id
+        ? { ...o, provider_org_id: updated?.provider_org_id ?? selectedProviderId, updated_at: updated?.updated_at ?? new Date().toISOString() }
+        : o));
+      toast({ title: 'Provider assigned', description: 'Work order updated.' });
+      setAssignDialogFor(null);
+    } catch (error: any) {
+      console.error('assignProvider error', error);
+      toast({ title: 'Error', description: error?.message || 'Failed to assign provider', variant: 'destructive' });
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -510,6 +594,11 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
                                 Complete
                               </Button>
                             )}
+                            {order.status !== 'completed' && order.status !== 'canceled' && (
+                              <Button variant="outline" onClick={() => openAssignDialog(order)}>
+                                {order.provider_org_id ? 'Reassign Provider' : 'Assign Provider'}
+                              </Button>
+                            )}
                             {order.status !== 'canceled' && order.status !== 'completed' && (
                               <Button 
                                 variant="destructive" 
@@ -519,6 +608,7 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
                               </Button>
                             )}
                           </div>
+
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -529,6 +619,38 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
           ))}
         </Tabs>
       </CardContent>
+
+      <Dialog open={!!assignDialogFor} onOpenChange={(open) => !open && setAssignDialogFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Provider</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Provider linked to {assignDialogFor?.store_name}</Label>
+            {providerOptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No active providers linked to this store. Create a provider–store link first.
+              </p>
+            ) : (
+              <Select value={selectedProviderId} onValueChange={setSelectedProviderId}>
+                <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                <SelectContent>
+                  {providerOptions.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogFor(null)}>Cancel</Button>
+            <Button onClick={assignProvider} disabled={!selectedProviderId || isAssigning}>
+              {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
+
