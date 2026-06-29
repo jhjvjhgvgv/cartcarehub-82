@@ -619,6 +619,38 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
           ))}
         </Tabs>
       </CardContent>
+
+      <Dialog open={!!assignDialogFor} onOpenChange={(open) => !open && setAssignDialogFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Provider</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Label>Provider linked to {assignDialogFor?.store_name}</Label>
+            {providerOptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No active providers linked to this store. Create a provider–store link first.
+              </p>
+            ) : (
+              <Select value={selectedProviderId} onValueChange={setSelectedProviderId}>
+                <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                <SelectContent>
+                  {providerOptions.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogFor(null)}>Cancel</Button>
+            <Button onClick={assignProvider} disabled={!selectedProviderId || isAssigning}>
+              {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
+
