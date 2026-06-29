@@ -144,21 +144,30 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
 
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  }, []);
+
+  useEffect(() => {
     let filtered = workOrders;
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(order => 
+      filtered = filtered.filter(order =>
         order.store_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (order.summary || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (statusFilter !== 'all') {
       filtered = filtered.filter(order => order.status === statusFilter);
     }
-    
+
+    if (mineOnly && currentUserId) {
+      filtered = filtered.filter(order => order.assigned_to === currentUserId);
+    }
+
     setFilteredOrders(filtered);
-  }, [workOrders, searchTerm, statusFilter]);
+  }, [workOrders, searchTerm, statusFilter, mineOnly, currentUserId]);
+
 
   const updateWorkOrderStatus = async (orderId: string, newStatus: WorkOrder['status']) => {
     try {
