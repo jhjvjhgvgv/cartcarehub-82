@@ -594,6 +594,11 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
                                 Complete
                               </Button>
                             )}
+                            {order.status !== 'completed' && order.status !== 'canceled' && (
+                              <Button variant="outline" onClick={() => openAssignDialog(order)}>
+                                {order.provider_org_id ? 'Reassign Provider' : 'Assign Provider'}
+                              </Button>
+                            )}
                             {order.status !== 'canceled' && order.status !== 'completed' && (
                               <Button 
                                 variant="destructive" 
@@ -603,6 +608,7 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
                               </Button>
                             )}
                           </div>
+
                         </div>
                       </DialogContent>
                     </Dialog>
