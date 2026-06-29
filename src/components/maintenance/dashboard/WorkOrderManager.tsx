@@ -57,6 +57,8 @@ export function WorkOrderManager({ providerId }: WorkOrderManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('new');
+  const [mineOnly, setMineOnly] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newOrderStoreId, setNewOrderStoreId] = useState('');
   const [newOrderSummary, setNewOrderSummary] = useState('');
