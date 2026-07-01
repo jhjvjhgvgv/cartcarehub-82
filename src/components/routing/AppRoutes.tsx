@@ -21,6 +21,8 @@ import ReportIssue from "@/pages/customer/ReportIssue";
 import CustomerSettings from "@/pages/customer/Settings";
 import Inspection from "@/pages/Inspection";
 import StoreCarts from "@/pages/store/StoreCarts";
+import ProviderQueue from "@/pages/provider/Queue";
+import StoreWorkOrders from "@/pages/customer/WorkOrders";
 import { ProfileSetup } from "@/components/auth/ProfileSetup";
 import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
@@ -55,6 +57,9 @@ export const AppRoutes = () => {
         </AdminProtectedRoute>
       } />
       <Route path="/store/:id" element={<ProtectedRoute element={<Store />} allowedRole="maintenance" />} />
+      <Route path="/provider/queue" element={<ProtectedRoute element={<ProviderQueue />} allowedRole="maintenance" />} />
+      <Route path="/customer/work-orders" element={<ProtectedRoute element={<StoreWorkOrders />} allowedRole="store" />} />
+      
       
       {/* Customer/Store routes - Protected */}
       <Route path="/customer/dashboard" element={<ProtectedRoute element={<CustomerDashboard />} allowedRole="store" />} />
