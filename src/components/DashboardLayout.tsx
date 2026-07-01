@@ -1,6 +1,6 @@
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
-import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut } from "lucide-react";
+import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut, ClipboardList } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       href: "/customers",
       icon: Users,
       disabled: !hasConnections
+    },
+    {
+      name: "My Queue",
+      href: "/provider/queue",
+      icon: ClipboardList,
     },
     {
       name: "Settings",

@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut, X } from "lucide-react";
+import { ShoppingCart, AlertTriangle, Home, Settings, Menu, LogOut, X, ClipboardList } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +41,11 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
       name: "Report Issue",
       href: "/customer/report-issue",
       icon: AlertTriangle,
+    },
+    {
+      name: "Work Orders",
+      href: "/customer/work-orders",
+      icon: ClipboardList,
     },
     {
       name: "Settings",
