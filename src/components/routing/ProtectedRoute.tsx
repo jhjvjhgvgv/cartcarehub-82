@@ -86,8 +86,8 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
     return <Navigate to="/" replace />;
   }
   
-  // Check onboarding (only after auth is confirmed)
-  if (!onboardingChecked) {
+  // Check onboarding + membership (only after auth is confirmed)
+  if (!onboardingChecked || !membershipChecked) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -97,10 +97,15 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
       </div>
     );
   }
-  
+
   // Redirect to onboarding if needed
   if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // No org membership — send to self-service setup
+  if (needsSetup) {
+    return <Navigate to="/pending-setup" replace />;
   }
   
   // If verification failed, handle gracefully
