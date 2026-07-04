@@ -192,6 +192,26 @@ export function useRemoveMembership() {
   });
 }
 
+export function useAutoSetupUser() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (user_id: string) => {
+      const { data, error } = await supabase.rpc("safe_user_setup", {
+        user_id_param: user_id,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Auto-setup complete" });
+      qc.invalidateQueries({ queryKey: ["admin-users-memberships"] });
+    },
+    onError: (e: any) =>
+      toast({ title: "Auto-setup failed", description: e.message, variant: "destructive" }),
+  });
+}
+
 export const MEMBERSHIP_ROLES: MembershipRole[] = [
   "corp_admin",
   "corp_viewer",
