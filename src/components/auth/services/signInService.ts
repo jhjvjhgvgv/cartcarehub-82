@@ -46,22 +46,28 @@ export const signInUser = async (
       
       try {
         // Use get_my_portal_context for routing
-        const { data: ctx, error: ctxError } = await supabase.rpc('get_my_portal_context');
-        
+        let { data: ctx, error: ctxError } = await supabase.rpc('get_my_portal_context');
+
         if (ctxError) {
           console.error("Error getting portal context:", ctxError);
-          // Fallback to onboarding
           navigate('/onboarding', { replace: true });
           return { success: true, message: "You have been signed in successfully!" };
         }
 
-        const context = ctx as unknown as PortalContext | null;
-        
+        let context = ctx as unknown as PortalContext | null;
+
+        // Safety net: no memberships → try to auto-setup once
+        if (!context?.memberships || context.memberships.length === 0) {
+          const { error: setupError } = await supabase.rpc('ensure_my_setup');
+          if (!setupError) {
+            const refetch = await supabase.rpc('get_my_portal_context');
+            context = refetch.data as unknown as PortalContext | null;
+          }
+        }
+
         if (context?.memberships && context.memberships.length > 0) {
           const membership = context.memberships[0];
           const role = membership.role;
-          
-          // Route based on membership role
           if (role.startsWith('provider_')) {
             navigate('/dashboard', { replace: true });
           } else if (role.startsWith('corp_')) {
@@ -70,10 +76,9 @@ export const signInUser = async (
             navigate('/customer/dashboard', { replace: true });
           }
         } else {
-          // No memberships - go to onboarding
-          navigate('/onboarding', { replace: true });
+          navigate('/pending-setup', { replace: true });
         }
-        
+
         return { success: true, message: "You have been signed in successfully!" };
       } catch (err) {
         console.error("Error during portal context fetch:", err);
