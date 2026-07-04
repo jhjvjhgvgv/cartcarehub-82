@@ -3335,6 +3335,7 @@ export type Database = {
         Args: { _store_org: string }
         Returns: boolean
       }
+      ensure_my_setup: { Args: never; Returns: Json }
       get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_cart_analytics_summary: {
         Args: { date_from?: string; date_to?: string; store_id_param?: string }
