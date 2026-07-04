@@ -15,6 +15,24 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   const { isAuthenticated, isVerified, roleCheckComplete } = useAuthCheck(allowedRole);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [membershipChecked, setMembershipChecked] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
+
+  useEffect(() => {
+    const checkMembership = async () => {
+      if (!user || skipOnboardingCheck) {
+        setMembershipChecked(true);
+        return;
+      }
+      const { count } = await supabase
+        .from("org_memberships")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setNeedsSetup((count ?? 0) === 0);
+      setMembershipChecked(true);
+    };
+    if (isAuthenticated && user) checkMembership();
+  }, [user, isAuthenticated, skipOnboardingCheck]);
   
   // Check onboarding status
   useEffect(() => {
