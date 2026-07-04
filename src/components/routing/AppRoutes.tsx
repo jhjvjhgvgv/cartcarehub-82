@@ -27,6 +27,7 @@ import { ProfileSetup } from "@/components/auth/ProfileSetup";
 import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
 import { OnboardingContainer } from "@/components/auth/onboarding/OnboardingContainer";
+import PendingSetup from "@/pages/PendingSetup";
 
 export const AppRoutes = () => {
   return (
