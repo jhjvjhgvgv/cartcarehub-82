@@ -14,7 +14,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlert, Plus, Trash2, Building2, Users } from "lucide-react";
 import {
-  useAdminUsersWithMemberships, useAssignMembership, useBootstrapCorpAdmin,
+  useAdminUsersWithMemberships, useAssignMembership, useAutoSetupUser, useBootstrapCorpAdmin,
   useCorpAdminCheck, useCorpAdminCount, useCreateOrganization,
   useOrganizations, useRemoveMembership,
   MEMBERSHIP_ROLES, ORG_TYPES,
