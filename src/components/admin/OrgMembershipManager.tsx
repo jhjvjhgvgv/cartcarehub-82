@@ -145,6 +145,8 @@ export function OrgMembershipManager() {
 
 function UserRow({ user, onAssign }: { user: AdminUserRow; onAssign: () => void }) {
   const remove = useRemoveMembership();
+  const autoSetup = useAutoSetupUser();
+  const isOrphan = !user.memberships?.length;
   return (
     <TableRow>
       <TableCell>
@@ -168,13 +170,26 @@ function UserRow({ user, onAssign }: { user: AdminUserRow; onAssign: () => void 
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">No memberships — locked out by RLS</span>
+          <Badge variant="destructive">No memberships — locked out</Badge>
         )}
       </TableCell>
       <TableCell>
-        <Button size="sm" variant="outline" onClick={onAssign}>
-          <Plus className="h-3 w-3 mr-1" /> Assign
-        </Button>
+        <div className="flex gap-1">
+          {isOrphan && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => autoSetup.mutate(user.user_id)}
+              disabled={autoSetup.isPending}
+              title="Create default org & membership from signup metadata"
+            >
+              Auto-setup
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={onAssign}>
+            <Plus className="h-3 w-3 mr-1" /> Assign
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
