@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNewAccountSession } from "@/services/connection/storage-utils";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -110,6 +111,11 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
           <ShoppingCart className="h-6 w-6 text-primary" />
           <span className="font-semibold text-gray-900">CartCareHub</span>
         </Link>
+
+        <div className="ml-auto mr-2 flex items-center">
+          <NotificationBell />
+        </div>
+        
         
         {isMobile ? (
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

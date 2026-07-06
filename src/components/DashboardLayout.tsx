@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { ConnectionService } from "@/services/ConnectionService";
 import { isNewAccountSession, setNewAccountSessionFlag, clearFlagsOnSettingsNavigation } from "@/services/connection/storage-utils";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -180,7 +181,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 overflow-hidden">
-          <SidebarTrigger className="p-4" />
+          <div className="flex items-center justify-between p-4">
+            <SidebarTrigger />
+            <NotificationBell />
+          </div>
           <div className="p-4 md:p-6">
             {children}
           </div>
