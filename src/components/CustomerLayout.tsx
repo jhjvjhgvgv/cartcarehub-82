@@ -110,6 +110,11 @@ const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
           <ShoppingCart className="h-6 w-6 text-primary" />
           <span className="font-semibold text-gray-900">CartCareHub</span>
         </Link>
+
+        <div className="ml-auto mr-2 flex items-center">
+          <NotificationBell />
+        </div>
+        
         
         {isMobile ? (
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

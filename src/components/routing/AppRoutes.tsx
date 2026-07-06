@@ -28,6 +28,7 @@ import { ErrorRecovery } from "@/components/auth/ErrorRecovery";
 import { MasterAdminLogin } from "@/pages/MasterAdminLogin";
 import { OnboardingContainer } from "@/components/auth/onboarding/OnboardingContainer";
 import PendingSetup from "@/pages/PendingSetup";
+import NotificationsPage from "@/pages/Notifications";
 
 export const AppRoutes = () => {
   return (
@@ -40,6 +41,7 @@ export const AppRoutes = () => {
       <Route path="/setup-profile" element={<ProtectedRoute element={<ProfileSetup />} skipOnboardingCheck />} />
       <Route path="/onboarding" element={<ProtectedRoute element={<OnboardingContainer />} skipOnboardingCheck />} />
       <Route path="/pending-setup" element={<ProtectedRoute element={<PendingSetup />} skipOnboardingCheck />} />
+      <Route path="/notifications" element={<ProtectedRoute element={<NotificationsPage />} />} />
 
       
       {/* Inspection route - accessible to both roles */}
