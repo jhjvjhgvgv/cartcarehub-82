@@ -678,6 +678,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       org_memberships: {
         Row: {
           created_at: string
@@ -3396,6 +3432,17 @@ export type Database = {
       normalize_cart_status: {
         Args: { p: string }
         Returns: Database["public"]["Enums"]["cart_status"]
+      }
+      notify_store_admins: {
+        Args: {
+          _body: string
+          _link: string
+          _metadata: Json
+          _store_org_id: string
+          _title: string
+          _type: string
+        }
+        Returns: undefined
       }
       provider_has_store_access: {
         Args: { _provider_org: string; _store_org: string }
