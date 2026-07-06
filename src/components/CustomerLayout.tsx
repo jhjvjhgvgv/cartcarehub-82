@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { isNewAccountSession } from "@/services/connection/storage-utils";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const CustomerLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
