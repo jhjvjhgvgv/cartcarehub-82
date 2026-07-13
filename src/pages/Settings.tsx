@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MaintenanceSettings from "@/components/settings/MaintenanceSettings";
 import { MaintenanceConnectionManager } from "@/components/settings/MaintenanceConnectionManager";
-import { ImprovedConnectionsManager } from "@/components/settings/ImprovedConnectionsManager";
+import { StoreConnectionsManager } from "@/components/settings/StoreConnectionsManager";
 import { ConnectionStatusHandler } from "@/components/settings/ConnectionStatusHandler";
 import { ProviderVerificationPanel } from "@/components/settings/ProviderVerificationPanel";
 import { ConnectionStatusDisplay } from "@/components/settings/ConnectionStatusDisplay";
@@ -19,7 +19,7 @@ import { DesignNotes } from "@/components/settings/DesignNotes";
 
 const Settings = () => {
   const { toast } = useToast();
-  const { isMaintenanceUser } = useUserProfile();
+  const { isMaintenanceUser, isStoreUser } = useUserProfile();
 
   const handleSaveNotifications = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +108,15 @@ const Settings = () => {
 
           <TabsContent value="stores">
             <div className="space-y-6">
-              <ImprovedConnectionsManager />
-              <MaintenanceConnectionManager />
+              {isMaintenanceUser && <MaintenanceConnectionManager />}
+              {isStoreUser && <StoreConnectionsManager />}
+              {!isMaintenanceUser && !isStoreUser && (
+                <Card>
+                  <CardContent className="p-6 text-sm text-muted-foreground">
+                    Complete your profile to manage store or provider connections.
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
