@@ -3387,7 +3387,6 @@ export type Database = {
         }[]
       }
       get_my_portal_context: { Args: never; Returns: Json }
-      get_user_primary_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _org: string
