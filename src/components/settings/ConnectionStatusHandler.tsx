@@ -30,45 +30,38 @@ export const ConnectionStatusHandler: React.FC<ConnectionStatusHandlerProps> = (
     if (!user?.id || !profile) return;
 
     try {
-      // First check if profile is complete
       const completion = await checkProfileCompletion(user.id);
       setProfileComplete(completion.isComplete);
 
-      // Only check connections if profile is complete
-      if (completion.isComplete) {
-        if (isStoreUser) {
-          // For store users, check if they have any accepted connections with maintenance providers
-          const connections = await ConnectionService.getStoreConnections(profile.company_name || 'unknown');
-          const activeConnections = connections.filter(conn => conn.status === 'active');
-          setConnectionStatus({ 
-            loading: false, 
-            hasActiveConnections: activeConnections.length > 0 
-          });
-        } else if (isMaintenanceUser) {
-          // For maintenance users, check if they have any accepted connections with stores
-          const requests = await ConnectionService.getMaintenanceRequests(user.id);
-          const activeConnections = requests.filter(req => req.status === 'active');
-          setConnectionStatus({ 
-            loading: false, 
-            hasActiveConnections: activeConnections.length > 0 
-          });
-        } else {
-          // Admin users and other roles don't need connections
-          setConnectionStatus({ loading: false, hasActiveConnections: true });
-        }
+      if (!completion.isComplete || !profile.org_id) {
+        setConnectionStatus({ loading: false, hasActiveConnections: true });
+        return;
+      }
+
+      if (isStoreUser) {
+        const connections = await ConnectionService.getStoreConnections(profile.org_id);
+        setConnectionStatus({
+          loading: false,
+          hasActiveConnections: connections.some((c) => c.status === "active"),
+        });
+      } else if (isMaintenanceUser) {
+        const requests = await ConnectionService.getMaintenanceRequests(profile.org_id);
+        setConnectionStatus({
+          loading: false,
+          hasActiveConnections: requests.some((r) => r.status === "active"),
+        });
       } else {
-        // Profile incomplete - connections not relevant yet
         setConnectionStatus({ loading: false, hasActiveConnections: true });
       }
     } catch (error) {
       console.error("Error checking connection status:", error);
-      setConnectionStatus({ 
-        loading: false, 
-        hasActiveConnections: false, 
-        error: "Failed to check connection status" 
+      setConnectionStatus({
+        loading: false,
+        hasActiveConnections: false,
+        error: "Failed to check connection status",
       });
     }
-  }, [user?.id, profile?.company_name, isStoreUser, isMaintenanceUser]);
+  }, [user?.id, profile?.org_id, isStoreUser, isMaintenanceUser]);
 
   useEffect(() => {
     if (!profileLoading && user?.id && profile) {
