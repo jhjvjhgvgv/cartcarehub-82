@@ -232,15 +232,9 @@ export function ConnectedStoresList({ isMaintenance, formatDate }: ConnectedStor
                           )}
                         </div>
                       </div>
-                      {!isMaintenance && (
-                        <ConnectionRequestsDialog 
-                          isMaintenance={false} 
-                          store={{
-                            id: profile?.company_name || "your-store",
-                            name: profile?.company_name || "Your Store",
-                            status: "active",
-                            connectedSince: new Date().toISOString()
-                          }} 
+                      {!isMaintenance && profile?.org_id && (
+                        <ConnectionRequestsDialog
+                          isMaintenance={false}
                           onUpdate={loadConnections}
                         />
                       )}

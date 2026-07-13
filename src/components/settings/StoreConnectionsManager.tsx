@@ -7,7 +7,7 @@ import { Invitation } from "./types";
 import { ConnectionService } from "@/services/ConnectionService";
 import { ConnectionDialog } from "./ConnectionDialog";
 import { AccountIdentifier } from "./AccountIdentifier";
-import { ConnectionStatus } from "./ConnectionStatus";
+
 import { PendingInvitationsList } from "./PendingInvitationsList";
 import { ConnectedStoresList } from "./ConnectedStoresList";
 import { useUserProfile } from "@/hooks/use-user-profile";
@@ -47,9 +47,8 @@ export function StoreConnectionsManager() {
             currentUser={currentUser}
             isMaintenance={isMaintenance}
           />
-          
-          {/* Connection Status Card */}
-          <ConnectionStatus isMaintenance={isMaintenance} />
+
+
           
           <ConnectedStoresList 
             isMaintenance={isMaintenance} 

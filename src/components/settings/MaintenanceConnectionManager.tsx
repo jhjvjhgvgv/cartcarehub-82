@@ -5,7 +5,7 @@ import { Plus, Users } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { ConnectionDialog } from "./ConnectionDialog";
 import { AccountIdentifier } from "./AccountIdentifier";
-import { ConnectionStatus } from "./ConnectionStatus";
+
 import { PendingInvitationsList } from "./PendingInvitationsList";
 import { ConnectedStoresList } from "./ConnectedStoresList";
 import { Invitation } from "./types";
@@ -50,9 +50,8 @@ export function MaintenanceConnectionManager() {
             currentUser={currentUser}
             isMaintenance={isMaintenance}
           />
-          
-          {/* Connection Status Card */}
-          <ConnectionStatus isMaintenance={isMaintenance} />
+
+
           
           {/* Connected Stores List */}
           <ConnectedStoresList 

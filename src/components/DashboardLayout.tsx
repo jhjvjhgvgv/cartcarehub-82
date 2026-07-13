@@ -1,4 +1,3 @@
-
 import { SidebarProvider, Sidebar, SidebarContent, SidebarTrigger } from "@/components/ui/sidebar";
 import { ShoppingCart, LayoutDashboard, Users, Settings, LogOut, ClipboardList } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -6,62 +5,61 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { ConnectionService } from "@/services/ConnectionService";
-import { isNewAccountSession, setNewAccountSessionFlag, clearFlagsOnSettingsNavigation } from "@/services/connection/storage-utils";
+import { isNewAccountSession, clearFlagsOnSettingsNavigation } from "@/services/connection/storage-utils";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile, loading: profileLoading, isMaintenanceUser } = useUserProfile();
   const [hasConnections, setHasConnections] = useState(true);
   const [isNewAccount, setIsNewAccount] = useState(false);
 
   useEffect(() => {
-    // Check if it's a new account session to skip sample data
     const newAccount = isNewAccountSession();
     setIsNewAccount(newAccount);
 
     if (newAccount) {
-      // If navigating to settings, clear the flags so settings can work normally
       if (location.pathname === "/settings") {
         clearFlagsOnSettingsNavigation();
         setIsNewAccount(false);
       }
-      setHasConnections(false); // Treat as no connections so require real setup
+      setHasConnections(false);
       return;
     }
-    
-    // Check if we're in test mode
-    if (localStorage.getItem("testMode") === "true") {
-      return; // Don't check connections in test mode
-    }
-    
-    // Verify that the maintenance provider has active connections
-    const checkConnections = async () => {
+
+    if (localStorage.getItem("testMode") === "true") return;
+
+    // Only gate maintenance providers; require profile with an org_id
+    if (profileLoading || !profile?.org_id || !isMaintenanceUser) return;
+
+    let cancelled = false;
+    (async () => {
       try {
-        // For maintenance users, we'll need to get the user ID from authentication
-        // This is a simplified fix - in a real app, we'd use proper auth context
-        const userId = localStorage.getItem('testMode') === 'true' ? 'test-maintenance-user' : '';
-        const connections = await ConnectionService.getMaintenanceRequests(userId);
-        
-        const hasActiveConnections = connections.some(conn => conn.status === "active");
-        setHasConnections(hasActiveConnections);
-        
-        if (!hasActiveConnections && location.pathname !== "/settings") {
+        const connections = await ConnectionService.getMaintenanceRequests(profile.org_id!);
+        if (cancelled) return;
+        const active = connections.some((c) => c.status === "active");
+        setHasConnections(active);
+
+        if (!active && location.pathname !== "/settings") {
           toast({
             title: "No Active Connections",
-            description: "You don't have any active store connections. Please connect to at least one store.",
-            variant: "destructive"
+            description: "Connect to at least one store from Settings.",
+            variant: "destructive",
           });
           navigate("/settings");
         }
       } catch (error) {
         console.error("Error checking connections:", error);
       }
+    })();
+
+    return () => {
+      cancelled = true;
     };
-    
-    checkConnections();
-  }, [location.pathname, navigate, toast]);
+  }, [location.pathname, navigate, toast, profile?.org_id, profileLoading, isMaintenanceUser]);
 
   const navigation = [
     {
