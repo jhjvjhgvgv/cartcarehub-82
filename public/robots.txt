@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /$
+Allow: /forgot-password
+Disallow: /dashboard
+Disallow: /carts
+Disallow: /customers
+Disallow: /settings
+Disallow: /admin
+Disallow: /master-admin
+Disallow: /store/
+Disallow: /provider/
+Disallow: /customer/
+Disallow: /onboarding
+Disallow: /pending-setup
+Disallow: /setup-profile
+Disallow: /notifications
+Disallow: /inspection
+Disallow: /invite
+Disallow: /reset-password
+Disallow: /error-recovery
+
+Sitemap: https://cartrepairpros.com/sitemap.xml
