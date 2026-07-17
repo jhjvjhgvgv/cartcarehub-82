@@ -30,10 +30,13 @@ import { OnboardingContainer } from "@/components/auth/onboarding/OnboardingCont
 import PendingSetup from "@/pages/PendingSetup";
 import NotificationsPage from "@/pages/Notifications";
 
+import Landing from "@/pages/Landing";
+
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/auth" element={<Index />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/invite" element={<Invite />} />

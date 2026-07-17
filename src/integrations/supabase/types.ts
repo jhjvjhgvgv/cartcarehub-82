@@ -418,6 +418,33 @@ export type Database = {
           },
         ]
       }
+      investor_leads: {
+        Row: {
+          created_at: string
+          email: string
+          firm: string | null
+          id: string
+          message: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          firm?: string | null
+          id?: string
+          message?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          firm?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -1283,6 +1310,30 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      waitlist_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string | null
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          role?: string | null
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string | null
+          source?: string | null
         }
         Relationships: []
       }
