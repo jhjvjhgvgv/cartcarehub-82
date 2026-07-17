@@ -118,7 +118,7 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
     }
     
     // Fallback to login if no user
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   // All checks passed, render the protected element
