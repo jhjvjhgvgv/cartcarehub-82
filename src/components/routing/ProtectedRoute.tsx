@@ -83,7 +83,7 @@ export const ProtectedRoute = ({ element, allowedRole, skipOnboardingCheck = fal
   
   // Not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   // Check onboarding + membership (only after auth is confirmed)
