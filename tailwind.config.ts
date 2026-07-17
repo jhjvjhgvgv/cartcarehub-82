@@ -62,6 +62,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        ember: {
+          DEFAULT: "#e85d3a",
+          bright: "#ff7a52",
+        },
+      },
+      fontFamily: {
+        display: ['"Space Grotesk"', "system-ui", "sans-serif"],
+        body: ['"DM Sans"', "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
